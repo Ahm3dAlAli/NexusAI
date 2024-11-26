@@ -3,7 +3,7 @@
 <div align="center">
 <img src="path-to-your-logo.svg" alt="NexusAI Logo" width="100">
 
-[![GitHub stars](https://img.shields.io/github/stars/yourusername/nexusai.svg?style=social)](https://github.com/yourusername/nexusai/stargazers)
+[![GitHub stars](https://img.shields.io/github/stars/yourusername/nexusai.svg?style=social)](https://github.com/Ahm3dAlAli/NexusAI)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![GitHub Discussions](https://img.shields.io/badge/Discussions-Q%26A-green?logo=github)](https://github.com/yourusername/nexusai/discussions)
 
