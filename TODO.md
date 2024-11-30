@@ -8,9 +8,13 @@
 
 ## Ideas
 - move away from jupyter notebook
-    - add setup.py
-    - add main entrypoint
+    - add setup.py?
     - run in docker container?
+- reduce latency by changing models:
+    - GPT-4o-mini seems to work well
+    - other areas of improvement: try other models (Qwen2 72B, cerebrus, groq)
+    - we can also use different models for different parts of the workflow
+- multiple languages
 - more rigorous analysis with perplexity and copilot or other tools. I think we can find examples where our agent is even better.
     - **we should double down on this since the judges really liked it in the previous hackathon**
     - better explain the metrics and find examples where our agent is even better
@@ -34,8 +38,6 @@
         - external links (e.g. https://arxiv.org/abs/1706.03762)
 
 ## Nice to haves
-- try to use GPT-4o-mini or Qwen2 72B (together.ai?) to have cheaper and faster models
-    - we can also use different models for different parths of the workflow
 - move all config params to a config file. then we can mention in the readme that the tool is highly customizable
 - build a simple UI?
 - memory:
