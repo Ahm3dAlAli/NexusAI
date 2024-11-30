@@ -1,14 +1,13 @@
-
+# python cache
 __pycache__/
-*.py[cod]
-*$py.class
-*.so
-.env
-.venv
-env/
-venv/
-ENV/
-dist/
-build/
+
+# pip
 *.egg-info/
-.eggs/
+build/
+dist/
+
+# env
+.env
+
+# user data
+/data

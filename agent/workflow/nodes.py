@@ -1,12 +1,11 @@
-from typing import Any, Dict, List
-import json
-from pydantic import BaseModel, Field
-from langchain_core.messages import SystemMessage, AIMessage, ToolMessage, BaseMessage
+from typing import Any
+from langchain_core.messages import SystemMessage, AIMessage, ToolMessage
 from langchain_core.tools import BaseTool
 from langchain_openai import ChatOpenAI
 
-from ..config import MODEL_NAME, TEMPERATURE
-from ..models.state import AgentState
+from ..config import MODEL_NAME, TEMPERATURE, MAX_FEEDBACK_REQUESTS
+from ..models.agent_state import AgentState
+from ..models.outputs import DecisionMakingOutput, JudgeOutput
 from ..prompts.system_prompts import (
     decision_making_prompt,
     planning_prompt,
@@ -14,33 +13,10 @@ from ..prompts.system_prompts import (
     judge_prompt
 )
 
-class DecisionMakingOutput(BaseModel):
-    """Output object of the decision making node."""
-    requires_research: bool = Field(description="Whether the user query requires research or not.")
-    answer: str | None = Field(
-        default=None,
-        description="The answer to the user query. None if research is required."
-    )
-
-class JudgeOutput(BaseModel):
-    """Output object of the judge node."""
-    is_good_answer: bool = Field(description="Whether the answer is good or not.")
-    feedback: str | None = Field(
-        default=None,
-        description="Feedback about why the answer is not good. None if answer is good."
-    )
-
-def format_tools_description(tools: List[BaseTool]) -> str:
-    """Format the description of available tools."""
-    return "\n\n".join([
-        f"- {tool.name}: {tool.description}\n  Input arguments: {tool.args}"
-        for tool in tools
-    ])
-
 class WorkflowNodes:
     """Implementation of the workflow nodes for the research agent."""
     
-    def __init__(self, tools: List[BaseTool]):
+    def __init__(self, tools: list[BaseTool]):
         """Initialize workflow nodes with tools."""
         self.tools = tools
         self.tools_dict = {tool.name: tool for tool in tools}
@@ -56,7 +32,14 @@ class WorkflowNodes:
         self.agent_llm = self.base_llm.bind_tools(tools)
         self.judge_llm = self.base_llm.with_structured_output(JudgeOutput)
 
-    def decision_making_node(self, state: AgentState) -> Dict[str, Any]:
+    def __format_tools_description(self) -> str:
+        """Format the description of available tools."""
+        return "\n\n".join([
+            f"- {tool.name}: {tool.description}\n  Input arguments: {tool.args}"
+            for tool in self.tools
+        ])
+
+    def decision_making_node(self, state: AgentState) -> dict[str, Any]:
         """Entry point node that decides whether research is needed."""
         system_prompt = SystemMessage(content=decision_making_prompt)
         response: DecisionMakingOutput = self.decision_making_llm.invoke(
@@ -68,17 +51,17 @@ class WorkflowNodes:
             output["messages"] = [AIMessage(content=response.answer)]
         return output
 
-    def planning_node(self, state: AgentState) -> Dict[str, Any]:
+    def planning_node(self, state: AgentState) -> dict[str, Any]:
         """Planning node that creates a research strategy."""
         system_prompt = SystemMessage(
             content=planning_prompt.format(
-                tools=format_tools_description(self.tools)
+                tools=self.__format_tools_description()
             )
         )
         response = self.base_llm.invoke([system_prompt] + state["messages"])
         return {"messages": [response]}
 
-    def tools_node(self, state: AgentState) -> Dict[str, Any]:
+    def tools_node(self, state: AgentState) -> dict[str, Any]:
         """Node that executes tools based on the plan."""
         outputs = []
         for tool_call in state["messages"][-1].tool_calls:
@@ -103,17 +86,17 @@ class WorkflowNodes:
                 )
         return {"messages": outputs}
 
-    def agent_node(self, state: AgentState) -> Dict[str, Any]:
+    def agent_node(self, state: AgentState) -> dict[str, Any]:
         """Node that uses the LLM with tools to process results."""
         system_prompt = SystemMessage(content=agent_prompt)
         response = self.agent_llm.invoke([system_prompt] + state["messages"])
         return {"messages": [response]}
 
-    def judge_node(self, state: AgentState) -> Dict[str, Any]:
+    def judge_node(self, state: AgentState) -> dict[str, Any]:
         """Node that evaluates the quality of the final answer."""
         # End execution if the LLM failed twice
         num_feedback_requests = state.get("num_feedback_requests", 0)
-        if num_feedback_requests >= 2:
+        if num_feedback_requests >= MAX_FEEDBACK_REQUESTS:
             return {"is_good_answer": True}
 
         system_prompt = SystemMessage(content=judge_prompt)

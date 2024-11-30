@@ -1,4 +1,3 @@
-# scientific_paper_agent/tools/core_api.py
 import time
 from typing import ClassVar
 import urllib3

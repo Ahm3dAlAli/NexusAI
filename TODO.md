@@ -7,14 +7,9 @@
 # Build with AI hackathon
 
 ## Ideas
-- move away from jupyter notebook
-    - add setup.py?
-    - run in docker container?
-- reduce latency by changing models:
-    - GPT-4o-mini seems to work well
+- reduce latency by changing models (using gpt-4o-mini already helps a lot):
     - other areas of improvement: try other models (Qwen2 72B, cerebrus, groq)
     - we can also use different models for different parts of the workflow
-- multiple languages
 - more rigorous analysis with perplexity and copilot or other tools. I think we can find examples where our agent is even better.
     - **we should double down on this since the judges really liked it in the previous hackathon**
     - better explain the metrics and find examples where our agent is even better
