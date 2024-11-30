@@ -33,7 +33,6 @@
         - external links (e.g. https://arxiv.org/abs/1706.03762)
 
 ## Nice to haves
-- move all config params to a config file. then we can mention in the readme that the tool is highly customizable
 - build a simple UI?
 - memory:
     - store previous outputs in local db for persisted memory

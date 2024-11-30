@@ -73,14 +73,14 @@ def main():
     if args.interactive:
         display_banner()
         display_help()
-        print("\nEntering interactive mode. Type 'exit' to quit.\n")
+        print("Entering interactive mode. Type 'exit' to quit.")
         
         while True:
             try:
-                query = input("\nEnter your research query: ").strip()
+                query = input("Enter your research query: ").strip()
                 
                 if query.lower() == 'exit':
-                    print("\nGoodbye!")
+                    print("Goodbye!")
                     break
                     
                 if query.lower() == 'help':
@@ -90,20 +90,20 @@ def main():
                 if not query:
                     continue
                 
-                print("\nProcessing your query...\n")
+                print("Processing your query...")
                 result = asyncio.run(process_query(query, workflow))
                 print(f"{'=' * 35} Results {'=' * 35}\n\n{result}\n{'=' * 80}")
             except KeyboardInterrupt:
-                print("\n\nOperation cancelled by user.")
+                print("Operation cancelled by user.")
                 break
             except Exception as e:
-                print(f"\nError: {str(e)}")        
+                print(f"Error: {str(e)}")        
     else:
         # Process single query
         if not args.query:
             parser.error("Query is required when not in interactive mode")
             
-        print("Processing your query...\n")
+        print("Processing your query...")
         result = asyncio.run(process_query(args.query, workflow))
         print(f"{'=' * 36} Result {'=' * 36}\n\n{result}\n{'=' * 80}")
 
