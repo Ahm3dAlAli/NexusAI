@@ -9,8 +9,8 @@ with open("requirements.txt", "r", encoding="utf-8") as fh:
 setup(
     name="nexusai",
     version="0.1.0",
-    author="Vincenzo Fanizza",
-    author_email="contact@vincenzofanizza.com",
+    author="Ahmed A. Ali, Vincenzo Fanizza",
+    author_email="ahm3dalali@outlook.com, contact@vincenzofanizza.com",
     description="A research assistant for scientific paper analysis",
     long_description=long_description,
     long_description_content_type="text/markdown",
