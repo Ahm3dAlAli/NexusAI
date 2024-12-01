@@ -7,9 +7,6 @@
 # Build with AI hackathon
 
 ## Ideas
-- reduce latency by changing models (using gpt-4o-mini already helps a lot):
-    - other areas of improvement: try other models (Qwen2 72B, cerebrus, groq)
-    - we can also use different models for different parts of the workflow
 - more rigorous analysis with perplexity and copilot or other tools. I think we can find examples where our agent is even better.
     - **we should double down on this since the judges really liked it in the previous hackathon**
     - better explain the metrics and find examples where our agent is even better

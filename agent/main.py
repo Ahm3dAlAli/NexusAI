@@ -1,3 +1,4 @@
+import time
 import asyncio
 import argparse
 from langchain_core.tools import BaseTool
@@ -12,7 +13,10 @@ def setup_tools() -> list[BaseTool]:
 
 async def process_query(query: str, workflow: ResearchWorkflow) -> str:
     """Process a single research query."""
+    start_time = time.time()
     result = await workflow.process_query(query)
+    end_time = time.time()
+    print(f"Time taken: {end_time - start_time:.2f} seconds")
 
     # Check for errors
     if "error" in result:

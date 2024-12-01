@@ -32,7 +32,9 @@ class CoreAPIWrapper(BaseModel):
                     return response.json()
                     
                 if attempt < MAX_RETRIES - 1:
-                    time.sleep(RETRY_BASE_DELAY ** (attempt + 2))
+                    sleep_time = 60 if response.status == 429 else RETRY_BASE_DELAY ** (attempt + 2)
+                    print(f"Got {response.status} response from CORE API. Sleeping for {sleep_time} seconds before retrying...")
+                    time.sleep(sleep_time)
                 else:
                     raise Exception(
                         f"Got non 2xx response from CORE API: "

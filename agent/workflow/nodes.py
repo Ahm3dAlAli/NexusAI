@@ -2,8 +2,9 @@ from typing import Any
 from langchain_core.messages import SystemMessage, AIMessage, ToolMessage
 from langchain_core.tools import BaseTool
 from langchain_openai import ChatOpenAI
+from langchain_groq import ChatGroq
 
-from ..config import MODEL_NAME, TEMPERATURE, MAX_FEEDBACK_REQUESTS
+from ..config import MAX_FEEDBACK_REQUESTS
 from ..models.agent_state import AgentState
 from ..models.outputs import DecisionMakingOutput, JudgeOutput
 from ..prompts.system_prompts import (
@@ -21,16 +22,23 @@ class WorkflowNodes:
         self.tools = tools
         self.tools_dict = {tool.name: tool for tool in tools}
         
-        # Initialize LLMs
-        self.base_llm = ChatOpenAI(
-            model=MODEL_NAME,
-            temperature=TEMPERATURE
+        # Initialize base LLMs
+        self.__groq_llm = ChatGroq(
+            model="llama-3.1-70b-versatile",
+            temperature=0.0
         )
-        self.decision_making_llm = self.base_llm.with_structured_output(
+        self.__openai_llm = ChatOpenAI(
+            model="gpt-4o-mini",
+            temperature=0.0
+        )
+
+        # Workflow LLMs
+        self.planning_llm = self.__groq_llm
+        self.decision_making_llm = self.__groq_llm.with_structured_output(
             DecisionMakingOutput
         )
-        self.agent_llm = self.base_llm.bind_tools(tools)
-        self.judge_llm = self.base_llm.with_structured_output(JudgeOutput)
+        self.agent_llm = self.__openai_llm.bind_tools(tools)
+        self.judge_llm = self.__openai_llm.with_structured_output(JudgeOutput)
 
     def __format_tools_description(self) -> str:
         """Format the description of available tools."""
@@ -58,7 +66,7 @@ class WorkflowNodes:
                 tools=self.__format_tools_description()
             )
         )
-        response = self.base_llm.invoke([system_prompt] + state["messages"])
+        response = self.planning_llm.invoke([system_prompt] + state["messages"])
         return {"messages": [response]}
 
     def tools_node(self, state: AgentState) -> dict[str, Any]:
