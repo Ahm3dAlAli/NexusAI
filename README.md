@@ -61,7 +61,7 @@ NexusAI is built upon a layered architecture with three main components:
 First install the required packages:
 
 ```bash
-pip install requiremnts.txt
+pip install requirements.txt
 ```
 
 Set up your environment variables:
