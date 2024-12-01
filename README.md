@@ -61,17 +61,13 @@ NexusAI is built upon a layered architecture with three main components:
 First install the required packages:
 
 ```bash
-pip install --upgrade langchain==0.2.16 langchain-community==0.2.16 
-pip install langchain-openai==0.1.23 langgraph==0.2.18 
-pip install pdfplumber python-dotenv
+pip install requiremnts.txt
 ```
 
 Set up your environment variables:
 
 ```python
-import os
-os.environ["OPENAI_API_KEY"] = "your-key"
-os.environ["CORE_API_KEY"] = "your-key"
+
 ```
 
 Basic usage example:
