@@ -85,6 +85,12 @@ results = assistant.analyze_paper("paper_url_or_query")
 review = assistant.literature_review("quantum computing", year_range=(2023, 2024))
 ```
 
+Evaluation using MacOS zsh
+
+```python
+python path/run_evaluation.py --services our_agent perplexity --interactive
+```
+
 ## Use Cases
 
 ### 1. Academic Research
