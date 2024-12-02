@@ -2,8 +2,9 @@ import io
 import time
 import urllib3
 import pdfplumber
+from typing import List
 
-from langchain_core.tools import tool
+from langchain_core.tools import tool, BaseTool
 
 from ..config import MAX_RETRIES, RETRY_BASE_DELAY
 from .core_api import CoreAPIWrapper
@@ -77,3 +78,10 @@ def ask_human_feedback(question: str) -> str:
     """
     return input(question)
 
+def setup_tools() -> List[BaseTool]:
+    """Setup and return the list of available tools."""
+    return [
+        search_papers,
+        download_paper,
+        ask_human_feedback
+    ]
