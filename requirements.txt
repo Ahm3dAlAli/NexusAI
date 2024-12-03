@@ -1,3 +1,4 @@
+fastapi==0.115.5
 langchain==0.2.16
 langchain-community==0.2.16
 langchain-groq==0.1.8
@@ -7,4 +8,4 @@ langsmith==0.1.114
 pdfplumber
 python-dotenv
 urllib3
-anthropic
+websockets==14.1
