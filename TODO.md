@@ -10,8 +10,7 @@ We need to wait for the problem statement of our challenge to be released and po
     - 'Quickstart' section is made up
     - ahmed pls reference me somewhere :)
 - more rigorous analysis with perplexity and copilot or other tools. I think we can find examples where our agent is even better.
-    - **we should double down on this since the judges really liked it in the previous hackathon**
-    - better explain the metrics and find examples where our agent is even better
+- build a simple UI
 - handle large documents
     - limit time to download
     - limit time with unstructured and opt for a faster strategy (based on number of pages?)
@@ -32,7 +31,6 @@ We need to wait for the problem statement of our challenge to be released and po
         - external links (e.g. https://arxiv.org/abs/1706.03762)
 
 ## Nice to haves
-- build a simple UI?
 - memory:
     - store previous outputs in local db for persisted memory
     - allow the user to select previous outputs to start from or start a new task

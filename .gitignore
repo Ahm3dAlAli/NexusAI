@@ -9,5 +9,5 @@ dist/
 # env
 .env
 
-# user data
-/data
+# VSCode
+.vscode/
