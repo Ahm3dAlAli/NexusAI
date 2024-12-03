@@ -1,12 +1,13 @@
-# Repo
-- set a more restrictive license
-- move markdown blocks from notebook to readme
-- 'Quickstart' section is made up
-- ahmed pls reference me somewhere :)
-
 # Build with AI hackathon
 
-## Ideas
+We need to wait for the problem statement of our challenge to be released and possibly reframe our solution.
+
+## Todos
+- README (documentation):
+    - Describe the agent (use markdown blocks from original notebook)
+    - Describe the evaluation procedure
+    - 'Quickstart' section is made up
+    - ahmed pls reference me somewhere :)
 - more rigorous analysis with perplexity and copilot or other tools. I think we can find examples where our agent is even better.
     - **we should double down on this since the judges really liked it in the previous hackathon**
     - better explain the metrics and find examples where our agent is even better
@@ -36,7 +37,6 @@
     - allow the user to select previous outputs to start from or start a new task
 
 ## Submission
-- find a mentor?
-- share github repo
+- github repo
 - documentation
-- demo video (let's take more time to make it better than last time)
+- demo video
