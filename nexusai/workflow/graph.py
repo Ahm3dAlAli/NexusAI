@@ -1,10 +1,10 @@
-from typing import Any
 from langgraph.graph import END, StateGraph
 from langgraph.graph.state import CompiledStateGraph
-from langchain_core.messages import BaseMessage, ToolMessage
+from langchain_core.messages import ToolMessage, BaseMessage
 
 from ..models.agent_state import AgentState
 from ..workflow.nodes import WorkflowNodes
+from ..models.outputs import AgentMessage, AgentMessageType
 
 class ResearchWorkflow:
     """Implementation of the research workflow graph."""
@@ -82,33 +82,47 @@ class ResearchWorkflow:
             return "end"
         return "planning"
 
-    async def __astream(self, input: str) -> BaseMessage | None:
-        """Stream the results of the workflow."""
-        # Stream the results 
-        all_messages = []
-        async for chunk in self.workflow.astream({"messages": [input]}, stream_mode="updates"):
-            for updates in chunk.values():
-                if messages := updates.get("messages"):
-                    all_messages.extend(messages)
-                    for message in messages:
-                        if isinstance(message, ToolMessage) and len(message.content) > 1000:
-                            message = ToolMessage(
-                                content=message.content[:1000] + " [...]",
-                                name=message.name,
-                                tool_call_id=message.tool_call_id,
-                            )
-                        message.pretty_print()
-
-        # Return the last message if any
-        if not all_messages:
-            return None
-        return all_messages[-1]
-
-    async def process_query(self, query: str) -> dict[str, Any]:
+    async def process_query(self, query: str, message_callback=None) -> AgentMessage:
         """Process a research query through the workflow."""
         try:
-            final_message = await self.__astream(query)
-            return {"answer": final_message.content or "No answer provided."}
+            all_messages: list[BaseMessage] = []
+            async for chunk in self.workflow.astream({"messages": [query]}, stream_mode="updates"):
+                for updates in chunk.values():
+                    if messages := updates.get("messages"):
+                        all_messages.extend(messages)
+                        for message in messages:
+                            # Truncate long tool messages
+                            if isinstance(message, ToolMessage) and len(message.content) > 1000:
+                                message = ToolMessage(
+                                    content=message.content[:1000] + " [...]",
+                                    name=message.name,
+                                    tool_call_id=message.tool_call_id,
+                                )
+                            
+                            # Send intermediate message if callback is provided
+                            if message_callback:
+                                msg_type = AgentMessageType.tool if isinstance(message, ToolMessage) else AgentMessageType.agent
+                                await message_callback(AgentMessage(
+                                    type=msg_type,
+                                    content=message.content,
+                                    tool_name=getattr(message, "name", None) if isinstance(message, ToolMessage) else None
+                                ))
+
+            # Return final message
+            if not all_messages:
+                return AgentMessage(
+                    type=AgentMessageType.final,
+                    content="No answer provided.",
+                )
+
+            final_message = all_messages[-1]
+            return AgentMessage(
+                type=AgentMessageType.final,
+                content=final_message.content,
+            )
         except Exception as e:
             print(f"Error processing query: {str(e)}")
-            return {"error": str(e)}
+            return AgentMessage(
+                type=AgentMessageType.error,
+                content=str(e),
+            )

@@ -3,6 +3,10 @@
 We need to wait for the problem statement of our challenge to be released and possibly reframe our solution.
 
 ## Todos
+- backend:
+    - handle human feedback through websocket
+- frontend:
+    - build simple NextJS UI
 - README (documentation):
     - Describe the agent (use markdown blocks from original notebook)
     - We should probably go more in depth with the agent description. We should document the code and write what each part does in the README.
@@ -10,7 +14,6 @@ We need to wait for the problem statement of our challenge to be released and po
     - 'Quickstart' section is made up
     - ahmed pls reference me somewhere :)
 - more rigorous analysis with perplexity and copilot or other tools. I think we can find examples where our agent is even better.
-- build a simple UI
 - handle large documents
     - limit time to download
     - limit time with unstructured and opt for a faster strategy (based on number of pages?)

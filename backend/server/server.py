@@ -1,13 +1,10 @@
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
 
 from .websocket_manager import WebSocketManager
+from .models import QueryRequest
 from nexusai.agent import process_query
-
-# Models
-class QueryRequest(BaseModel):
-    query: str
+from nexusai.models.outputs import AgentMessage, AgentMessageType
 
 # FastAPI app
 app = FastAPI()
@@ -32,6 +29,11 @@ async def read_root():
 @app.websocket("/ws")
 async def process_query_websocket(websocket: WebSocket):
     await manager.connect(websocket)
+
+    # Send intermediate messages
+    async def send_intermediate_message(message: AgentMessage):
+        await manager.send_message(message.model_dump(), websocket)
+
     try:
         while True:
             # Receive and validate message
@@ -40,16 +42,18 @@ async def process_query_websocket(websocket: WebSocket):
                 request = QueryRequest(**data)
             except ValueError:
                 await manager.send_message(
-                    {"error": "Invalid request format. Expected {'query': 'your question'}"}, 
+                    AgentMessage(
+                        type=AgentMessageType.error,
+                        content="Invalid request format. Expected {'query': 'your question'}"
+                    ).model_dump(),
                     websocket
                 )
                 continue
 
             # Process the query using the agent's workflow
-            result = await process_query(request.query)
-            await manager.send_message(
-                result, 
-                websocket
-            )
+            result = await process_query(request.query, send_intermediate_message)
+            
+            # Send final message
+            await manager.send_message(result.model_dump(), websocket)
     except WebSocketDisconnect:
         manager.disconnect(websocket)

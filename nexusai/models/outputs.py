@@ -1,3 +1,4 @@
+from enum import StrEnum, auto
 from pydantic import BaseModel, Field
 
 class DecisionMakingOutput(BaseModel):
@@ -10,3 +11,14 @@ class JudgeOutput(BaseModel):
     is_good_answer: bool = Field(description="Whether the answer is good or not.")
     feedback: str | None = Field(default=None, description="Detailed feedback about why the answer is not good. It should be None if the answer is good.")
 
+class AgentMessageType(StrEnum):
+    system = auto()
+    agent = auto()
+    tool = auto()
+    error = auto()
+    final = auto()
+
+class AgentMessage(BaseModel):
+    type: AgentMessageType
+    content: str
+    tool_name: str | None = None 
