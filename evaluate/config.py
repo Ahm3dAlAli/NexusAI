@@ -11,7 +11,7 @@ class ServiceType(Enum):
     """Types of services that can be evaluated."""
     OUR_AGENT = "our_agent"
     PERPLEXITY = "perplexity"
-    ANTHROPIC = "anthropic"
+
 
 @dataclass
 class ServiceConfig:
@@ -29,7 +29,6 @@ class EvalConfig:
     """Evaluation configuration."""
     # API Keys
     PERPLEXITY_API_KEY: str = field(default_factory=lambda: os.getenv("PERPLEXITY_API_KEY", ""))
-    ANTHROPIC_API_KEY: str = field(default_factory=lambda: os.getenv("ANTHROPIC_API_KEY", ""))
     OPENAI_API_KEY: str = field(default_factory=lambda: os.getenv("OPENAI_API_KEY", ""))
     CORE_API_KEY: str = field(default_factory=lambda: os.getenv("CORE_API_KEY", ""))
     
@@ -63,12 +62,8 @@ class EvalConfig:
             model_name="gpt-4o-mini"
         ),
         ServiceType.PERPLEXITY: ServiceConfig(
-            model_name="mixtral-8x7b-instruct",
+            model_name="gpt-4.0-mini",  # Updated model name
             api_key=os.getenv("PERPLEXITY_API_KEY")
-        ),
-        ServiceType.ANTHROPIC: ServiceConfig(
-            model_name="claude-3-opus-20240229",
-            api_key=os.getenv("ANTHROPIC_API_KEY")
         )
     })
     
@@ -97,7 +92,6 @@ class EvalConfig:
         # Validate required API keys
         required_keys = {
             "PERPLEXITY_API_KEY": self.PERPLEXITY_API_KEY,
-            "ANTHROPIC_API_KEY": self.ANTHROPIC_API_KEY,
             "OPENAI_API_KEY": self.OPENAI_API_KEY,
             "CORE_API_KEY": self.CORE_API_KEY
         }

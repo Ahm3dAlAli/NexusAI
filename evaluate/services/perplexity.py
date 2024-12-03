@@ -1,42 +1,28 @@
-
 from typing import Dict, Any
 import requests
 from .base import BaseServiceEvaluator
 
 class PerplexityEvaluator(BaseServiceEvaluator):
-    """Evaluator for Perplexity API."""
+    """Evaluator for simple chat completion using Perplexity API."""
     
     def __init__(self, service_config):
         super().__init__(service_config)
         self.api_key = service_config.api_key
-        self.model = service_config.model_name or "llama-3.1-sonar-small-128k-online"
+        self.model = "llama-3.1-sonar-small-128k-online"
         
     async def query(self, text: str) -> Dict[str, Any]:
-        """Execute a query using Perplexity API."""
+        """Execute a basic chat completion query."""
         url = "https://api.perplexity.ai/chat/completions"
         
         payload = {
             "model": self.model,
             "messages": [
                 {
-                    "role": "system",
-                    "content": "You are a scientific research assistant. Provide detailed, accurate information about scientific papers with proper citations."
-                },
-                {
                     "role": "user",
                     "content": text
                 }
             ],
-            "temperature": 0.2,
-            "top_p": 0.9,
-            "search_domain_filter": ["arxiv.org", "scholar.google.com", "science.org", "nature.com", "sciencedirect.com"],
-            "return_images": False,
-            "return_related_questions": False,
-            "search_recency_filter": "year",  # Focus on recent papers
-            "top_k": 10,  # Get more comprehensive results
-            "stream": False,
-            "presence_penalty": 0,
-            "frequency_penalty": 1
+            "temperature": 0.2
         }
         
         headers = {
@@ -45,18 +31,29 @@ class PerplexityEvaluator(BaseServiceEvaluator):
         }
         
         try:
-            response = requests.post(url, json=payload, headers=headers)
-            response.raise_for_status()
+            print(f"Sending request to Perplexity API...")
+            print(f"Model: {self.model}")
+            print(f"Payload: {payload}")
             
+            response = requests.post(url, json=payload, headers=headers)
+            
+            print(f"Status Code: {response.status_code}")
+            print(f"Response: {response.text}")
+            
+            response.raise_for_status()
             result = response.json()
+            
             return {
                 "answer": result["choices"][0]["message"]["content"],
                 "metadata": {
                     "model_used": self.model,
-                    "finish_reason": result["choices"][0].get("finish_reason"),
-                    "usage": result.get("usage", {})
+                    "usage": result.get("usage", {}),
+                    "citations": result.get("citations", [])
                 }
             }
             
         except Exception as e:
-            raise Exception(f"Error querying Perplexity API: {str(e)}")
+            print(f"Error details: {str(e)}")
+            print(f"Response status: {getattr(response, 'status_code', 'N/A')}")
+            print(f"Response text: {getattr(response, 'text', 'N/A')}")
+            raise Exception(f"Perplexity API error: {str(e)}")

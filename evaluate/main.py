@@ -8,12 +8,11 @@ from pathlib import Path
 import pandas as pd
 
 # Use absolute imports
-from .config import EvalConfig, ServiceType
-from .services.our_agent import OurAgentEvaluator
-from .services.perplexity import PerplexityEvaluator
-from .services.anthropic import AnthropicEvaluator
-from .visualization.plots import plot_comparison_metrics
-from .visualization.reports import generate_report
+from config import EvalConfig, ServiceType
+from services.our_agent import OurAgentEvaluator
+from services.perplexity import PerplexityEvaluator
+from visualization.plots import plot_comparison_metrics
+from visualization.reports import generate_report
 
 class Evaluator:
     """Main evaluation orchestrator."""
@@ -30,54 +29,59 @@ class Evaluator:
 
     def _save_results(self, results: Dict[str, Any]) -> pd.DataFrame:
         """Save raw results and convert to DataFrame."""
-        # Save raw results
-        result_path = Path(f"evaluation_results/results_{self.timestamp}.json")
-        with open(result_path, "w") as f:
-            json.dump(results, f, indent=2)
-
-        # Convert to DataFrame with proper structure
         rows = []
         for service_name, service_results in results.items():
             for result in service_results:
-                # Create base row with service info
+                # Start with base info
                 row = {
                     "service": service_name,
                     "query": result.get("query", ""),
                     "latency": result.get("latency", 0.0),
+                    "success": result.get("success", False),
+                    "answer": result.get("answer", "")
                 }
 
-                # Add metrics if available
-                metrics = {
-                    "quality": result.get("quality_metrics", {}),
-                    "performance": result.get("performance_metrics", {}),
-                    "scientific": result.get("scientific_metrics", {})
-                }
+                # Add performance metrics
+                if "performance_metrics" in result:
+                    for key, value in result["performance_metrics"].items():
+                        row[f"performance_{key}"] = value
 
-                # Flatten metrics into the row
-                for metric_type, metric_values in metrics.items():
-                    if isinstance(metric_values, dict):
-                        for key, value in metric_values.items():
-                            row[f"{metric_type}_{key}"] = value
+                # Add quality metrics
+                if "quality_metrics" in result:
+                    for key, value in result["quality_metrics"].items():
+                        row[f"quality_{key}"] = value
+
+                # Add scientific metrics
+                if "scientific_metrics" in result:
+                    for key, value in result["scientific_metrics"].items():
+                        row[f"scientific_{key}"] = value
 
                 rows.append(row)
 
         # Create DataFrame
         df = pd.DataFrame(rows)
         
+        # Save raw results with all details
+        result_path = Path(f"evaluation_results/results_{self.timestamp}.json")
+        with open(result_path, "w") as f:
+            json.dump(results, f, indent=2)
+
         # Save processed results
         df.to_csv(f"evaluation_results/metrics_{self.timestamp}.csv", index=False)
         
-        print("\nDataFrame columns:", df.columns.tolist())
-        print("\nDataFrame head:")
+        # Debug output
+        print("\nAvailable columns:", df.columns.tolist())
+        print("\nSample data:")
         print(df.head())
         
         return df
 
+    # In evaluate/main.py (update the _analyze_results method)
+
     def _analyze_results(self, df: pd.DataFrame) -> Dict[str, Any]:
-        """Analyze evaluation results."""
+        """Analyze evaluation results across all metrics."""
         analysis = {}
         
-        # Check if DataFrame is empty
         if df.empty:
             print("Warning: No results to analyze")
             return {}
@@ -86,34 +90,56 @@ class Evaluator:
             for service in df["service"].unique():
                 service_df = df[df["service"] == service]
                 
-                # Initialize metrics with guaranteed metrics
+                # Calculate all available metrics
                 metrics = {
-                    "average_latency": service_df["latency"].mean(),
-                    "p95_latency": service_df["latency"].quantile(0.95),
-                    "success_rate": len(service_df) / len(df) * len(df["service"].unique()),
+                    # Performance metrics
+                    "latency_metrics": {
+                        "average_latency": float(service_df["latency"].mean()),
+                        "p95_latency": float(service_df["latency"].quantile(0.95)),
+                        "min_latency": float(service_df["latency"].min()),
+                        "max_latency": float(service_df["latency"].max())
+                    },
+                    
+                    # Quality metrics
+                    "quality_metrics": {
+                        "paper_coverage": float(service_df["quality_paper_coverage"].mean() if "quality_paper_coverage" in service_df else 0),
+                        "temporal_accuracy": float(service_df["quality_temporal_accuracy"].mean() if "quality_temporal_accuracy" in service_df else 0),
+                        "response_completeness": float(service_df["quality_response_completeness"].mean() if "quality_response_completeness" in service_df else 0)
+                    },
+                    
+                    # Scientific metrics
+                    "scientific_metrics": {
+                        "citation_quality": float(service_df["scientific_citation_quality"].mean() if "scientific_citation_quality" in service_df else 0),
+                        "scientific_structure": float(service_df["scientific_scientific_structure"].mean() if "scientific_scientific_structure" in service_df else 0),
+                        "technical_depth": float(service_df["scientific_technical_depth"].mean() if "scientific_technical_depth" in service_df else 0),
+                        "academic_rigor": float(service_df["scientific_academic_rigor"].mean() if "scientific_academic_rigor" in service_df else 0),
+                    },
+                    
+                    # Overall statistics
+                    "success_metrics": {
+                        "success_rate": float(len(service_df[service_df["success"] == True]) / len(service_df)),
+                        "error_rate": float(len(service_df[service_df["success"] == False]) / len(service_df)),
+                        "completion_rate": float(len(service_df[service_df["answer"].str.len() > 0]) / len(service_df)),
+                    }
                 }
                 
-                # Add quality metrics if available
-                metric_mappings = {
-                    "quality_paper_coverage": "paper_coverage",
-                    "quality_citation_quality": "citation_quality",
-                    "scientific_structure": "scientific_accuracy"
+                # Calculate aggregate scores
+                metrics["aggregate_scores"] = {
+                    "overall_quality": sum(metrics["quality_metrics"].values()) / len(metrics["quality_metrics"]),
+                    "scientific_rigor": sum(metrics["scientific_metrics"].values()) / len(metrics["scientific_metrics"]),
+                    "performance_score": 1.0 / (1.0 + metrics["latency_metrics"]["average_latency"]),  # Higher is better
+                    "reliability": (metrics["success_metrics"]["success_rate"] - metrics["success_metrics"]["error_rate"])/metrics["success_metrics"]["success_rate"]
                 }
-                
-                for col, metric_name in metric_mappings.items():
-                    if col in service_df.columns:
-                        try:
-                            metrics[metric_name] = service_df[col].mean()
-                        except Exception as e:
-                            print(f"Warning: Could not calculate {metric_name}: {e}")
                 
                 analysis[service] = metrics
                 
                 # Debug output
-                print(f"\nMetrics calculated for {service}:")
-                for metric, value in metrics.items():
-                    print(f"  {metric}: {value}")
-        
+                print(f"\nDetailed Metrics for {service}:")
+                for category, category_metrics in metrics.items():
+                    print(f"\n{category.replace('_', ' ').title()}:")
+                    for metric_name, value in category_metrics.items():
+                        print(f"  {metric_name}: {value:.3f}")
+                
         except Exception as e:
             print(f"Error analyzing results: {e}")
             print("Available columns:", df.columns.tolist())
@@ -128,8 +154,7 @@ class Evaluator:
         service_config = self.config.SERVICES[service_type]
         service_map = {
             ServiceType.OUR_AGENT: OurAgentEvaluator,
-            ServiceType.PERPLEXITY: PerplexityEvaluator,
-            ServiceType.ANTHROPIC: AnthropicEvaluator
+            ServiceType.PERPLEXITY: PerplexityEvaluator
         }
 
         service = service_map[service_type](service_config)
@@ -153,10 +178,11 @@ class Evaluator:
                 continue
 
         return results
+
     def _display_results(self, analysis: Dict[str, Any]):
-        """Display evaluation results in the console."""
+        """Display comprehensive evaluation results."""
         print("\nEvaluation Results Summary:")
-        print("=" * 50)
+        print("=" * 100)
         
         if not analysis:
             print("\nNo results available for display.")
@@ -164,34 +190,37 @@ class Evaluator:
 
         for service, metrics in analysis.items():
             print(f"\n{service.upper()}:")
+            print("=" * 50)
             
-            # Display latency metrics
-            if "average_latency" in metrics:
-                print(f"  Average Latency: {metrics['average_latency']:.2f}s")
-            if "p95_latency" in metrics:
-                print(f"  95th Percentile Latency: {metrics['p95_latency']:.2f}s")
-            if "success_rate" in metrics:
-                print(f"  Success Rate: {metrics['success_rate']*100:.1f}%")
+            # Aggregate Scores
+            print("\nAggregate Scores:")
+            for metric, value in metrics["aggregate_scores"].items():
+                print(f"  • {metric.replace('_', ' ').title()}: {value*100:.1f}%")
             
-            # Display quality metrics if available
-            if "paper_coverage" in metrics:
-                print(f"  Paper Coverage: {metrics['paper_coverage']*100:.1f}%")
-            if "citation_quality" in metrics:
-                print(f"  Citation Quality: {metrics['citation_quality']*100:.1f}%")
-            if "scientific_accuracy" in metrics:
-                print(f"  Scientific Accuracy: {metrics['scientific_accuracy']*100:.1f}%")
-
-            # Display additional metrics if present
-            additional_metrics = set(metrics.keys()) - {
-                'average_latency', 'p95_latency', 'success_rate',
-                'paper_coverage', 'citation_quality', 'scientific_accuracy'
-            }
-            for metric in additional_metrics:
-                value = metrics[metric]
-                if isinstance(value, (int, float)):
-                    print(f"  {metric.replace('_', ' ').title()}: {value:.2f}")
+            # Performance Metrics
+            print("\nPerformance Metrics:")
+            for metric, value in metrics["latency_metrics"].items():
+                if "latency" in metric:
+                    print(f"  • {metric.replace('_', ' ').title()}: {value:.2f}s")
                 else:
-                    print(f"  {metric.replace('_', ' ').title()}: {value}")
+                    print(f"  • {metric.replace('_', ' ').title()}: {value:.1f}")
+            
+            # Quality Metrics
+            print("\nQuality Metrics:")
+            for metric, value in metrics["quality_metrics"].items():
+                print(f"  • {metric.replace('_', ' ').title()}: {value*100:.1f}%")
+            
+            # Scientific Metrics
+            print("\nScientific Metrics:")
+            for metric, value in metrics["scientific_metrics"].items():
+                print(f"  • {metric.replace('_', ' ').title()}: {value*100:.1f}%")
+            
+            # Success Metrics
+            print("\nSuccess Metrics:")
+            for metric, value in metrics["success_metrics"].items():
+                print(f"  • {metric.replace('_', ' ').title()}: {value*100:.1f}%")
+            
+            print("\n" + "=" * 100)
 
     async def run(self, 
                  services: Optional[List[str]] = None, 

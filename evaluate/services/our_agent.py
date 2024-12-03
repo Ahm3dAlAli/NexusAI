@@ -10,9 +10,9 @@ project_root = str(Path(__file__).parent.parent.parent)
 if project_root not in sys.path:
     sys.path.append(project_root)
 
-from agent.workflow.nodes import WorkflowNodes
-from agent.workflow.graph import ResearchWorkflow
-from agent.tools.functions import setup_tools
+from nexusai.workflow.nodes import WorkflowNodes
+from nexusai.workflow.graph import ResearchWorkflow
+from nexusai.tools.functions import setup_tools
 from .base import BaseServiceEvaluator
 
 class OurAgentEvaluator(BaseServiceEvaluator):
@@ -29,7 +29,7 @@ class OurAgentEvaluator(BaseServiceEvaluator):
         """Execute a query using our agent."""
         try:
             # Process the query using our workflow
-            result = await self.workflow.process_query(text)
+            result = await self.workflow.process_query(text,[])
             
             # Handle error cases
             if "error" in result:
@@ -37,7 +37,7 @@ class OurAgentEvaluator(BaseServiceEvaluator):
                 
             # Return result in standard format
             return {
-                "answer": result.get("answer", "No answer provided"),
+                "answer": result.content,
                 "metadata": {
                     "model_used": "gpt-4o-mini",
                     "tools_used": ["search-papers", "download-paper", "ask-human-feedback"],
