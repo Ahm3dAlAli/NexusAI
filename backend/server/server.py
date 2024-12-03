@@ -18,7 +18,7 @@ manager = WebSocketManager()
 # Middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -30,7 +30,7 @@ async def read_root():
     return "Hello, World!"
 
 @app.websocket("/ws")
-async def process_query(websocket: WebSocket):
+async def process_query_websocket(websocket: WebSocket):
     await manager.connect(websocket)
     try:
         while True:

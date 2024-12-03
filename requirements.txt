@@ -8,4 +8,5 @@ langsmith==0.1.114
 pdfplumber
 python-dotenv
 urllib3
+uvicorn
 websockets==14.1
