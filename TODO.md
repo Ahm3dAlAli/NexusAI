@@ -8,7 +8,6 @@ We need to wait for the problem statement of our challenge to be released and po
     - add some header/logo on top
     - favicon
 - backend:
-    - logger
     - ask follow ups by passing the previous user queries and final answers
 - README (documentation):
     - Describe the agent (use markdown blocks from original notebook)

@@ -4,6 +4,7 @@ import urllib3
 from pydantic import BaseModel, Field
 
 from ..config import CORE_API_KEY, CORE_API_BASE_URL, MAX_RETRIES, RETRY_BASE_DELAY
+from ..utils.logger import logger
 
 class CoreAPIWrapper(BaseModel):
     """Simple wrapper around the CORE API."""
@@ -33,7 +34,10 @@ class CoreAPIWrapper(BaseModel):
                     
                 if attempt < MAX_RETRIES - 1:
                     sleep_time = 60 if response.status == 429 else RETRY_BASE_DELAY ** (attempt + 2)
-                    print(f"Got {response.status} response from CORE API. Sleeping for {sleep_time} seconds before retrying...")
+                    logger.warning(
+                        f"Got {response.status} response from CORE API. "
+                        f"Sleeping for {sleep_time} seconds before retrying..."
+                    )
                     time.sleep(sleep_time)
                 else:
                     raise Exception(

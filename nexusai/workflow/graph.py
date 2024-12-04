@@ -7,6 +7,7 @@ from langchain_core.messages import ToolMessage, BaseMessage
 from ..models.agent_state import AgentState
 from ..workflow.nodes import WorkflowNodes
 from ..models.outputs import AgentMessage, AgentMessageType
+from ..utils.logger import logger
 
 class ResearchWorkflow:
     """Implementation of the research workflow graph."""
@@ -135,7 +136,7 @@ class ResearchWorkflow:
                                     tool_name=message.name if msg_type == AgentMessageType.tool else None
                                 ))
                             
-                            message.pretty_print()
+                            logger.info(f"New message:\n{message.json(indent=2)}")
 
             # Return final message
             if not all_messages:
@@ -150,7 +151,7 @@ class ResearchWorkflow:
                 content=final_message.content,
             )
         except Exception as e:
-            print(f"Error processing query: {str(e)}")
+            logger.error(f"Error processing query: {str(e)}")
             return AgentMessage(
                 type=AgentMessageType.error,
                 content=str(e),
