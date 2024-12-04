@@ -2,13 +2,15 @@ import io
 import time
 import urllib3
 import pdfplumber
-from typing import List
-
 from langchain_core.tools import tool, BaseTool
 
 from ..config import MAX_RETRIES, RETRY_BASE_DELAY
 from .core_api import CoreAPIWrapper
 from ..models.inputs import SearchPapersInput
+
+# Disable warnings for insecure requests
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
 
 @tool("search-papers", args_schema=SearchPapersInput)
 def search_papers(query: str, max_papers: int = 1) -> str:
@@ -64,24 +66,9 @@ def download_paper(url: str) -> str:
     except Exception as e:
         return f"Error downloading paper: {e}"
 
-@tool("ask-human-feedback")
-def ask_human_feedback(question: str) -> str:
-    """You must call this tool when encountering unexpected errors or don't know how to proceed.
-    The question must be in the same language as the user query.
-    
-    Example:
-    After encountering an error downloading a paper, you call this tool with the following input:
-    {"question": "There seems to be an issue downloading the paper with the given URL, how should I proceed?"}
-    
-    Returns:
-        Further instructions from the human.
-    """
-    return input(question)
-
-def setup_tools() -> List[BaseTool]:
+def setup_tools() -> list[BaseTool]:
     """Setup and return the list of available tools."""
     return [
         search_papers,
-        download_paper,
-        ask_human_feedback
+        download_paper
     ]

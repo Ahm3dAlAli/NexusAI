@@ -37,7 +37,7 @@ async def process_query_websocket(websocket: WebSocket):
     try:
         while True:
             # Receive and validate message
-            data = await websocket.receive_json()
+            data = await manager.receive_message(websocket)
             try:
                 request = QueryRequest(**data)
             except ValueError:
@@ -51,8 +51,11 @@ async def process_query_websocket(websocket: WebSocket):
                 continue
 
             # Process the query using the agent's workflow
-            result = await process_query(request.query, send_intermediate_message)
-            
+            result: AgentMessage = await process_query(
+                query=request.query,
+                message_callback=send_intermediate_message
+            )
+
             # Send final message
             await manager.send_message(result.model_dump(), websocket)
     except WebSocketDisconnect:

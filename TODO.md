@@ -3,8 +3,6 @@
 We need to wait for the problem statement of our challenge to be released and possibly reframe our solution.
 
 ## Todos
-- backend:
-    - handle human feedback through websocket
 - frontend:
     - build simple NextJS UI
 - README (documentation):

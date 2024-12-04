@@ -16,3 +16,7 @@ class WebSocketManager:
     async def send_message(self, data: dict, websocket: WebSocket):
         """Sends data to a specific WebSocket connection."""
         await websocket.send_json(data)
+
+    async def receive_message(self, websocket: WebSocket) -> dict:
+        """Receives data from a specific WebSocket connection."""
+        return await websocket.receive_json()

@@ -91,6 +91,9 @@ class ResearchWorkflow:
                     if messages := updates.get("messages"):
                         all_messages.extend(messages)
                         for message in messages:
+                            if not message.content:
+                                continue
+
                             # Truncate long tool messages
                             if isinstance(message, ToolMessage) and len(message.content) > 1000:
                                 message = ToolMessage(
@@ -105,8 +108,10 @@ class ResearchWorkflow:
                                 await message_callback(AgentMessage(
                                     type=msg_type,
                                     content=message.content,
-                                    tool_name=getattr(message, "name", None) if isinstance(message, ToolMessage) else None
+                                    tool_name=message.name
                                 ))
+                            
+                            message.pretty_print()
 
             # Return final message
             if not all_messages:
