@@ -78,7 +78,7 @@ body {
 }
 
 .message-user {
-  @apply bg-blue-100 ml-auto rounded-2xl rounded-tr-sm break-words max-w-[50%];
+  @apply bg-blue-100 ml-auto rounded-2xl break-words max-w-[50%] py-2 px-4;
 }
 
 .message-ai {
@@ -96,19 +96,19 @@ body {
 
 /* Headers */
 .message-content h1 {
-  @apply text-2xl font-bold mt-6 mb-4;
+  @apply text-2xl font-bold mt-2 mb-2;
 }
 
 .message-content h2 {
-  @apply text-xl font-bold mt-5 mb-3;
+  @apply text-xl font-bold mt-2 mb-2;
 }
 
 .message-content h3 {
-  @apply text-lg font-bold mt-4 mb-2;
+  @apply text-lg font-bold mt-2 mb-2;
 }
 
 .message-content h4 {
-  @apply text-base font-bold mt-3 mb-2;
+  @apply text-base font-bold mt-2 mb-2;
 }
 
 /* Lists */

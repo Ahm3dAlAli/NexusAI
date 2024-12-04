@@ -95,7 +95,7 @@ class ResearchWorkflow:
 
     def __build_content_from_tool_calls(self, message: BaseMessage) -> str:
         """Build the content from tool calls."""
-        content = "**Tool calls:**\n\n"
+        content = "Calling the following tools:\n\n"
         tool_calls_strs = []
         for tool_call in message.tool_calls:
             tool_calls_strs.append(
