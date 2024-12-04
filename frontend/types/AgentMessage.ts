@@ -1,5 +1,6 @@
 export enum AgentMessageType {
     system = "system",
+    human = "human",
     agent = "agent",
     tool = "tool",
     error = "error",

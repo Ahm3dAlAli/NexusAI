@@ -2,7 +2,7 @@ import json
 
 from langgraph.graph import END, StateGraph
 from langgraph.graph.state import CompiledStateGraph
-from langchain_core.messages import ToolMessage, BaseMessage, AIMessage
+from langchain_core.messages import ToolMessage, BaseMessage
 
 from ..models.agent_state import AgentState
 from ..workflow.nodes import WorkflowNodes
@@ -86,15 +86,17 @@ class ResearchWorkflow:
 
     def __infer_message_type(self, message: BaseMessage) -> AgentMessageType:
         """Infer the type of message based on the message content."""
-        if message.type == "tool":
-            return AgentMessageType.tool
-        elif message.type in ["system", "human"]:
+        if message.type == "system":
             return AgentMessageType.system
+        elif message.type == "human":
+            return AgentMessageType.human
         elif message.type == "ai":
             return AgentMessageType.agent
+        elif message.type == "tool":
+            return AgentMessageType.tool
 
     def __build_content_from_tool_calls(self, message: BaseMessage) -> str:
-        """Build the content from tool calls."""
+        """Build the message content from tool calls."""
         content = "Calling the following tools:\n\n"
         tool_calls_strs = []
         for tool_call in message.tool_calls:
@@ -116,7 +118,7 @@ class ResearchWorkflow:
                             # Truncate long tool messages
                             if isinstance(message, ToolMessage) and len(message.content) > 1000:
                                 message = ToolMessage(
-                                    content=message.content[:1000] + " [...]",
+                                    content=message.content[:1000] + "[...]",
                                     name=message.name,
                                     tool_call_id=message.tool_call_id,
                                 )

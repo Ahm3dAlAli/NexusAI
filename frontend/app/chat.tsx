@@ -7,8 +7,16 @@ import ReactMarkdown from 'react-markdown'
 import { AgentMessage, AgentMessageType } from '@/types/AgentMessage'
 import { Copy } from "lucide-react"
 
-const MarkdownLink = ({ href, children }: { href?: string, children: React.ReactNode }) => {
-  return <a href={href} target="_blank" rel="noopener noreferrer">{children}</a>
+const MarkdownLink = ({
+  href,
+  children,
+  ...props
+}: React.AnchorHTMLAttributes<HTMLAnchorElement>) => {
+  return (
+    <a href={href} target="_blank" rel="noopener noreferrer" {...props}>
+      {children}
+    </a>
+  )
 }
 
 export default function Chat() {
@@ -56,7 +64,7 @@ export default function Chat() {
     if (input.trim() === '' || aiTyping) return
 
     const userMessage: AgentMessage = {
-      type: AgentMessageType.system,
+      type: AgentMessageType.human,
       content: input.trim(),
     }
 
@@ -70,12 +78,14 @@ export default function Chat() {
 
   const getEmoji = (type: AgentMessageType) => {
     switch(type) {
+      case AgentMessageType.system:
+        return '⚙️'
+      case AgentMessageType.human:
+        return '👤'
       case AgentMessageType.agent:
         return '🤖'
       case AgentMessageType.tool:
-        return '⚙️'
-      case AgentMessageType.system:
-        return '👤'
+        return '🛠️'
       case AgentMessageType.error:
         return '❌'
       default:
@@ -98,7 +108,7 @@ export default function Chat() {
           if (
             m.type === AgentMessageType.final &&
             index >= 2 &&
-            messages[index - 2].type === AgentMessageType.system &&
+            messages[index - 2].type === AgentMessageType.human &&
             messages[index - 1].type === AgentMessageType.agent
           ) {
             return null;
@@ -132,14 +142,14 @@ export default function Chat() {
             <div
               key={index}
               className={`p-4 ${
-                m.type === AgentMessageType.system ? 'message-user' : 'message-ai'
+                m.type === AgentMessageType.human ? 'message-user' : 'message-ai'
               } max-w-[80%] flex`}
             >
               <span className="mr-2 text-xl mt-[6px]">{getEmoji(m.type)}</span>
               {m.type === AgentMessageType.tool ? (
                 <div className="flex flex-col w-full">
                   {m.tool_name && (
-                    <div className="font-bold mb-2 pb-2 border-b">{m.tool_name}</div>
+                    <div className="font-bold mt-2 mb-2 pb-2 border-b">{m.tool_name}</div>
                   )}
                   <div className="message-content">
                     <ReactMarkdown components={{ a: MarkdownLink }}>{m.content}</ReactMarkdown>
@@ -155,7 +165,7 @@ export default function Chat() {
         })}
         {aiTyping && (
           <div className="bg-gray-100 p-4 rounded-lg max-w-[80%] flex items-center">
-            <div className="animate-pulse">💭 Working on it...</div>
+            <div>💭 Thinking...</div>
           </div>
         )}
       </div>

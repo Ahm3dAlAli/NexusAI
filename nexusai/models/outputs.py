@@ -13,6 +13,7 @@ class JudgeOutput(BaseModel):
 
 class AgentMessageType(StrEnum):
     system = auto()
+    human = auto()
     agent = auto()
     tool = auto()
     error = auto()
