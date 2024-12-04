@@ -2,7 +2,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from backend.server.server import app
+from server.server import app
 
 if __name__ == "__main__":
     import uvicorn
