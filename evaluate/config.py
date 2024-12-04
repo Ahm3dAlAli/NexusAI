@@ -31,7 +31,6 @@ class EvalConfig:
     PERPLEXITY_API_KEY: str = field(default_factory=lambda: os.getenv("PERPLEXITY_API_KEY", ""))
     ANTHROPIC_API_KEY: str = field(default_factory=lambda: os.getenv("ANTHROPIC_API_KEY", ""))
     OPENAI_API_KEY: str = field(default_factory=lambda: os.getenv("OPENAI_API_KEY", ""))
-    GROQ_API_KEY: str = field(default_factory=lambda: os.getenv("GROQ_API_KEY", ""))
     CORE_API_KEY: str = field(default_factory=lambda: os.getenv("CORE_API_KEY", ""))
     
     # Test queries with expected results
@@ -61,7 +60,7 @@ class EvalConfig:
     # Service configurations
     SERVICES: Dict[ServiceType, ServiceConfig] = field(default_factory=lambda: {
         ServiceType.OUR_AGENT: ServiceConfig(
-            model_name="groq-llama-3.1-70b + gpt-4o-mini"
+            model_name="gpt-4o-mini"
         ),
         ServiceType.PERPLEXITY: ServiceConfig(
             model_name="mixtral-8x7b-instruct",
@@ -100,7 +99,6 @@ class EvalConfig:
             "PERPLEXITY_API_KEY": self.PERPLEXITY_API_KEY,
             "ANTHROPIC_API_KEY": self.ANTHROPIC_API_KEY,
             "OPENAI_API_KEY": self.OPENAI_API_KEY,
-            "GROQ_API_KEY": self.GROQ_API_KEY,
             "CORE_API_KEY": self.CORE_API_KEY
         }
         

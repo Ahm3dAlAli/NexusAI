@@ -39,7 +39,7 @@ class OurAgentEvaluator(BaseServiceEvaluator):
             return {
                 "answer": result.get("answer", "No answer provided"),
                 "metadata": {
-                    "model_used": "groq-llama-3.1-70b + gpt-4o-mini",
+                    "model_used": "gpt-4o-mini",
                     "tools_used": ["search-papers", "download-paper", "ask-human-feedback"],
                 }
             }

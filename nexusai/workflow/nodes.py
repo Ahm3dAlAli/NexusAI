@@ -2,7 +2,6 @@ from typing import Any
 from langchain_core.messages import SystemMessage, AIMessage, ToolMessage
 from langchain_core.tools import BaseTool
 from langchain_openai import ChatOpenAI
-from langchain_groq import ChatGroq
 
 from ..config import MAX_FEEDBACK_REQUESTS
 from ..models.agent_state import AgentState
@@ -23,18 +22,14 @@ class WorkflowNodes:
         self.tools_dict = {tool.name: tool for tool in tools}
         
         # Initialize base LLMs
-        self.__groq_llm = ChatGroq(
-            model="llama-3.1-70b-versatile",
-            temperature=0.0
-        )
         self.__openai_llm = ChatOpenAI(
             model="gpt-4o-mini",
             temperature=0.0
         )
 
         # Workflow LLMs
-        self.planning_llm = self.__groq_llm
-        self.decision_making_llm = self.__groq_llm.with_structured_output(
+        self.planning_llm = self.__openai_llm
+        self.decision_making_llm = self.__openai_llm.with_structured_output(
             DecisionMakingOutput
         )
         self.agent_llm = self.__openai_llm.bind_tools(tools)

@@ -6,11 +6,10 @@ load_dotenv()
 
 # LLMs
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-if not OPENAI_API_KEY or not GROQ_API_KEY:
+if not OPENAI_API_KEY:
     raise ValueError(
-        "OPENAI_API_KEY or GROQ_API_KEY environment variable is not set. "
-        "Please set them both in your .env file."
+        "OPENAI_API_KEY environment variable is not set. "
+        "Please set it in your .env file."
     )
 
 # CORE API Configuration
