@@ -76,3 +76,87 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+.message-user {
+  @apply bg-blue-100 ml-auto rounded-2xl rounded-tr-sm break-words max-w-[50%];
+}
+
+.message-ai {
+  @apply bg-gray-100 mr-auto rounded-2xl rounded-tl-sm break-words;
+}
+
+/* Add styles for markdown content */
+.message-content {
+  @apply min-w-[60px] max-w-full;
+}
+
+.message-content > * {
+  @apply overflow-x-auto;
+}
+
+/* Headers */
+.message-content h1 {
+  @apply text-2xl font-bold mt-6 mb-4;
+}
+
+.message-content h2 {
+  @apply text-xl font-bold mt-5 mb-3;
+}
+
+.message-content h3 {
+  @apply text-lg font-bold mt-4 mb-2;
+}
+
+.message-content h4 {
+  @apply text-base font-bold mt-3 mb-2;
+}
+
+/* Lists */
+.message-content ul {
+  @apply list-disc pl-6 my-3;
+}
+
+.message-content ol {
+  @apply list-decimal pl-6 my-3;
+}
+
+.message-content li {
+  @apply my-1;
+}
+
+/* Paragraphs and spacing */
+.message-content p {
+  @apply my-3;
+}
+
+.message-content p + p {
+  @apply mt-4; /* Adds more space between consecutive paragraphs */
+}
+
+/* Code blocks */
+.message-content pre {
+  @apply my-2 p-3 bg-gray-800 text-white rounded-lg;
+}
+
+.message-content code {
+  @apply font-mono text-sm;
+}
+
+/* Inline code */
+.message-content :not(pre) > code {
+  @apply bg-gray-100 px-1.5 py-0.5 rounded text-sm;
+}
+
+/* Links */
+.message-content a {
+  @apply text-blue-600 hover:text-blue-800 underline;
+}
+
+/* Final message styling */
+.final-message {
+  @apply ml-4 mr-auto max-w-[80%] text-gray-700 relative pr-10;
+}
+
+.final-message .message-content {
+  @apply min-w-[60px] max-w-full;
+}

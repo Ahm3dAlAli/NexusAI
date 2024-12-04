@@ -1,6 +1,8 @@
+import json
+
 from langgraph.graph import END, StateGraph
 from langgraph.graph.state import CompiledStateGraph
-from langchain_core.messages import ToolMessage, BaseMessage
+from langchain_core.messages import ToolMessage, BaseMessage, AIMessage
 
 from ..models.agent_state import AgentState
 from ..workflow.nodes import WorkflowNodes
@@ -82,6 +84,26 @@ class ResearchWorkflow:
             return "end"
         return "planning"
 
+    def __infer_message_type(self, message: BaseMessage) -> AgentMessageType:
+        """Infer the type of message based on the message content."""
+        if message.type == "tool":
+            return AgentMessageType.tool
+        elif message.type in ["system", "human"]:
+            return AgentMessageType.system
+        elif message.type == "ai":
+            return AgentMessageType.agent
+
+    def __build_content_from_tool_calls(self, message: BaseMessage) -> str:
+        """Build the content from tool calls."""
+        content = "**Tool calls:**\n\n"
+        tool_calls_strs = []
+        for tool_call in message.tool_calls:
+            tool_calls_strs.append(
+                f"- **Tool name:** {tool_call['name']}\n"
+                f"- **Args:** {json.dumps(tool_call['args'])}\n"
+            )
+        return content + "\n---\n".join(tool_calls_strs)
+
     async def process_query(self, query: str, message_callback=None) -> AgentMessage:
         """Process a research query through the workflow."""
         try:
@@ -91,9 +113,6 @@ class ResearchWorkflow:
                     if messages := updates.get("messages"):
                         all_messages.extend(messages)
                         for message in messages:
-                            if not message.content:
-                                continue
-
                             # Truncate long tool messages
                             if isinstance(message, ToolMessage) and len(message.content) > 1000:
                                 message = ToolMessage(
@@ -101,14 +120,17 @@ class ResearchWorkflow:
                                     name=message.name,
                                     tool_call_id=message.tool_call_id,
                                 )
-                            
+
+                            if not message.content:
+                                message.content = self.__build_content_from_tool_calls(message)
+
                             # Send intermediate message if callback is provided
                             if message_callback:
-                                msg_type = AgentMessageType.tool if isinstance(message, ToolMessage) else AgentMessageType.agent
+                                msg_type = self.__infer_message_type(message)
                                 await message_callback(AgentMessage(
                                     type=msg_type,
                                     content=message.content,
-                                    tool_name=message.name
+                                    tool_name=message.name if msg_type == AgentMessageType.tool else None
                                 ))
                             
                             message.pretty_print()

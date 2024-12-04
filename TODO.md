@@ -4,7 +4,8 @@ We need to wait for the problem statement of our challenge to be released and po
 
 ## Todos
 - frontend:
-    - build simple NextJS UI
+    - improve colors
+    - user text area
 - README (documentation):
     - Describe the agent (use markdown blocks from original notebook)
     - We should probably go more in depth with the agent description. We should document the code and write what each part does in the README.
