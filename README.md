@@ -88,7 +88,7 @@ review = assistant.literature_review("quantum computing", year_range=(2023, 2024
 Evaluation using MacOS zsh
 
 ```python
-python path/run_evaluation.py --services our_agent perplexity --interactive
+python evaluate/run_evaluation.py --services  perplexity --interactive
 ```
 
 ## Use Cases
