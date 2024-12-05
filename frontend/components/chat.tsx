@@ -31,7 +31,7 @@ export default function Chat() {
         ))}
         {aiTyping && (
           <div className="bg-gray-100 p-4 rounded-lg max-w-[80%]">
-            <div className="animate-pulse">AI is typing...</div>
+            <div className="animate-pulse">Typing...</div>
           </div>
         )}
       </div>

@@ -20,7 +20,7 @@ body {
     --card-foreground: 0 0% 3.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 3.9%;
-    --primary: 0 0% 9%;
+    --primary: 220 60% 20%;
     --primary-foreground: 0 0% 98%;
     --secondary: 0 0% 96.1%;
     --secondary-foreground: 0 0% 9%;
@@ -39,6 +39,22 @@ body {
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
+    --secondary-glow: conic-gradient(
+      from 10deg at 50% 50%,
+      hsl(220 60% 20%) 0deg,
+      hsl(220 60% 25%) 55deg,
+      hsl(220 60% 30%) 120deg,
+      hsl(220 60% 35%) 160deg,
+      transparent 360deg
+    );
+    --third-glow: conic-gradient(
+      from 90deg at 50% 50%,
+      hsl(220 60% 25%) 0deg,
+      hsl(220 60% 30%) 160deg,
+      hsl(220 60% 35%) 120deg,
+      hsl(220 60% 40%) 55deg,
+      transparent 360deg
+    );
   }
   .dark {
     --background: 0 0% 3.9%;
@@ -47,8 +63,8 @@ body {
     --card-foreground: 0 0% 98%;
     --popover: 0 0% 3.9%;
     --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
+    --primary: 220 60% 20%;
+    --primary-foreground: 0 0% 98%;
     --secondary: 0 0% 14.9%;
     --secondary-foreground: 0 0% 98%;
     --muted: 0 0% 14.9%;
@@ -75,14 +91,6 @@ body {
   body {
     @apply bg-background text-foreground;
   }
-}
-
-.message-user {
-  @apply bg-blue-100 ml-auto rounded-2xl break-words max-w-[50%] py-2 px-4;
-}
-
-.message-ai {
-  @apply bg-gray-100 mr-auto rounded-2xl rounded-tl-sm break-words;
 }
 
 /* Add styles for markdown content */
@@ -159,4 +167,44 @@ body {
 
 .final-message .message-content {
   @apply min-w-[60px] max-w-full;
+}
+
+/* Hide scrollbar but keep functionality */
+.flex-1.overflow-y-auto {
+  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none;  /* Internet Explorer and Edge */
+}
+
+.flex-1.overflow-y-auto::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari and Opera */
+}
+
+/* Add these styles at the end of the file */
+body::before,
+body::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  opacity: 0.2;
+}
+
+body::before {
+  background: var(--third-glow);
+  border-radius: 50%;
+  width: 50vw;
+  height: 50vw;
+  margin-left: -200px;
+  filter: blur(120px);
+  top: calc(50vh - 50vw/2);
+  left: calc(50vw);
+}
+
+body::after {
+  background: var(--secondary-glow);
+  border-radius: 50%;
+  width: 500px;
+  height: 700px;
+  filter: blur(120px);
+  top: calc(50vh - 50vw/2);
+  left: calc(50vw - 50vw/2);
 }
