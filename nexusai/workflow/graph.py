@@ -107,11 +107,11 @@ class ResearchWorkflow:
             )
         return content + "\n---\n".join(tool_calls_strs)
 
-    async def process_query(self, query: str, message_callback=None) -> AgentMessage:
+    async def process_query(self, query: str, messages: list[BaseMessage], message_callback=None) -> AgentMessage:
         """Process a research query through the workflow."""
         try:
             all_messages: list[BaseMessage] = []
-            async for chunk in self.workflow.astream({"messages": [query]}, stream_mode="updates"):
+            async for chunk in self.workflow.astream({"messages": messages + [query]}, stream_mode="updates"):
                 for updates in chunk.values():
                     if messages := updates.get("messages"):
                         all_messages.extend(messages)

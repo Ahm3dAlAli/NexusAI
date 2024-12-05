@@ -28,12 +28,11 @@ async def read_root():
 
 @app.websocket("/ws")
 async def process_query_websocket(websocket: WebSocket):
-    await manager.connect(websocket)
-
-    # Send intermediate messages
     async def send_intermediate_message(message: AgentMessage):
         await manager.send_message(message.model_dump(), websocket)
 
+    await manager.connect(websocket)
+    history = []
     try:
         while True:
             # Receive and validate message
@@ -53,8 +52,11 @@ async def process_query_websocket(websocket: WebSocket):
             # Process the query using the agent's workflow
             result: AgentMessage = await process_query(
                 query=request.query,
+                history=history,
                 message_callback=send_intermediate_message
             )
+            history.append(AgentMessage(type=AgentMessageType.human, content=request.query))
+            history.append(result)
 
             # Send final message
             await manager.send_message(result.model_dump(), websocket)
