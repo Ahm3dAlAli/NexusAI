@@ -1,37 +1,37 @@
-# NexusAI
+# 🤖 NexusAI 📚
 
 <div align="center">
 <img src="path-to-your-logo.svg" alt="NexusAI Logo" width="100">
 
 [![GitHub stars](https://img.shields.io/github/stars/yourusername/nexusai.svg?style=social)](https://github.com/Ahm3dAlAli/NexusAI)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![GitHub Discussions](https://img.shields.io/badge/Discussions-Q%26A-green?logo=github)](https://github.com/yourusername/nexusai/discussions)
 
 </div>
 
 > [!IMPORTANT]
 > - 🏆 (11/26/24) Winner of the Agent Craft Hackathon hosted by Dimant AI x Langchain!
-> - 📚 Built using LangGraph and advanced LLMs for state-driven scientific paper analysis
-> - 🔍 Integrated with CORE API for access to 136M+ academic papers
-> - 🤝 Join our growing community of researchers and contributors
+> - 📰 Featured in [DiamantAI's newsletter](https://diamantai.substack.com/p/nexus-ai-the-revolutionary-research) with a comprehensive deep-dive into our architecture and impact on research efficiency.
 
 NexusAI is an intelligent research assistant that transforms how researchers interact with scientific literature. It streamlines the paper analysis process through state-driven workflows, advanced language models, and sophisticated validation mechanisms.
 
-- [Key Features](#key-features)
+### Why NexusAI?
+
+**TODO**: Describe our value prop + present overview of main results that frame us as better of perplexity.
+
+### Demo
+
+**TODO**: Add a demo video
+
+## Table of Contents
+
 - [Architecture](#architecture)
-- [Quickstart](#quickstart)
+- [Features](#features)
+- [Getting Started](#getting-started)
 - [Use Cases](#use-cases)
-- [Contributing](#contributing)
-
-## Key Features
-
-NexusAI offers the following key capabilities:
-
-- **State-Driven Analysis**: Five-node system for orchestrated research with validation gates
-- **Comprehensive Processing**: Automated paper retrieval, content extraction, and structure analysis
-- **Quality Focused**: Multi-step validation and improvement cycles
-- **Human-in-the-Loop**: Flexible validation options for critical research tasks
-- **Academic Integration**: Direct access to 136M+ papers through CORE API
+- [Evaluation](#evaluation)
+- [License](#license)
+- [Acknowledgments](#acknowledgments)
+- [Contact](#contact)
 
 ## Architecture
 
@@ -56,42 +56,29 @@ NexusAI is built upon a layered architecture with three main components:
 - Quality improvement cycles
 - Human validation options
 
-## Quickstart
+## Features
 
-First install the required packages:
+NexusAI offers the following key capabilities:
 
-```bash
-pip install requirements.txt
-```
+- **State-Driven Analysis**: Five-node system for orchestrated research with validation gates
+- **Comprehensive Processing**: Automated paper retrieval, content extraction, and structure analysis
+- **Quality Focused**: Multi-step validation and improvement cycles
+- **Human-in-the-Loop**: Flexible validation options for critical research tasks
+- **Academic Integration**: Direct access to 136M+ papers through CORE API
 
-Set up your environment variables:
+## ⚙️ Getting Started
 
-```python
+### Installation
 
-```
+**TODO**
 
-Basic usage example:
+### Run with Docker
 
-```python
-from nexusai import ResearchAssistant
-
-# Initialize the research assistant
-assistant = ResearchAssistant()
-
-# Analyze a research paper
-results = assistant.analyze_paper("paper_url_or_query")
-
-# Run a literature review
-review = assistant.literature_review("quantum computing", year_range=(2023, 2024))
-```
-
-Evaluation using MacOS zsh
-
-```python
-python evaluate/run_evaluation.py --services  perplexity --interactive
-```
+**TODO**
 
 ## Use Cases
+
+**TODO**
 
 ### 1. Academic Research
 - Literature review and synthesis
@@ -110,22 +97,43 @@ python evaluate/run_evaluation.py --services  perplexity --interactive
 - Learning resource identification
 - Research methodology training
 
-
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Acknowledgments
 
-- Thanks to Dimant AI and Langchain for hosting the Agent Craft Hackathon
-- Special thanks to CORE API for enabling academic paper access
-- Thanks to our amazing community of contributors
+We would like to thank Dimant AI and Langchain for hosting the Agent Craft Hackathon. Special thanks to CORE API for enabling academic paper access. We are also grateful to our amazing community of contributors.
 
 ## Contact
 
-- GitHub Issues: For bug reports and feature requests
-- GitHub Discussions: For general questions and discussions
+<table>
+  <tr>
+    <td align="center">
+      <a href="https://github.com/Ahm3dAlAli">
+        <img src="https://avatars.githubusercontent.com/u/84172381?v=4" width="100px;" alt="Ahmed Al Ali"/><br />
+        <sub><b>Ahmed Al Ali</b></sub>
+      </a><br />
+      <a href="https://www.linkedin.com/in/ahmed-a-295933211/" title="LinkedIn">
+        <img src="https://img.shields.io/badge/-LinkedIn-0A66C2?style=flat&logo=linkedin" />
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://github.com/vincenzofanizza">
+        <img src="https://avatars.githubusercontent.com/u/104767369?v=4" width="100px;" alt="Vincenzo Fanizza"/><br />
+        <sub><b>Vincenzo Fanizza</b></sub>
+      </a><br />
+      <a href="https://www.linkedin.com/in/vincenzo-fanizza/" title="LinkedIn">
+        <img src="https://img.shields.io/badge/-LinkedIn-0A66C2?style=flat&logo=linkedin" />
+      </a>
+    </td>
+  </tr>
+</table>
 
+Feel free to reach out to us for questions, suggestions, or contributions! You can also:
+
+- 🐛 [Open an issue](https://github.com/Ahm3dAlAli/NexusAI/issues)
+- 🔧 [Submit a PR](https://github.com/Ahm3dAlAli/NexusAI/pulls)
 
 <p align="right">
 <a href="#nexusai">↑ Back to Top</a>
