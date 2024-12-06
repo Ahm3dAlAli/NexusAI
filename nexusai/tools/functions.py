@@ -37,7 +37,10 @@ def download_paper(url: str) -> str:
     Returns:
         The paper content.
     """
-    try:        
+    try:
+        # Make sure arxiv urls are correctly formatted
+        url = url.replace("arxiv.org/abs/", "arxiv.org/pdf/")
+
         http = urllib3.PoolManager(
             cert_reqs='CERT_NONE',
         )

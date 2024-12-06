@@ -74,12 +74,17 @@ Here are the relevant fields of a paper object you can use to filter the results
   "yearPublished": "2019"
 }
 
-Example queries:
-- "machine learning AND yearPublished:2023"
-- "maritime biology AND yearPublished>=2023 AND yearPublished<=2024"
-- "cancer research AND authors:Vaswani, Ashish AND authors:Bello, Irwan"
-- "title:Attention is all you need"
-- "mathematics AND _exists_:abstract"
+Examples:
+- Search for papers about machine learning published in 2023: 
+  "machine learning AND yearPublished:2023"
+- Search for papers about maritime biology published in 2023 or 2024: 
+  "maritime biology AND yearPublished>=2023 AND yearPublished<=2024"
+- Search for papers about cancer research by authors Ashish Vaswani and Irwan Bello:
+  "cancer research AND authors:Vaswani, Ashish AND authors:Bello, Irwan"
+- Search for the paper "Attention is all you need":
+  "title:Attention is all you need"
+- Search for papers on mathematics with an abstract:
+  "mathematics AND _exists_:abstract"
 """
 
 # Prompt for the judging step to evaluate the quality of the final answer
