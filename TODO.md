@@ -7,6 +7,13 @@
     - gemini flash 8b
     - llama 3.1 70b berkeley
 - expand search engine (use other APIs)
+    - Google Scholar
+    - CORE
+    - semantic scholar
+    - arxiv
+    - PubMed
+    - Web of Science
+    We need to be able to find ANY paper we can think of. Maybe we don't need all of them maybe we need more.
 - add more params to config
 - handle large documents
     - limit time with unstructured and opt for a faster strategy (based on number of pages?)
