@@ -1,4 +1,4 @@
-# 🤖 NexusAI 📚
+# NexusAI
 
 <div align="center">
 <img src="frontend/app/favicon.ico" alt="NexusAI Logo" width="100">
@@ -9,8 +9,8 @@
 </div>
 
 > [!IMPORTANT]
-> - 📰 (12/03/24) Featured in [DiamantAI's newsletter](https://diamantai.substack.com/p/nexus-ai-the-revolutionary-research) with a comprehensive deep-dive into our architecture and impact on research efficiency.
-> - 🏆 (11/26/24) Winner of the Agent Craft Hackathon hosted by Dimant AI x Langchain!
+> - 📰 **[12/03/24]** Featured in [DiamantAI's newsletter](https://diamantai.substack.com/p/nexus-ai-the-revolutionary-research) with a comprehensive deep-dive into our architecture and impact on research efficiency.
+> - 🏆 **[11/26/24]** Winner of the Agent Craft Hackathon hosted by Dimant AI x Langchain!
 
 NexusAI is an intelligent research assistant that transforms how researchers interact with scientific literature. It streamlines the paper analysis process through state-driven workflows, advanced language models, and sophisticated validation mechanisms.
 
