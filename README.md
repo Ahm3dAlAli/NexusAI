@@ -35,6 +35,7 @@ NexusAI is an intelligent research assistant that transforms how researchers int
 
 ## Architecture
 
+**TODO**: Add diagram and describe architecture in detail.
 NexusAI is built upon a layered architecture with three main components:
 
 ### 1. Workflow Engine
@@ -58,6 +59,7 @@ NexusAI is built upon a layered architecture with three main components:
 
 ## Features
 
+**TODO**: Describe features in detail.
 NexusAI offers the following key capabilities:
 
 - **State-Driven Analysis**: Five-node system for orchestrated research with validation gates
