@@ -5,7 +5,7 @@ from .websocket_manager import WebSocketManager
 from .models import QueryRequest
 from nexusai.agent import process_query
 from nexusai.models.outputs import AgentMessage, AgentMessageType
-
+from nexusai.utils.logger import logger
 # FastAPI app
 app = FastAPI()
 
@@ -60,5 +60,7 @@ async def process_query_websocket(websocket: WebSocket):
 
             # Send final message
             await manager.send_message(result.model_dump(), websocket)
-    except WebSocketDisconnect:
+    except Exception as e:
+        logger.error(e)
+    finally:
         manager.disconnect(websocket)

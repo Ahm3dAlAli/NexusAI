@@ -13,11 +13,7 @@
     We need to be able to find ANY paper we can think of. Maybe we don't need all of them maybe we need more.
 - handle large documents
     - limit time with unstructured and opt for a faster strategy (based on number of pages?)
-    - use RAG or some other strategy to handle issues with context window OR gemini (1M tokens)
-- use cache for downloaded data:
-    - paper URL/filename as key
-    - extracted data from unstructured (compress?)
-    - bytes as backup (compress?) or the original file so that also the user can open it
+    - use RAG or some other strategy to handle issues with context window
 - memory:
     - store previous outputs in local db for persisted memory
     - allow the user to select previous outputs to start from or start a new task

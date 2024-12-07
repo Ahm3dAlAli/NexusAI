@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-
+from nexusai.utils.logger import logger
 # Load environment variables from .env file
 load_dotenv()
 
@@ -20,6 +20,11 @@ if not CORE_API_KEY:
         "CORE_API_KEY environment variable is not set. "
         "Please set it in your .env file."
     )
+
+# Redis
+REDIS_URL = os.getenv("REDIS_URL")
+if not REDIS_URL:
+    logger.warning("REDIS_URL environment variable is not set. Not using cache.")
 
 # Request Configuration
 MAX_RETRIES = 5

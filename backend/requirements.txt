@@ -6,6 +6,7 @@ langgraph==0.2.18
 langsmith==0.1.114
 pdfplumber
 python-dotenv
+redis==5.2.1
 urllib3
 uvicorn
 websockets==14.1

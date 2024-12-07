@@ -12,9 +12,9 @@ def setup_logger(name: str = "nexusai", level: int | None = None) -> logging.Log
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setLevel(logging.DEBUG)
     
-    # Create formatter
+    # Create formatter with filename and line number
     formatter = logging.Formatter(
-        '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        '%(levelname)s - %(asctime)s - %(name)s - [%(filename)s:%(lineno)d] - %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S'
     )
     
