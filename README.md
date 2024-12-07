@@ -1,16 +1,16 @@
 # 🤖 NexusAI 📚
 
 <div align="center">
-<img src="path-to-your-logo.svg" alt="NexusAI Logo" width="100">
+<img src="frontend/app/favicon.ico" alt="NexusAI Logo" width="100">
 
-[![GitHub stars](https://img.shields.io/github/stars/yourusername/nexusai.svg?style=social)](https://github.com/Ahm3dAlAli/NexusAI)
+[![GitHub stars](https://img.shields.io/github/stars/Ahm3dAlAli/NexusAI.svg?style=social)](https://github.com/Ahm3dAlAli/NexusAI)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 </div>
 
 > [!IMPORTANT]
+> - 📰 (12/03/24) Featured in [DiamantAI's newsletter](https://diamantai.substack.com/p/nexus-ai-the-revolutionary-research) with a comprehensive deep-dive into our architecture and impact on research efficiency.
 > - 🏆 (11/26/24) Winner of the Agent Craft Hackathon hosted by Dimant AI x Langchain!
-> - 📰 Featured in [DiamantAI's newsletter](https://diamantai.substack.com/p/nexus-ai-the-revolutionary-research) with a comprehensive deep-dive into our architecture and impact on research efficiency.
 
 NexusAI is an intelligent research assistant that transforms how researchers interact with scientific literature. It streamlines the paper analysis process through state-driven workflows, advanced language models, and sophisticated validation mechanisms.
 

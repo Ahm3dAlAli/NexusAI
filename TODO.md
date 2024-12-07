@@ -7,7 +7,6 @@ We need to wait for the problem statement of our challenge to be released and po
     - Describe the agent (use markdown blocks from original notebook)
     - We should probably go more in depth with the agent description. We should document the code and write what each part does in the README.
     - Describe the evaluation procedure
-- more rigorous analysis with perplexity and copilot or other tools. I think we can find examples where our agent is even better.
 - handle large documents
     - limit time to download
     - limit time with unstructured and opt for a faster strategy (based on number of pages?)
