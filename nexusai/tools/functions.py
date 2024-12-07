@@ -58,10 +58,12 @@ def download_paper(url: str) -> str:
             if 200 <= response.status < 300:
                 pdf_file = io.BytesIO(response.data)
                 with pdfplumber.open(pdf_file) as pdf:
-                    text = ""
+                    pages = []
                     for page in pdf.pages:
-                        text += page.extract_text() + "\n"
-                return text
+                        pages.append(page.extract_text())
+                    
+                    # Use RAG if the PDF is too large
+                    return "\n".join(pages)
             elif attempt < MAX_RETRIES - 1:
                 time.sleep(RETRY_BASE_DELAY ** (attempt + 2))
             else:
