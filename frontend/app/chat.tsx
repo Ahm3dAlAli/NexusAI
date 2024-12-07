@@ -45,7 +45,11 @@ export default function Chat() {
       const message: AgentMessage = JSON.parse(event.data)
       setMessages(prev => [...prev, message])
 
-      if (message.type === AgentMessageType.final) {
+      // Set aiTyping to false for both 'final' and 'error' message types
+      if (
+        message.type === AgentMessageType.final ||
+        message.type === AgentMessageType.error
+      ) {
         setAiTyping(false)
       }
     }
@@ -182,7 +186,9 @@ export default function Chat() {
         {aiTyping && (
           <Card className="mb-4 mr-auto max-w-[80%]">
             <CardContent className="flex items-center p-4">
-              <div>💭 Thinking...</div>
+              <div>
+                💭 <span className="animated-thinking"></span>
+              </div>
             </CardContent>
           </Card>
         )}

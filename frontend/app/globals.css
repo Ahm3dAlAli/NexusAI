@@ -208,3 +208,40 @@ body::after {
   top: calc(50vh - 50vw/2);
   left: calc(50vw - 50vw/2);
 }
+
+/* Keyframes for the typing dots animation */
+@keyframes typingDots {
+  0% {
+    content: 'Thinking';
+  }
+  25% {
+    content: 'Thinking.';
+  }
+  50% {
+    content: 'Thinking..';
+  }
+  75% {
+    content: 'Thinking...';
+  }
+  100% {
+    content: 'Thinking';
+  }
+}
+
+/* Apply the animation to the animated-thinking class */
+.animated-thinking::after {
+  content: '';
+  animation: typingDots 1.5s steps(4, end) infinite;
+}
+
+.animated-thinking {
+  position: relative;
+}
+
+.animated-thinking::after {
+  position: absolute;
+  left: 0;
+  top: 0;
+  /* Ensure the animated dots appear right after the word "Thinking" */
+  margin-left: 0.25rem;
+}

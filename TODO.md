@@ -3,9 +3,6 @@
 ## Todos
 
 ### Tech
-- use models promoted for the hackathon
-    - gemini flash 8b
-    - llama 3.1 70b berkeley
 - expand search engine (use other APIs)
     - Google Scholar
     - CORE
@@ -14,7 +11,6 @@
     - PubMed
     - Web of Science
     We need to be able to find ANY paper we can think of. Maybe we don't need all of them maybe we need more.
-- add more params to config
 - handle large documents
     - limit time with unstructured and opt for a faster strategy (based on number of pages?)
     - use RAG or some other strategy to handle issues with context window OR gemini (1M tokens)
@@ -37,9 +33,6 @@
         - external links (e.g. https://arxiv.org/abs/1706.03762)
 - build full platform and deploy?
 
-### Eval
-- should we drop latency as a metric? we can just reference it at the end
-
 ### Documentation
 - add docstrings to all functions
 - README:
@@ -54,7 +47,9 @@
 - **Project Code**: Provide source code with instructions for running the application, including any dependencies.
 - **User Guide**: Include a brief document explaining how users can interact with your application. MAXIMUM 7-8 pages.
 
-
+## Notes
+- lambda labs doesn't support debit cards
+- gemini models cannot be used as agents because they strictly require user-ai message sequence
 
 ### Priorities 
 
@@ -82,20 +77,7 @@ Create response aggregator
 Build cache management system
 Develop API rate limiting handlers
 
-#### Priority 2: Intelligent Model Routing System
-Model Selection Logic
-
-Implement context length detection
-Create routing logic for different models:
-
-Switch to Gemini for papers >50 pages
-Use GPT-4 for standard queries
-Google AI for specialized cases
-
-
-Develop automatic model switching based on context window requirements
-
-#### Priority 3: Unstructured Data Processing
+#### Priority 2: Unstructured Data Processing
 Table Analysis
 
 Implement table extraction from PDFs
@@ -111,7 +93,7 @@ Design citation network analyzer
 Build figure/diagram extractor
 Develop metadata processor
 
-#### Priority 4: User Agent System
+#### Priority 3: User Agent System
 Agent Implementation
 
 Design agent architecture for complex queries

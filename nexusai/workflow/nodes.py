@@ -22,18 +22,19 @@ class WorkflowNodes:
         self.tools_dict = {tool.name: tool for tool in tools}
         
         # Initialize base LLMs
-        self.__openai_llm = ChatOpenAI(
+        self.__base_llm = ChatOpenAI(
             model="gpt-4o-mini",
-            temperature=0.0
+            temperature=0.0,
+            max_tokens=16384
         )
 
         # Workflow LLMs
-        self.planning_llm = self.__openai_llm
-        self.decision_making_llm = self.__openai_llm.with_structured_output(
+        self.planning_llm = self.__base_llm
+        self.decision_making_llm = self.__base_llm.with_structured_output(
             DecisionMakingOutput
         )
-        self.agent_llm = self.__openai_llm.bind_tools(tools)
-        self.judge_llm = self.__openai_llm.with_structured_output(JudgeOutput)
+        self.agent_llm = self.__base_llm.bind_tools(tools)
+        self.judge_llm = self.__base_llm.with_structured_output(JudgeOutput)
 
     def __format_tools_description(self) -> str:
         """Format the description of available tools."""
