@@ -12,21 +12,22 @@ class CacheManager:
         """Generate a unique cache key based on type and value."""
         return f"{key_type}:{hashlib.sha256(value.encode()).hexdigest()}"
     
-    def get_pdf(self, url: str) -> bytes | None:
+    def get_pdf(self, url: str) -> str | None:
         """Get PDF from cache."""
         if not self.redis:
             return None
 
         key = self.__generate_key("pdf", url)
-        return self.redis.get(key)
+        data = self.redis.get(key)
+        return json.loads(data) if data else None
     
-    def store_pdf(self, url: str, content: bytes) -> None:
+    def store_pdf(self, url: str, content: str) -> None:
         """Store PDF in cache."""
         if not self.redis:
             return None
 
         key = self.__generate_key("pdf", url)
-        self.redis.set(key, content)
+        self.redis.set(key, json.dumps(content))
     
     def get_query_results(self, query: str) -> dict | None:
         """Get query results from cache."""

@@ -1,4 +1,5 @@
 from typing import Any
+import asyncio
 from langchain_core.messages import SystemMessage, AIMessage, ToolMessage
 from langchain_core.tools import BaseTool
 from langchain_openai import ChatOpenAI
@@ -65,29 +66,34 @@ class WorkflowNodes:
         response = self.planning_llm.invoke([system_prompt] + state["messages"])
         return {"messages": [response]}
 
+    async def __execute_tool_call(self, tool_call: dict) -> ToolMessage:
+        """Execute a single tool call asynchronously."""
+        try:
+            tool_result = await self.tools_dict[tool_call["name"]].ainvoke(
+                tool_call["args"]
+            )
+            return ToolMessage(
+                content=str(tool_result),
+                name=tool_call["name"],
+                tool_call_id=tool_call["id"],
+            )
+        except Exception as e:
+            return ToolMessage(
+                content=f"Error executing tool {tool_call['name']}: {str(e)}",
+                name=tool_call["name"],
+                tool_call_id=tool_call["id"],
+            )
+
     def tools_node(self, state: AgentState) -> dict[str, Any]:
         """Node that executes tools based on the plan."""
-        outputs = []
-        for tool_call in state["messages"][-1].tool_calls:
-            try:
-                tool_result = self.tools_dict[tool_call["name"]].invoke(
-                    tool_call["args"]
-                )
-                outputs.append(
-                    ToolMessage(
-                        content=str(tool_result),
-                        name=tool_call["name"],
-                        tool_call_id=tool_call["id"],
-                    )
-                )
-            except Exception as e:
-                outputs.append(
-                    ToolMessage(
-                        content=f"Error executing tool {tool_call['name']}: {str(e)}",
-                        name=tool_call["name"],
-                        tool_call_id=tool_call["id"],
-                    )
-                )
+        async def run_tool_calls() -> list[ToolMessage]:
+            tasks = [
+                self.__execute_tool_call(tool_call)
+                for tool_call in state["messages"][-1].tool_calls
+            ]
+            return await asyncio.gather(*tasks)
+
+        outputs = asyncio.run(run_tool_calls())
         return {"messages": outputs}
 
     def agent_node(self, state: AgentState) -> dict[str, Any]:

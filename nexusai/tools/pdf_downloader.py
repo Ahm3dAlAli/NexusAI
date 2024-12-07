@@ -14,12 +14,15 @@ class PDFDownloader:
     def __init__(self):
         self.cache_manager = CacheManager()
         
-    def __convert_bytes_to_text(self, content: bytes) -> str:
-        pdf_file = io.BytesIO(content)
+    def __convert_bytes_to_text(self, bytes_content: bytes) -> str:
+        """Convert bytes to text."""
+        logger.info(f"Converting bytes to text...")
+        pdf_file = io.BytesIO(bytes_content)
         with pdfplumber.open(pdf_file) as pdf:
             pages = []
             for page in pdf.pages:
                 pages.append(page.extract_text())
+        logger.info(f"Done")
         return "\n".join(pages)
     
     def download_pdf(self, url: str) -> str:
@@ -52,7 +55,8 @@ class PDFDownloader:
                 raise Exception(f"Got non 2xx when downloading paper: {response.status}")
 
         # Store in cache
-        content = response.data
+        bytes_content = response.data
+        content = self.__convert_bytes_to_text(bytes_content)
         logger.info(f"Storing PDF in cache for {url}")
         self.cache_manager.store_pdf(url, content)
-        return self.__convert_bytes_to_text(content)
+        return content
