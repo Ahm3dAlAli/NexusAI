@@ -95,11 +95,11 @@ body {
 
 /* Add styles for markdown content */
 .message-content {
-  @apply min-w-[60px] max-w-full;
+  @apply min-w-[60px] max-w-full break-words;
 }
 
 .message-content > * {
-  @apply overflow-x-auto;
+  @apply overflow-x-auto whitespace-pre-wrap break-words;
 }
 
 /* Headers */
@@ -143,16 +143,19 @@ body {
 
 /* Code blocks */
 .message-content pre {
-  @apply my-2 p-3 bg-gray-800 text-white rounded-lg;
+  @apply my-2 p-3 bg-gray-800 text-white rounded-lg overflow-x-auto max-w-full;
+  white-space: pre-wrap;       /* preserve line breaks */
+  word-wrap: break-word;       /* break long words */
 }
 
 .message-content code {
-  @apply font-mono text-sm;
+  @apply font-mono text-sm break-words;
 }
 
 /* Inline code */
 .message-content :not(pre) > code {
-  @apply bg-gray-100 px-1.5 py-0.5 rounded text-sm;
+  @apply bg-gray-100 px-1.5 py-0.5 rounded text-sm break-words;
+  word-wrap: break-word;
 }
 
 /* Links */
