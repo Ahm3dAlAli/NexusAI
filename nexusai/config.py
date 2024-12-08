@@ -15,6 +15,14 @@ if not OPENAI_API_KEY:
         "Please set it in your .env file."
     )
 
+
+ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
+if not ANTHROPIC_API_KEY:
+    raise ValueError(
+        "ANTHROPIC_API_KEY environment variable is not set. "
+        "Please set it in your .env file."
+    )
+
 # CORE API Configuration
 CORE_API_BASE_URL = "https://api.core.ac.uk/v3"
 CORE_API_KEY = os.getenv("CORE_API_KEY")
@@ -50,3 +58,14 @@ MAX_FEEDBACK_REQUESTS = 2
 MAX_PAGES = 50
 
 
+
+# Figure Analysis Configuration
+FIGURE_MIN_SIZE = 100  # Minimum pixel size for figures
+FIGURE_MAX_SIZE = 4096  # Maximum pixel size for figure processing
+FIGURE_FORMATS = ['jpg', 'jpeg', 'png', 'tiff']  # Supported figure formats
+FIGURE_CACHE_EXPIRY = 86400 * 30  # 30 days cache for figures
+
+# Claude Configuration
+CLAUDE_MODEL = "claude-3-sonnet-20240229"
+CLAUDE_MAX_TOKENS = 1000
+CLAUDE_TEMPERATURE = 0.2
