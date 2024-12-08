@@ -66,29 +66,8 @@ Why 4o mini?
 
 ### Priorities 
 
-#### Priority 1: Core API Wrapper Development
-API Integration Layer
-
-Implement unified interface for multiple academic APIs:
-
-PubMed
-Core API
-Semantic Scholar
-arXiv
-Google Scholar API
-
-
-Develop standardized response format
-Implement caching system for paper storage
-Create parallel processing pipeline for multi-API queries
-
-Search Engine Core
-
-Design unified search interface
-Implement query router
-Create response aggregator
-Build cache management system
-Develop API rate limiting handlers
+#### Priority 1:  API Wrapper Development (DONE)
+API Integration Layer Implement unified interface for APIs
 
 #### Priority 2: Unstructured Data Processing
 Table Analysis
