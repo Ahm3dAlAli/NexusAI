@@ -67,7 +67,7 @@ Why 4o mini?
 ### Priorities 
 
 #### Priority 1:  API Wrapper Development (DONE)
-API Integration Layer Implement unified interface for APIs
+API Integration Layer Implement unified interface for Semantic Scholar
 
 #### Priority 2: Unstructured Data Processing
 Table Analysis
