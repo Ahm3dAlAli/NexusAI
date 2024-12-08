@@ -16,6 +16,7 @@ from nexusai.utils.logger import logger
 # Disable warnings for insecure requests
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
+
 class PDFDownloader:
     query: str = ""
 
@@ -34,13 +35,16 @@ class PDFDownloader:
         db = FAISS.from_embeddings(
             zip(pages, embeddings),
             self.embeddings,
-            metadatas=[{"page_number": i} for i in range(len(pages))]
+            metadatas=[{"page_number": i} for i in range(len(pages))],
         )
         logger.info(f"Searching for most relevant pages...")
         docs = db.similarity_search(self.query, k=MAX_PAGES)
         end_time = time.time()
         logger.info(f"Filtering pages took {end_time - start_time:.2f} seconds")
-        return [doc.page_content for doc in sorted(docs, key=lambda x: x.metadata["page_number"])]
+        return [
+            doc.page_content
+            for doc in sorted(docs, key=lambda x: x.metadata["page_number"])
+        ]
 
     def __convert_bytes_to_text(self, url: str, bytes_content: bytes) -> str:
         """Convert bytes to text."""
@@ -58,7 +62,7 @@ class PDFDownloader:
             pages = self.__filter_pages(pages)
 
         return "\n\n".join(pages)
-    
+
     def download_pdf(self, url: str) -> str:
         """Get PDF from URL or cache if available."""
         if cached_pages := self.cache_manager.get_pdf(url):
@@ -68,28 +72,34 @@ class PDFDownloader:
             return "\n".join(cached_pages)
 
         http = urllib3.PoolManager(
-            cert_reqs='CERT_NONE',
+            cert_reqs="CERT_NONE",
         )
         # Mock browser headers to avoid 403 error
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-            'Accept-Language': 'en-US,en;q=0.5',
-            'Accept-Encoding': 'gzip, deflate, br',
-            'Connection': 'keep-alive',
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "Accept-Language": "en-US,en;q=0.5",
+            "Accept-Encoding": "gzip, deflate, br",
+            "Connection": "keep-alive",
         }
         for attempt in range(MAX_RETRIES):
-            logger.info(f"Downloading PDF from {url} (attempt {attempt + 1}/{MAX_RETRIES})")
-            response = http.request('GET', url, headers=headers)
+            logger.info(
+                f"Downloading PDF from {url} (attempt {attempt + 1}/{MAX_RETRIES})"
+            )
+            response = http.request("GET", url, headers=headers)
             if 200 <= response.status < 300:
                 logger.info(f"Successfully downloaded PDF from {url}")
                 break
             elif attempt < MAX_RETRIES - 1:
-                logger.warning(f"Got {response.status} response when downloading paper. Sleeping for {RETRY_BASE_DELAY ** (attempt + 2)} seconds before retrying...")
+                logger.warning(
+                    f"Got {response.status} response when downloading paper. Sleeping for {RETRY_BASE_DELAY ** (attempt + 2)} seconds before retrying..."
+                )
                 time.sleep(RETRY_BASE_DELAY ** (attempt + 2))
             else:
-                raise Exception(f"Got non 2xx when downloading paper: {response.status}")
-    
+                raise Exception(
+                    f"Got non 2xx when downloading paper: {response.status}"
+                )
+
         return self.__convert_bytes_to_text(url, response.data)
 
     @tool("download-paper")
@@ -109,4 +119,3 @@ class PDFDownloader:
             return PDFDownloader(PDFDownloader.query).download_pdf(url)
         except Exception as e:
             return f"Error downloading paper: {e}"
-

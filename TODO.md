@@ -13,7 +13,6 @@
     We need to be able to find ANY paper we can think of. Maybe we don't need all of them maybe we need more.
 - handle large documents
     - limit time with unstructured and opt for a faster strategy (based on number of pages?)
-    - use RAG or some other strategy to handle issues with context window
 - memory:
     - store previous outputs in local db for persisted memory
     - allow the user to select previous outputs to start from or start a new task
@@ -44,6 +43,10 @@
 - **User Guide**: Include a brief document explaining how users can interact with your application. MAXIMUM 7-8 pages.
 
 ## Notes
+We should explain all our design choices in the user guide.
+
+Why 4o mini?
+- best compromise between latency, cost, and performance
 - lambda labs doesn't support debit cards
 - gemini models cannot be used as agents because they strictly require user-ai message sequence
 

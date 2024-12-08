@@ -11,22 +11,21 @@ from ..prompts.system_prompts import (
     decision_making_prompt,
     planning_prompt,
     agent_prompt,
-    judge_prompt
+    judge_prompt,
 )
+
 
 class WorkflowNodes:
     """Implementation of the workflow nodes for the research agent."""
-    
+
     def __init__(self, tools: list[BaseTool]):
         """Initialize workflow nodes with tools."""
         self.tools = tools
         self.tools_dict = {tool.name: tool for tool in tools}
-        
+
         # Initialize base LLMs
         self.__base_llm = ChatOpenAI(
-            model="gpt-4o-mini",
-            temperature=0.0,
-            max_tokens=16384
+            model="gpt-4o-mini", temperature=0.0, max_tokens=16384
         )
 
         # Workflow LLMs
@@ -39,10 +38,12 @@ class WorkflowNodes:
 
     def __format_tools_description(self) -> str:
         """Format the description of available tools."""
-        return "\n\n".join([
-            f"- {tool.name}: {tool.description}\n  Input arguments: {tool.args}"
-            for tool in self.tools
-        ])
+        return "\n\n".join(
+            [
+                f"- {tool.name}: {tool.description}\n  Input arguments: {tool.args}"
+                for tool in self.tools
+            ]
+        )
 
     def decision_making_node(self, state: AgentState) -> dict[str, Any]:
         """Entry point node that decides whether research is needed."""
@@ -50,7 +51,7 @@ class WorkflowNodes:
         response: DecisionMakingOutput = self.decision_making_llm.invoke(
             [system_prompt] + state["messages"]
         )
-        
+
         output = {"requires_research": response.requires_research}
         if response.answer:
             output["messages"] = [AIMessage(content=response.answer)]
@@ -59,9 +60,7 @@ class WorkflowNodes:
     def planning_node(self, state: AgentState) -> dict[str, Any]:
         """Planning node that creates a research strategy."""
         system_prompt = SystemMessage(
-            content=planning_prompt.format(
-                tools=self.__format_tools_description()
-            )
+            content=planning_prompt.format(tools=self.__format_tools_description())
         )
         response = self.planning_llm.invoke([system_prompt] + state["messages"])
         return {"messages": [response]}
@@ -86,6 +85,7 @@ class WorkflowNodes:
 
     def tools_node(self, state: AgentState) -> dict[str, Any]:
         """Node that executes tools based on the plan."""
+
         async def run_tool_calls() -> list[ToolMessage]:
             tasks = [
                 self.__execute_tool_call(tool_call)
@@ -113,10 +113,10 @@ class WorkflowNodes:
         response: JudgeOutput = self.judge_llm.invoke(
             [system_prompt] + state["messages"]
         )
-        
+
         output = {
             "is_good_answer": response.is_good_answer,
-            "num_feedback_requests": num_feedback_requests + 1
+            "num_feedback_requests": num_feedback_requests + 1,
         }
         if response.feedback:
             output["messages"] = [AIMessage(content=response.feedback)]

@@ -9,9 +9,10 @@ from ..workflow.nodes import WorkflowNodes
 from ..models.outputs import AgentMessage, AgentMessageType
 from ..utils.logger import logger
 
+
 class ResearchWorkflow:
     """Implementation of the research workflow graph."""
-    
+
     def __init__(self, nodes: WorkflowNodes):
         """Initialize the workflow with nodes."""
         self.nodes = nodes
@@ -39,7 +40,7 @@ class ResearchWorkflow:
             {
                 "planning": "planning",
                 "end": END,
-            }
+            },
         )
         workflow.add_edge("planning", "agent")
         workflow.add_edge("tools", "agent")
@@ -57,7 +58,7 @@ class ResearchWorkflow:
             {
                 "planning": "planning",
                 "end": END,
-            }
+            },
         )
 
         return workflow.compile()
@@ -74,7 +75,7 @@ class ResearchWorkflow:
         """Determine if the agent should continue processing."""
         messages = state["messages"]
         last_message = messages[-1]
-        
+
         # Continue if there are tool calls, otherwise end
         return "continue" if last_message.tool_calls else "end"
 
@@ -107,17 +108,24 @@ class ResearchWorkflow:
             )
         return content + "\n---\n".join(tool_calls_strs)
 
-    async def process_query(self, query: str, messages: list[BaseMessage], message_callback=None) -> AgentMessage:
+    async def process_query(
+        self, query: str, messages: list[BaseMessage], message_callback=None
+    ) -> AgentMessage:
         """Process a research query through the workflow."""
         try:
             all_messages: list[BaseMessage] = []
-            async for chunk in self.workflow.astream({"messages": messages + [query]}, stream_mode="updates"):
+            async for chunk in self.workflow.astream(
+                {"messages": messages + [query]}, stream_mode="updates"
+            ):
                 for updates in chunk.values():
                     if messages := updates.get("messages"):
                         all_messages.extend(messages)
                         for message in messages:
                             # Truncate long tool messages
-                            if isinstance(message, ToolMessage) and len(message.content) > 1000:
+                            if (
+                                isinstance(message, ToolMessage)
+                                and len(message.content) > 1000
+                            ):
                                 message = ToolMessage(
                                     content=message.content[:1000] + "[...]",
                                     name=message.name,
@@ -125,17 +133,25 @@ class ResearchWorkflow:
                                 )
 
                             if not message.content:
-                                message.content = self.__build_content_from_tool_calls(message)
+                                message.content = self.__build_content_from_tool_calls(
+                                    message
+                                )
 
                             # Send intermediate message if callback is provided
                             if message_callback:
                                 msg_type = self.__infer_message_type(message)
-                                await message_callback(AgentMessage(
-                                    type=msg_type,
-                                    content=message.content,
-                                    tool_name=message.name if msg_type == AgentMessageType.tool else None
-                                ))
-                            
+                                await message_callback(
+                                    AgentMessage(
+                                        type=msg_type,
+                                        content=message.content,
+                                        tool_name=(
+                                            message.name
+                                            if msg_type == AgentMessageType.tool
+                                            else None
+                                        ),
+                                    )
+                                )
+
                             logger.info(f"New message:\n{message.json(indent=2)}")
 
             # Return final message

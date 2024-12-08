@@ -4,12 +4,15 @@ from nexusai.tools.functions import setup_tools
 from nexusai.utils.messages import build_messages
 from nexusai.models.outputs import AgentMessage
 
-async def process_query(query: str, history: list[AgentMessage] = [], message_callback=None) -> AgentMessage:
+
+async def process_query(
+    query: str, history: list[AgentMessage] = [], message_callback=None
+) -> AgentMessage:
     # Setup workflow
     tools = setup_tools(query)
     nodes = WorkflowNodes(tools)
     workflow = ResearchWorkflow(nodes)
-    
+
     # Process the query using the agent's workflow
     messages = build_messages(history)
     result = await workflow.process_query(query, messages, message_callback)

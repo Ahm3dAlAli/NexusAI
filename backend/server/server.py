@@ -6,6 +6,7 @@ from .models import QueryRequest
 from nexusai.agent import process_query
 from nexusai.models.outputs import AgentMessage, AgentMessageType
 from nexusai.utils.logger import logger
+
 # FastAPI app
 app = FastAPI()
 
@@ -21,10 +22,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 # Endpoints
 @app.get("/")
 async def read_root():
     return "Hello, World!"
+
 
 @app.websocket("/ws")
 async def process_query_websocket(websocket: WebSocket):
@@ -43,9 +46,9 @@ async def process_query_websocket(websocket: WebSocket):
                 await manager.send_message(
                     AgentMessage(
                         type=AgentMessageType.error,
-                        content="Invalid request format. Expected {'query': 'your question'}"
+                        content="Invalid request format. Expected {'query': 'your question'}",
                     ).model_dump(),
-                    websocket
+                    websocket,
                 )
                 continue
 
@@ -53,9 +56,11 @@ async def process_query_websocket(websocket: WebSocket):
             result: AgentMessage = await process_query(
                 query=request.query,
                 history=history,
-                message_callback=send_intermediate_message
+                message_callback=send_intermediate_message,
             )
-            history.append(AgentMessage(type=AgentMessageType.human, content=request.query))
+            history.append(
+                AgentMessage(type=AgentMessageType.human, content=request.query)
+            )
             history.append(result)
 
             # Send final message
