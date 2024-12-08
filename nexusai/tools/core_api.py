@@ -1,20 +1,21 @@
 import time
 import urllib3
 
+from langchain_core.tools import tool
+
 from nexusai.cache.cache_manager import CacheManager
 from nexusai.config import CORE_API_KEY, CORE_API_BASE_URL, MAX_RETRIES, RETRY_BASE_DELAY
+from nexusai.models.inputs import SearchPapersInput
 from nexusai.utils.logger import logger
 
 class CoreAPIWrapper:
     """Simple wrapper around the CORE API."""    
-    def __init__(self, top_k_results: int = 1):
+    def __init__(self):
         self.base_url = CORE_API_BASE_URL
         self.api_key = CORE_API_KEY
-        self.top_k_results = top_k_results
-
         self.cache_manager = CacheManager()
 
-    def __get_search_results(self, query: str) -> list:
+    def __get_search_results(self, query: str, max_papers: int = 1) -> list:
         """Execute search query with retry mechanism."""
         if cached_results := self.cache_manager.get_query_results(query):
             logger.info(f"Found search results for '{query}' in cache")
@@ -27,7 +28,7 @@ class CoreAPIWrapper:
                 'GET',
                 f"{self.base_url}/search/outputs", 
                 headers={"Authorization": f"Bearer {self.api_key}"}, 
-                fields={"q": query, "limit": self.top_k_results}
+                fields={"q": query, "limit": max_papers}
             )
             if 200 <= response.status < 300:
                 logger.info(f"Successfully got search results for '{query}'")
@@ -44,7 +45,6 @@ class CoreAPIWrapper:
 
         # Store results in cache
         results = response.json().get("results", [])
-        logger.info(f"Storing search results for '{query}' in cache")
         self.cache_manager.store_query_results(query, results)
         return results
     
@@ -80,8 +80,24 @@ class CoreAPIWrapper:
             
         return "\n-----\n".join(docs)
 
-    def search(self, query: str) -> str:
+    def search(self, query: str, max_papers: int = 1) -> str:
         """Search for papers and format results."""
-        results = self.__get_search_results(query)
+        results = self.__get_search_results(query, max_papers)
         formatted_results = self.__format_results(results)
         return formatted_results
+    
+    @tool("search-papers", args_schema=SearchPapersInput)
+    @staticmethod
+    def tool_function(query: str, max_papers: int = 1) -> str:
+        """Search for scientific papers using the CORE API. Queries must be in English.
+
+        Example:
+        {"query": "Attention is all you need", "max_papers": 1}
+
+        Returns:
+            A list of the relevant papers found with the corresponding relevant information.
+        """
+        try:
+            return CoreAPIWrapper().search(query, max_papers)
+        except Exception as e:
+            return f"Error performing paper search: {e}"

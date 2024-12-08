@@ -6,7 +6,7 @@ from nexusai.models.outputs import AgentMessage
 
 async def process_query(query: str, history: list[AgentMessage] = [], message_callback=None) -> AgentMessage:
     # Setup workflow
-    tools = setup_tools()
+    tools = setup_tools(query)
     nodes = WorkflowNodes(tools)
     workflow = ResearchWorkflow(nodes)
     

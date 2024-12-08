@@ -32,3 +32,6 @@ RETRY_BASE_DELAY = 2  # seconds
 
 # State Management Configuration
 MAX_FEEDBACK_REQUESTS = 2
+
+# PDF Downloader Configuration
+MAX_PAGES = 50

@@ -2,34 +2,70 @@ import urllib3
 import time
 import io
 import pdfplumber
+import asyncio
+
+from langchain_core.tools import tool
+from langchain_community.vectorstores import FAISS
+from langchain_openai import OpenAIEmbeddings
+
 
 from nexusai.cache.cache_manager import CacheManager
-from nexusai.config import MAX_RETRIES, RETRY_BASE_DELAY
+from nexusai.config import MAX_RETRIES, RETRY_BASE_DELAY, MAX_PAGES
 from nexusai.utils.logger import logger
 
 # Disable warnings for insecure requests
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 class PDFDownloader:
-    def __init__(self):
+    query: str = ""
+
+    def __init__(self, query: str):
+        self.query = query
+        PDFDownloader.query = query
         self.cache_manager = CacheManager()
-        
-    def __convert_bytes_to_text(self, bytes_content: bytes) -> str:
+        self.embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
+
+    def __filter_pages(self, pages: list[str]) -> list[str]:
+        """Filter pages with RAG to keep only the most relevant ones."""
+        logger.warning(f"The PDF has {MAX_PAGES}, filtering content...")
+        logger.info(f"Generating embeddings for {len(pages)} pages...")
+        start_time = time.time()
+        embeddings = asyncio.run(self.embeddings.aembed_documents(pages))
+        db = FAISS.from_embeddings(
+            zip(pages, embeddings),
+            self.embeddings,
+            metadatas=[{"page_number": i} for i in range(len(pages))]
+        )
+        logger.info(f"Searching for most relevant pages...")
+        docs = db.similarity_search(self.query, k=MAX_PAGES)
+        end_time = time.time()
+        logger.info(f"Filtering pages took {end_time - start_time:.2f} seconds")
+        return [doc.page_content for doc in sorted(docs, key=lambda x: x.metadata["page_number"])]
+
+    def __convert_bytes_to_text(self, url: str, bytes_content: bytes) -> str:
         """Convert bytes to text."""
-        logger.info(f"Converting bytes to text...")
+        logger.info(f"Converting bytes to text for {url}...")
         pdf_file = io.BytesIO(bytes_content)
         with pdfplumber.open(pdf_file) as pdf:
             pages = []
             for page in pdf.pages:
                 pages.append(page.extract_text())
-        logger.info(f"Done")
-        return "\n".join(pages)
+        logger.info(f"Done for {url}")
+
+        self.cache_manager.store_pdf(url, pages)
+
+        if len(pages) > MAX_PAGES:
+            pages = self.__filter_pages(pages)
+
+        return "\n\n".join(pages)
     
     def download_pdf(self, url: str) -> str:
         """Get PDF from URL or cache if available."""
-        if cached_content := self.cache_manager.get_pdf(url):
+        if cached_pages := self.cache_manager.get_pdf(url):
             logger.info(f"Found PDF in cache for {url}")
-            return cached_content
+            if len(cached_pages) > MAX_PAGES:
+                cached_pages = self.__filter_pages(cached_pages)
+            return "\n".join(cached_pages)
 
         http = urllib3.PoolManager(
             cert_reqs='CERT_NONE',
@@ -53,10 +89,24 @@ class PDFDownloader:
                 time.sleep(RETRY_BASE_DELAY ** (attempt + 2))
             else:
                 raise Exception(f"Got non 2xx when downloading paper: {response.status}")
+    
+        return self.__convert_bytes_to_text(url, response.data)
 
-        # Store in cache
-        bytes_content = response.data
-        content = self.__convert_bytes_to_text(bytes_content)
-        logger.info(f"Storing PDF in cache for {url}")
-        self.cache_manager.store_pdf(url, content)
-        return content
+    @tool("download-paper")
+    @staticmethod
+    def tool_function(url: str) -> str:
+        """Download a specific scientific paper from a given URL.
+
+        Example:
+        {"url": "https://sample.pdf"}
+
+        Returns:
+            The paper content.
+        """
+        try:
+            # Make sure arxiv urls are correctly formatted
+            url = url.replace("arxiv.org/abs/", "arxiv.org/pdf/")
+            return PDFDownloader(PDFDownloader.query).download_pdf(url)
+        except Exception as e:
+            return f"Error downloading paper: {e}"
+
