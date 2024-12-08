@@ -45,6 +45,10 @@
 ## Notes
 We should explain all our design choices in the user guide.
 
+Make the agent robust:
+- use RAG
+- multiple APIs
+
 Why 4o mini?
 - best compromise between latency, cost, and performance
 - lambda labs doesn't support debit cards
