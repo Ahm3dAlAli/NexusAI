@@ -92,6 +92,97 @@ Examples:
   "title:Attention is all you need"
 - Search for papers on mathematics with an abstract:
   "mathematics AND _exists_:abstract"
+
+## SEMANTIC SCHOLAR API
+
+The Semantic Scholar API supports a powerful query language for paper search with advanced syntax. 
+See the following table for available operators:
+
+| Operator | Syntax | Meaning |
+|----------|---------|---------|
+| AND | + or space | Default operator, all terms must match |
+| OR | \| | Either term must match |
+| NOT | - | Negates a term |
+| Phrase | "..." | Matches exact phrase |
+| Prefix | * | Matches word prefix |
+| Precedence | (...) | Groups terms |
+| Fuzzy | ~N | Matches within edit distance N |
+| Proximity | "..."~N | Matches phrase terms within N words |
+
+Here are the relevant fields you can filter by:
+
+{
+    "title": "Title of the paper",
+    "abstract": "Abstract text",
+    "year": "2023",
+    "venue": "Journal or conference name",
+    "authors": [{"name": "Author Name"}],
+    "fieldsOfStudy": ["Computer Science", "Mathematics"],
+    "publicationTypes": ["JournalArticle", "Conference"],
+    "isOpenAccess": true,
+    "citations": 100,
+    "references": 50
+}
+
+Query Parameter Examples:
+
+1. Basic Search:
+   - "machine learning"  
+     (Matches papers containing both "machine" AND "learning")
+   - "deep learning | neural networks"  
+     (Matches papers containing either term)
+
+2. Phrase Search:
+   - "\"attention is all you need\""  
+     (Matches exact paper title)
+   - "\"transformer architecture\"~3"  
+     (Matches words within 3 words distance)
+
+3. Field Filtering:
+   - year:2023
+     (Papers from 2023)
+   - year:2020-2023 
+     (Papers between 2020-2023)
+   - venue:"Nature" 
+     (Papers from Nature)
+   - fieldsOfStudy:"Computer Science" 
+     (Computer Science papers)
+
+4. Complex Queries:
+   - "nlp -\"machine learning\""
+     (NLP papers excluding "machine learning")
+   - "(transformer | attention) architecture"
+     (Papers about transformer or attention architecture)
+   - "neural* network*" 
+     (Matches prefixes like "neural", "network", "networks", etc.)
+
+5. Multi-Field Queries:
+   - "deep learning venue:\"NeurIPS\" year:2023"
+     (Deep learning papers from NeurIPS 2023)
+   - "covid year:2020- fieldsOfStudy:\"Medicine\""
+     (Medical COVID papers from 2020 onwards)
+
+Note: The search is case-insensitive and uses English word stemming by default.
+
+Citation Count Filtering:
+- minCitationCount:100 
+  (Papers with at least 100 citations)
+
+Publication Type Filtering:
+- publicationTypes:JournalArticle,Conference
+  (Only journal articles and conference papers)
+
+Open Access Filtering:
+- openAccessPdf:true
+  (Only papers with available PDFs)
+
+Sorting Options:
+- sort=publicationDate:desc 
+  (Newest first)
+- sort=citationCount:desc 
+  (Most cited first)
+- sort=relevance 
+  (Default sort by relevance)
 """
 
 # Prompt for the judging step to evaluate the quality of the final answer

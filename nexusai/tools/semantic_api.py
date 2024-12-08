@@ -9,7 +9,6 @@ from nexusai.config import (
     SEMANTIC_SCHOLAR_API_KEY,
     MAX_RETRIES,
     RETRY_BASE_DELAY,
-    ENDPOINTS,
     DEFAULT_FIELDS,
     MAX_RESULTS_PER_PAGE
 )
@@ -18,7 +17,7 @@ from nexusai.utils.logger import logger
 
 
 class SemanticScholarAPIWrapper:
-    """Simple wrapper around the Semantic Scholar API for paper search and details."""
+    """Simple wrapper around the Semantic Scholar API for bulk paper search."""
 
     def __init__(self):
         self.base_url = SEMANTIC_SCHOLAR_BASE_URL
@@ -45,7 +44,7 @@ class SemanticScholarAPIWrapper:
             )
             response = http.request(
                 "GET",
-                f"{self.base_url}{ENDPOINTS['paper_search']}",
+                self.base_url,
                 headers={"x-api-key": self.api_key},
                 fields=params
             )
@@ -66,74 +65,27 @@ class SemanticScholarAPIWrapper:
             else:
                 raise Exception(f"Got non 2xx response from S2 API: {response.status}")
 
-    def __get_paper_details(self, paper_id: str) -> dict:
-        """Get detailed information about a specific paper."""
-        if cached_details := self.cache_manager.get_query_results(f"details_{paper_id}"):
-            logger.info(f"Found paper details for '{paper_id}' in cache")
-            return cached_details
-
-        http = urllib3.PoolManager()
-        endpoint = ENDPOINTS['paper_details'].format(paper_id=paper_id)
-
-        for attempt in range(MAX_RETRIES):
-            logger.info(f"Getting details for paper {paper_id}")
-            response = http.request(
-                "GET",
-                f"{self.base_url}{endpoint}",
-                headers={"x-api-key": self.api_key},
-                fields={'fields': DEFAULT_FIELDS}
-            )
-
-            if 200 <= response.status < 300:
-                details = response.json()
-                self.cache_manager.store_query_results(f"details_{paper_id}", details)
-                return details
-            elif attempt < MAX_RETRIES - 1:
-                sleep_time = RETRY_BASE_DELAY ** (attempt + 2)
-                logger.warning(f"Retrying in {sleep_time} seconds...")
-                time.sleep(sleep_time)
-            else:
-                raise Exception(f"Failed to get paper details: {response.status}")
-
-    def search_papers(self, query: str) -> tuple[int, List[Dict[str, Any]]]:
+    def search_papers(self, query: str, limit: int = 100) -> tuple[int, List[Dict[str, Any]], Optional[str]]:
         """
-        Search for papers and return total count and results.
+        Search for papers using the bulk search endpoint.
         
+        Args:
+            query: Search query (the agent will construct appropriate query syntax)
+            limit: Maximum number of results to return
+            
         Returns:
-            Tuple of (total_results, paper_list)
+            Tuple of (total_results, paper_list, next_token)
         """
         try:
-            results = self.__get_search_results(query)
-            return results.get("total", 0), results.get("data", [])
+            results = self.__get_search_results(query=query, limit=limit)
+            return (
+                results.get("total", 0),
+                results.get("data", []),
+                results.get("token")
+            )
         except Exception as e:
             logger.error(f"Error in paper search: {str(e)}")
-            return 0, []
-
-    def get_paper_details(self, paper_id: str) -> Optional[Dict[str, Any]]:
-        """Get detailed information about a specific paper."""
-        try:
-            return self.__get_paper_details(paper_id)
-        except Exception as e:
-            logger.error(f"Error getting paper details: {str(e)}")
-            return None
-
-    def format_paper_list(self, papers: List[Dict[str, Any]]) -> str:
-        """Format paper list for display."""
-        formatted = []
-        for idx, paper in enumerate(papers):
-            authors = paper.get('authors', [])
-            author_str = ' and '.join(author['name'] for author in authors[:3])
-            if len(authors) > 3:
-                author_str += ' et al.'
-
-            formatted.append(
-                f"{idx}. {paper['title']}\n"
-                f"   Authors: {author_str}\n"
-                f"   Year: {paper.get('year', 'N/A')}\n"
-                f"   Citations: {paper.get('citations', 0)}\n"
-                f"   URL: {paper['url']}\n"
-            )
-        return "\n".join(formatted)
+            return 0, [], None
 
     @tool("search-papers", args_schema=SearchPapersInput)
     @staticmethod
@@ -145,13 +97,26 @@ class SemanticScholarAPIWrapper:
         """
         try:
             api = SemanticScholarAPIWrapper()
-            total, papers = api.search_papers(query)
+            total, papers, next_token = api.search_papers(query, limit=max_papers)
             if not total:
                 return "No matches found."
             
-            return (
-                f"Found {total} results. Showing up to {max_papers}.\n\n"
-                f"{api.format_paper_list(papers[:max_papers])}"
-            )
+            # Format results
+            formatted_papers = []
+            for paper in papers:
+                formatted_papers.append(
+                    f"Title: {paper.get('title')}\n"
+                    f"URL: {paper.get('url')}\n"
+                )
+            
+            response = [
+                f"Found {total} results. Showing {len(papers)} papers.",
+                "\n\n".join(formatted_papers)
+            ]
+            
+            if next_token:
+                response.append(f"\nMore results available. Token: {next_token}")
+                
+            return "\n\n".join(response)
         except Exception as e:
             return f"Error performing paper search: {e}"
