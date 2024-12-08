@@ -19,6 +19,11 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from pathlib import Path
+
+from matplotlib.patches import Ellipse
+import matplotlib.transforms as transforms
+
+
 class ServiceTradeoffAnalyzer:
     def __init__(self, df: pd.DataFrame, timestamp: str):
         self.df = df
@@ -498,8 +503,6 @@ class ServiceTradeoffAnalyzer:
                     dpi=300, bbox_inches='tight')
         plt.close()
 
-from matplotlib.patches import Ellipse
-import matplotlib.transforms as transforms
 
 class StatisticalDashboardGenerator:
     def __init__(self, df: pd.DataFrame, timestamp: str):
