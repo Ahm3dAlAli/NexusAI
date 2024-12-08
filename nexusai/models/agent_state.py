@@ -1,5 +1,6 @@
 from typing import Annotated, Sequence, TypedDict
-from langchain_core.messages import BaseMessage, AIMessage
+
+from langchain_core.messages import AIMessage, BaseMessage
 from langgraph.graph.message import add_messages
 
 

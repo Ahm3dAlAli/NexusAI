@@ -43,6 +43,9 @@
 ## Notes
 We should explain all our design choices in the user guide.
 
+We want to provide researchers with a responsive and long-context agent that can answer complex questions.
+For this, we implemented cache and context window management.
+
 Cache:
 - store pdfs and query results in cache (redis to maximize throughput)
 - query results expire after 7 days (reasonable time period for a paper to be relevant)

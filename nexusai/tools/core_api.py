@@ -1,12 +1,12 @@
 import time
-import urllib3
 
+import urllib3
 from langchain_core.tools import tool
 
 from nexusai.cache.cache_manager import CacheManager
 from nexusai.config import (
-    CORE_API_KEY,
     CORE_API_BASE_URL,
+    CORE_API_KEY,
     MAX_RETRIES,
     RETRY_BASE_DELAY,
 )

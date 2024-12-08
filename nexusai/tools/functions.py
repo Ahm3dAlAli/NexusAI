@@ -1,7 +1,7 @@
 from langchain_core.tools import BaseTool
 
-from nexusai.tools.pdf_downloader import PDFDownloader
 from nexusai.tools.core_api import CoreAPIWrapper
+from nexusai.tools.pdf_downloader import PDFDownloader
 
 
 def setup_tools(query: str) -> list[BaseTool]:

@@ -1,16 +1,15 @@
-import urllib3
-import time
-import io
-import pdfplumber
 import asyncio
+import io
+import time
 
-from langchain_core.tools import tool
+import pdfplumber
+import urllib3
 from langchain_community.vectorstores import FAISS
+from langchain_core.tools import tool
 from langchain_openai import OpenAIEmbeddings
 
-
 from nexusai.cache.cache_manager import CacheManager
-from nexusai.config import MAX_RETRIES, RETRY_BASE_DELAY, MAX_PAGES
+from nexusai.config import MAX_PAGES, MAX_RETRIES, RETRY_BASE_DELAY
 from nexusai.utils.logger import logger
 
 # Disable warnings for insecure requests

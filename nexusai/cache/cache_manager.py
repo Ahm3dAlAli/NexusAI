@@ -1,6 +1,7 @@
-import redis
 import hashlib
 import json
+
+import redis
 
 from nexusai.config import REDIS_URL
 from nexusai.utils.logger import logger
