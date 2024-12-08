@@ -12,7 +12,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the rest of the application
 COPY backend/ .
-COPY .env .
 COPY nexusai/ ./nexusai
 
 # Expose the port the app runs on
