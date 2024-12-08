@@ -69,7 +69,7 @@ Why 4o mini?
 #### Priority 1:  API Wrapper Development (DONE)
 API Integration Layer Implement unified interface for Semantic Scholar
 
-#### Priority 2: Latex Overleaf report
+#### Priority 2: Latex Overleaf report and Unit testing
 Documentation and Testing
 Create comprehensive API documentation
 Develop test suites for each component
