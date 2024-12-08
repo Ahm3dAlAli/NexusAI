@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import { AgentMessage, AgentMessageType } from '@/types/AgentMessage'
 import { Copy } from "lucide-react"
 import {
@@ -148,7 +149,12 @@ export default function Chat() {
                 )}
                 <div className="message-content">
                   <h2>Task Completed:</h2>
-                  <ReactMarkdown components={{ a: MarkdownLink }}>{m.content}</ReactMarkdown>
+                  <ReactMarkdown 
+                    remarkPlugins={[remarkGfm]}
+                    components={{ a: MarkdownLink }}
+                  >
+                    {m.content}
+                  </ReactMarkdown>
                 </div>
               </div>
             );
@@ -171,12 +177,22 @@ export default function Chat() {
                       <div className="font-bold mt-2 mb-2 pb-2 border-b">{m.tool_name}</div>
                     )}
                     <div className="message-content">
-                      <ReactMarkdown components={{ a: MarkdownLink }}>{m.content}</ReactMarkdown>
+                      <ReactMarkdown 
+                        remarkPlugins={[remarkGfm]}
+                        components={{ a: MarkdownLink }}
+                      >
+                        {m.content}
+                      </ReactMarkdown>
                     </div>
                   </div>
                 ) : (
                   <div className="message-content">
-                    <ReactMarkdown components={{ a: MarkdownLink }}>{m.content}</ReactMarkdown>
+                    <ReactMarkdown 
+                      remarkPlugins={[remarkGfm]}
+                      components={{ a: MarkdownLink }}
+                    >
+                      {m.content}
+                    </ReactMarkdown>
                   </div>
                 )}
               </CardContent>

@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { useChat } from 'ai/react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 
 export default function Chat() {
   const [aiTyping, setAiTyping] = useState(false)
@@ -26,7 +28,14 @@ export default function Chat() {
               m.role === 'user' ? 'bg-blue-100 ml-auto' : 'bg-gray-100'
             } max-w-[80%]`}
           >
-            {m.content}
+            <ReactMarkdown 
+              remarkPlugins={[remarkGfm]}
+              components={{
+                a: ({node, ...props}) => <a {...props} target="_blank" rel="noopener noreferrer" />
+              }}
+            >
+              {m.content}
+            </ReactMarkdown>
           </div>
         ))}
         {aiTyping && (

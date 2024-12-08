@@ -6,6 +6,7 @@ from langchain_openai import ChatOpenAI
 
 from ..config import MAX_FEEDBACK_REQUESTS
 from ..models.agent_state import AgentState
+from ..utils.messages import get_agent_messages
 from ..models.outputs import DecisionMakingOutput, JudgeOutput
 from ..prompts.system_prompts import (
     decision_making_prompt,
@@ -63,7 +64,9 @@ class WorkflowNodes:
             content=planning_prompt.format(tools=self.__format_tools_description())
         )
         response = self.planning_llm.invoke([system_prompt] + state["messages"])
-        return {"messages": [response]}
+
+        # Add the latest planning to the state for easier access
+        return {"messages": [response], "current_planning": response}
 
     async def __execute_tool_call(self, tool_call: dict) -> ToolMessage:
         """Execute a single tool call asynchronously."""
@@ -99,7 +102,8 @@ class WorkflowNodes:
     def agent_node(self, state: AgentState) -> dict[str, Any]:
         """Node that uses the LLM with tools to process results."""
         system_prompt = SystemMessage(content=agent_prompt)
-        response = self.agent_llm.invoke([system_prompt] + state["messages"])
+        messages = get_agent_messages(state)
+        response = self.agent_llm.invoke([system_prompt] + messages)
         return {"messages": [response]}
 
     def judge_node(self, state: AgentState) -> dict[str, Any]:

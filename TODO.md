@@ -11,8 +11,6 @@
     - PubMed
     - Web of Science
     We need to be able to find ANY paper we can think of. Maybe we don't need all of them maybe we need more.
-- handle large documents
-    - limit time with unstructured and opt for a faster strategy (based on number of pages?)
 - memory:
     - store previous outputs in local db for persisted memory
     - allow the user to select previous outputs to start from or start a new task
@@ -44,6 +42,15 @@
 
 ## Notes
 We should explain all our design choices in the user guide.
+
+Cache:
+- store pdfs and query results in cache (redis to maximize throughput)
+- query results expire after 7 days (reasonable time period for a paper to be relevant)
+- the goal is to minimize latency, reduce API usage, and make the agent more robust
+
+Agent context: we implemented a sophisticated context management system to make the agent more responsive to the current planning.
+- remove all messages between the last human message and the last planning message
+- add the current planning message at the end
 
 Make the agent robust:
 - use RAG

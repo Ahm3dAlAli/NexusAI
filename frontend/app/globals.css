@@ -248,3 +248,21 @@ body::after {
   /* Ensure the animated dots appear right after the word "Thinking" */
   margin-left: 0.25rem;
 }
+
+/* Add styles for tables */
+.message-content table {
+  @apply w-full border-collapse my-4;
+}
+
+.message-content th,
+.message-content td {
+  @apply border border-gray-300 p-2 text-left;
+}
+
+.message-content th {
+  @apply bg-gray-100 font-bold;
+}
+
+.message-content tr:nth-child(even) {
+  @apply bg-gray-50;
+}
