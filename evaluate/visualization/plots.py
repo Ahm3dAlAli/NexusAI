@@ -36,6 +36,9 @@ class ServiceTradeoffAnalyzer:
             'Scientific': ['scientific_citation_quality', 'scientific_technical_depth', 'scientific_academic_rigor'],
             'Performance': ['latency', 'performance_tokens_per_second']
         }
+    @property
+    def metric_classes(self):
+        return self._metric_classes
 
     def analyze_tradeoffs(self):
         """Generate comprehensive tradeoff analysis visualizations."""
@@ -70,18 +73,16 @@ class ServiceTradeoffAnalyzer:
         service_points = []
         for service, color in zip(self.df['service'].unique(), self.colors):
             service_df = self.df[self.df['service'] == service]
-            
             latency = service_df['latency'].mean()
             scientific_score = np.mean([service_df[col].mean() * 100 
                                       for col in self.metric_classes['Scientific']])
             
-            # Plot point and add to legend handles
-            point = ax.scatter(latency, scientific_score, 
+            point = ax.scatter(latency, scientific_score,
                              s=300,
                              c=[color],
                              alpha=0.7,
                              label=f'{service}')
-            service_points.append(point)
+        service_points.append(point)
 
         # Add quadrant text without boxes
         ax.text(mid_latency/2, 75, 'OPTIMAL\nFast & Accurate', 
