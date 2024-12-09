@@ -64,6 +64,10 @@ Why 4o mini?
 - lambda labs doesn't support debit cards
 - gemini models cannot be used as agents because they strictly require user-ai message sequence
 
+Search APIs:
+- the user can run the agent locally, but they need to provide their own API keys.
+- using the online demo is recommended because we'll have all the keys there, especially semantic scholar which is the best API.
+
 ### Priorities 
 
 #### Priority 1:  API Wrapper Development (DONE)
