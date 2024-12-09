@@ -75,6 +75,7 @@ Create comprehensive API documentation
 Develop test suites for each component
 Implement integration tests
 Create usage examples and tutorials
+Add Evlauation Metrics and Benchamrking in the report
 
 #### Priority 3: Unstructured Data Processing
 Table Analysis
