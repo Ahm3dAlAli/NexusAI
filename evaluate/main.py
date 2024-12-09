@@ -11,7 +11,7 @@ import pandas as pd
 from config import EvalConfig, ServiceType
 from services.our_agent import OurAgentEvaluator
 from services.perplexity import PerplexityEvaluator
-from visualization.plots import plot_comparison_metrics
+from visualization.plots import generate_comprehensive_dashboard
 from visualization.reports import generate_report
 
 class Evaluator:
@@ -251,7 +251,7 @@ class Evaluator:
             
             # Generate visualizations and report
             print("Generating visualizations and report...")
-            plot_comparison_metrics(df, self.timestamp)
+            generate_comprehensive_dashboard(df, self.timestamp)
             generate_report(analysis, self.config, self.timestamp)
             
             if interactive:

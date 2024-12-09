@@ -682,7 +682,7 @@ class StatisticalDashboardGenerator:
         # Create bar plot
         bars = ax.barh([d['Metric'] for d in data],
                       [d['p_value'] for d in data],
-                      color=[self.colors[0] if d['significant'] else '#cccccc' for d in data])
+                      color=["#2c91d1" if d['significant'] else '#cccccc' for d in data])
         
         # Add significance threshold line
         ax.axvline(-np.log10(0.05), color='red', linestyle='--', alpha=0.5,
@@ -1423,7 +1423,6 @@ def generate_comprehensive_dashboard(df: pd.DataFrame, timestamp: str):
 
     generator = DashboardGenerator(df, timestamp)
     generator.create_main_dashboard()
-
 
 
  
