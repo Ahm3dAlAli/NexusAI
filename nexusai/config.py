@@ -26,6 +26,7 @@ CORE_API_BASE_URL = "https://api.core.ac.uk/v3"
 CORE_API_KEY = os.getenv("CORE_API_KEY")
 if CORE_API_KEY:
     PROVIDERS.append("core")
+    logger.info("Found CORE API key. CORE was added to the list of providers.")
 else:
     logger.warning("CORE_API_KEY environment variable is not set. Not using CORE API.")
 
@@ -34,6 +35,7 @@ SERP_API_BASE_URL = "https://serpapi.com"
 SERP_API_KEY = os.getenv("SERP_API_KEY")
 if SERP_API_KEY:
     PROVIDERS.append("serp")
+    logger.info("Found SERP API key. SERP was added to the list of providers.")
 else:
     logger.warning("SERP_API_KEY environment variable is not set. Not using SERP API.")
 
@@ -43,6 +45,16 @@ logger.info(f"Using providers: {PROVIDERS}")
 REDIS_URL = os.getenv("REDIS_URL")
 if not REDIS_URL:
     logger.warning("REDIS_URL environment variable is not set. Not using cache.")
+
+# Traceability with langsmith
+LANGCHAIN_PROJECT = "nexusai"
+if LANGCHAIN_API_KEY := os.getenv("LANGCHAIN_API_KEY"):
+    os.environ["LANGCHAIN_TRACING_V2"] = "true"
+    os.environ["LANGCHAIN_ENDPOINT"] = "https://api.smith.langchain.com"
+    os.environ["LANGCHAIN_PROJECT"] = LANGCHAIN_PROJECT
+    logger.info("Langsmith tracing enabled.")
+else:
+    logger.warning("LANGCHAIN_API_KEY environment variable is not set. Agent runs will not be traced.")
 
 # Request Configuration
 MAX_RETRIES = 5
