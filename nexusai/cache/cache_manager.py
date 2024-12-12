@@ -37,7 +37,7 @@ class CacheManager:
         key = self.__generate_key("pdf", url)
         self.redis.set(key, json.dumps(pages))
 
-    def get_query_results(self, query: str) -> dict | None:
+    def get_query_results(self, query: str) -> str | None:
         """Get query results from cache."""
         if not self.redis:
             return None
@@ -47,7 +47,7 @@ class CacheManager:
         return json.loads(data) if data else None
 
     def store_query_results(
-        self, query: str, results: list, expire_seconds: int = 86400 * 7
+        self, query: str, results: str, expire_seconds: int = 86400 * 7
     ) -> None:
         """Store query results in cache with 7-day default expiration."""
         if not self.redis:

@@ -3,17 +3,6 @@
 ## Todos
 
 ### Tech
-- expand search engine (use other APIs)
-    - Google Scholar
-    - CORE
-    - semantic scholar
-    - arxiv
-    - PubMed
-    - Web of Science
-    We need to be able to find ANY paper we can think of. Maybe we don't need all of them maybe we need more.
-- memory:
-    - store previous outputs in local db for persisted memory
-    - allow the user to select previous outputs to start from or start a new task
 - better data extraction from PDF. Use unstructured: https://docs.unstructured.io/api-reference/api-services/sdk-python
     - [V] tables: use the html text to help the llm
     - [V] citations: they are detected throughout the text, meaning every chunk contains metadata about the citations it makes

@@ -1,7 +1,6 @@
 import time
 
 import urllib3
-from langchain_core.tools import tool
 
 from nexusai.cache.cache_manager import CacheManager
 from nexusai.config import (
@@ -17,10 +16,31 @@ from nexusai.utils.logger import logger
 class CoreAPIWrapper:
     """Simple wrapper around the CORE API."""
 
+    name = "core"
+
     def __init__(self):
         self.base_url = CORE_API_BASE_URL
         self.api_key = CORE_API_KEY
+
+        # Redis cache
         self.cache_manager = CacheManager()
+
+    def __build_query(self, input: SearchPapersInput) -> str:
+        """Build the query for the CORE API."""
+        query = ""
+        if input.keywords:
+            query += f" {input.operator.value.upper()} ".join(
+                [f"'{keyword}'" for keyword in input.keywords]
+            )
+        if input.title:
+            query += f" title:'{input.title}'"
+        if input.year_range:
+            if input.year_range[0]:
+                query += f" yearPublished>={input.year_range[0]}"
+            if input.year_range[1]:
+                query += f" yearPublished<={input.year_range[1]}"
+        logger.info(f"Built query: {query}")
+        return query
 
     def __get_search_results(self, query: str, max_papers: int = 1) -> list:
         """Execute search query with retry mechanism."""
@@ -40,12 +60,10 @@ class CoreAPIWrapper:
                 fields={"q": query, "limit": max_papers},
             )
             if 200 <= response.status < 300:
-                logger.info(f"Successfully got search results for '{query}'")
+                logger.info(f"Successfully got search results from CORE for '{query}'")
                 break
-            elif attempt < MAX_RETRIES - 1:
-                sleep_time = (
-                    60 if response.status == 429 else RETRY_BASE_DELAY ** (attempt + 2)
-                )
+            elif attempt < MAX_RETRIES - 1 and response.status not in [429, 500]:
+                sleep_time = RETRY_BASE_DELAY ** (attempt + 2)
                 logger.warning(
                     f"Got {response.status} response from CORE API. "
                     f"Sleeping for {sleep_time} seconds before retrying..."
@@ -56,16 +74,11 @@ class CoreAPIWrapper:
                     f"Got non 2xx response from CORE API: {response.status}"
                 )
 
-        # Store results in cache
         results = response.json().get("results", [])
-        self.cache_manager.store_query_results(query, results)
         return results
 
     def __format_results(self, results: list) -> str:
         """Format the results into a string."""
-        if not results:
-            return "No relevant results were found"
-
         docs = []
         for result in results:
             published_date = result.get("publishedDate") or result.get(
@@ -76,7 +89,6 @@ class CoreAPIWrapper:
             urls = result.get("sourceFulltextUrls") or result.get("downloadUrl", "")
 
             doc_info = [
-                f"* ID: {result.get('id', '')}",
                 f"* Title: {result.get('title', '')}",
                 f"* Published Date: {published_date}",
                 f"* Authors: {authors_str}",
@@ -87,24 +99,12 @@ class CoreAPIWrapper:
 
         return "\n-----\n".join(docs)
 
-    def search(self, query: str, max_papers: int = 1) -> str:
+    def search(self, input: SearchPapersInput) -> str:
         """Search for papers and format results."""
-        results = self.__get_search_results(query, max_papers)
+        query = self.__build_query(input)
+        results = self.__get_search_results(query, input.max_papers)
         formatted_results = self.__format_results(results)
+
+        # Cache the results
+        self.cache_manager.store_query_results(query, formatted_results)
         return formatted_results
-
-    @tool("search-papers", args_schema=SearchPapersInput)
-    @staticmethod
-    def tool_function(query: str, max_papers: int = 1) -> str:
-        """Search for scientific papers using the CORE API. Queries must be in English.
-
-        Example:
-        {"query": "Attention is all you need", "max_papers": 1}
-
-        Returns:
-            A list of the relevant papers found with the corresponding relevant information.
-        """
-        try:
-            return CoreAPIWrapper().search(query, max_papers)
-        except Exception as e:
-            return f"Error performing paper search: {e}"

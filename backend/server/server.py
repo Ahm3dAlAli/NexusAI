@@ -1,12 +1,11 @@
 from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
+from server.models import QueryRequest
+from server.websocket_manager import WebSocketManager
 
 from nexusai.agent import process_query
 from nexusai.models.outputs import AgentMessage, AgentMessageType
 from nexusai.utils.logger import logger
-
-from server.models import QueryRequest
-from server.websocket_manager import WebSocketManager
 
 # FastAPI app
 app = FastAPI()
