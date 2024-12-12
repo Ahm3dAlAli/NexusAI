@@ -30,18 +30,17 @@ class OurAgentEvaluator(BaseServiceEvaluator):
         try:
             # Process the query using our workflow
             result = await self.workflow.process_query(text,[])
-            
             # Handle error cases
             if "error" in result:
                 raise Exception(result["error"])
-            
+            print(result.model_computed_fields)
             # Return result in standard format
             return {
                 "answer": result.content,
                 "metadata": {
                     "model_used": "gpt-4o-mini",
                     "tools_used": ["search-papers", "download-paper", "ask-human-feedback"],
-                    "tokens":result.get("response_metadata", {}).get("toke_usage", {}).get("completion_token"),
+                    "tokens": result.model_computed_fields,
                     "price": 0.015
                 }
             }
