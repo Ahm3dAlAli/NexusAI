@@ -8,6 +8,11 @@ from nexusai.utils.logger import logger
 
 
 class CacheManager:
+    """Cache manager for the agent.
+
+    It uses Redis to minimize latency and cost of the APIs.
+    """
+
     def __init__(self):
         self.redis = (
             redis.Redis.from_url(REDIS_URL, decode_responses=False)
@@ -29,7 +34,7 @@ class CacheManager:
         return json.loads(data) if data else None
 
     def store_pdf(self, url: str, pages: list[str]) -> None:
-        """Store PDF in cache."""
+        """Store PDF in cache as a list of pages."""
         if not self.redis:
             return None
 

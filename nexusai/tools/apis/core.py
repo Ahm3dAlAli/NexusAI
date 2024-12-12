@@ -14,7 +14,7 @@ from nexusai.utils.logger import logger
 
 
 class CoreAPIWrapper:
-    """Simple wrapper around the CORE API."""
+    """Wrapper around the CORE API."""
 
     name = "core"
 
@@ -30,22 +30,22 @@ class CoreAPIWrapper:
         query = ""
         if input.keywords:
             query += f" {input.operator.value.upper()} ".join(
-                [f"'{keyword}'" for keyword in input.keywords]
+                [f'"{keyword}"' for keyword in input.keywords]
             )
         if input.title:
-            query += f" title:'{input.title}'"
+            query += f' title:"{input.title}"'
         if input.year_range:
             if input.year_range[0]:
                 query += f" yearPublished>={input.year_range[0]}"
             if input.year_range[1]:
                 query += f" yearPublished<={input.year_range[1]}"
-        logger.info(f"Built query: {query}")
+        logger.info(f"Built CORE query: {query}")
         return query
 
     def __get_search_results(self, query: str, max_papers: int = 1) -> list:
         """Execute search query with retry mechanism."""
         if cached_results := self.cache_manager.get_query_results(query):
-            logger.info(f"Found search results for '{query}' in cache")
+            logger.info(f"Found CORE search results for '{query}' in cache")
             return cached_results
 
         http = urllib3.PoolManager()
@@ -60,8 +60,11 @@ class CoreAPIWrapper:
                 fields={"q": query, "limit": max_papers},
             )
             if 200 <= response.status < 300:
-                logger.info(f"Successfully got search results from CORE for '{query}'")
-                break
+                results = response.json().get("results")
+                if not results:
+                    raise Exception(f"No results found from CORE for '{query}'")
+                logger.info(f"Successfully got CORE search results for '{query}'")
+                return results
             elif attempt < MAX_RETRIES - 1 and response.status not in [429, 500]:
                 sleep_time = RETRY_BASE_DELAY ** (attempt + 2)
                 logger.warning(
@@ -73,9 +76,6 @@ class CoreAPIWrapper:
                 raise Exception(
                     f"Got non 2xx response from CORE API: {response.status}"
                 )
-
-        results = response.json().get("results", [])
-        return results
 
     def __format_results(self, results: list) -> str:
         """Format the results into a string."""

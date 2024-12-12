@@ -26,7 +26,7 @@ class SearchPapersInput(BaseModel):
     year_range: list[int | None] | None = Field(
         default=None,
         description="Year range to search for papers. The first element is the start year (inclusive) and the second element is the end year (inclusive).",
-        examples=[[2020, 2024], [2020, None], [None, 2024]],
+        examples=[[2020, 2024], [2020, None], [None, 2024], [2023, 2023]],
     )
     title: str | None = Field(
         default=None,

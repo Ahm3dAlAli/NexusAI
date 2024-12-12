@@ -8,6 +8,7 @@ from nexusai.workflow.nodes import WorkflowNodes
 async def process_query(
     query: str, history: list[AgentMessage] = [], message_callback=None
 ) -> AgentMessage:
+    """Process a query and return the result. It allows passing previous messages to ask follow-up questions."""
     # Setup workflow
     tools = setup_tools(query)
     nodes = WorkflowNodes(tools)

@@ -17,7 +17,13 @@ load_dotenv()
 
 
 class SerpAPIWrapper:
-    """Simple wrapper around the Google SERP API for academic search."""
+    """Wrapper around the Google SERP API for academic search.
+
+    It enriches the Google query by filtering for databases for academic papers and PDF results to increase the relevance of the results.
+    It doesn't use the Google Scholar API as it doesn't have the same coverage as Google Search.
+
+    It's used as the final API in the pipeline to get relevant results.
+    """
 
     name = "serp"
 
@@ -52,19 +58,19 @@ class SerpAPIWrapper:
             if input.year_range[1]:
                 query += f" before:{input.year_range[1] + 1}"
         query = f"site:({' OR '.join(self.sites)}) {query} filetype:pdf"
-        logger.info(f"Built query: {query}")
+        logger.info(f"Built SERP query: {query}")
         return query
 
     def __get_search_results(self, query: str, max_papers: int = 1) -> list:
         """Execute search query with retry mechanism."""
         if cached_results := self.cache_manager.get_query_results(query):
-            logger.info(f"Found search results for '{query}' in cache")
+            logger.info(f"Found SERP search results for '{query}' in cache")
             return cached_results
 
         http = urllib3.PoolManager()
         for attempt in range(MAX_RETRIES):
             logger.info(
-                f"Searching for '{query}' (attempt {attempt + 1}/{MAX_RETRIES})"
+                f"Searching SERP for '{query}' (attempt {attempt + 1}/{MAX_RETRIES})"
             )
             response = http.request(
                 "GET",
@@ -77,8 +83,11 @@ class SerpAPIWrapper:
                 },
             )
             if 200 <= response.status < 300:
-                logger.info(f"Successfully got search results from SERP for '{query}'")
-                break
+                results = response.json().get("organic_results", [])
+                if not results:
+                    raise Exception(f"No results found from SERP for '{query}'")
+                logger.info(f"Successfully got SERP search results for '{query}'")
+                return results
             elif attempt < MAX_RETRIES - 1 and response.status not in [429, 500]:
                 sleep_time = RETRY_BASE_DELAY ** (attempt + 2)
                 logger.warning(
@@ -90,9 +99,6 @@ class SerpAPIWrapper:
                 raise Exception(
                     f"Got non 2xx response from SERP API: {response.status}"
                 )
-
-        results = response.json().get("organic_results", [])
-        return results
 
     def __format_results(self, results: list) -> str:
         """Format the search results into a string."""

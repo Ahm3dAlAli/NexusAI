@@ -16,12 +16,12 @@
 - build full platform and deploy?
 
 ### Documentation
-- add docstrings to all functions
 - README:
     - Describe the agent (use markdown blocks from original notebook)
     - We should probably go more in depth with the agent description. We should document the code and write what each part does in the README.
     - Describe the evaluation procedure
 - there will be some overlap between the README and the user guide
+    - **ask judges where to write detailed doc (readme or user guide???)**
 
 ## Submission
 - **Video Presentation**: Demonstrate your application in action and explain how it addresses a real-world problem.

@@ -11,7 +11,7 @@ from ..workflow.nodes import WorkflowNodes
 
 
 class ResearchWorkflow:
-    """Implementation of the research workflow graph."""
+    """Implementation of the langgraph workflow."""
 
     def __init__(self, nodes: WorkflowNodes):
         """Initialize the workflow with nodes."""
@@ -87,7 +87,7 @@ class ResearchWorkflow:
         return "planning"
 
     def __infer_message_type(self, message: BaseMessage) -> AgentMessageType:
-        """Infer the type of message based on the message content."""
+        """Map langchain message types to agent message types."""
         if message.type == "system":
             return AgentMessageType.system
         elif message.type == "human":
@@ -111,7 +111,7 @@ class ResearchWorkflow:
     async def process_query(
         self, query: str, messages: list[BaseMessage], message_callback=None
     ) -> AgentMessage:
-        """Process a research query through the workflow."""
+        """Process a research query streaming the intermediate messages."""
         try:
             all_messages: list[BaseMessage] = []
             async for chunk in self.workflow.astream(
@@ -123,7 +123,7 @@ class ResearchWorkflow:
                         for message in messages:
                             # Truncate long tool messages
                             if (
-                                isinstance(message, ToolMessage)
+                                message.name == "download-paper"
                                 and len(message.content) > 1000
                             ):
                                 message = ToolMessage(

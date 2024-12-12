@@ -17,6 +17,8 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 class PDFDownloader:
+    """Download a PDF from a URL and return the text."""
+
     query: str = ""
 
     def __init__(self, query: str):
@@ -29,6 +31,8 @@ class PDFDownloader:
         """Filter pages with RAG to keep only the most relevant ones."""
         logger.warning(f"The PDF has {MAX_PAGES}, filtering content...")
         logger.info(f"Generating embeddings for {len(pages)} pages...")
+        assert self.query, "Query is required to filter pages"
+
         start_time = time.time()
         embeddings = asyncio.run(self.embeddings.aembed_documents(pages))
         db = FAISS.from_embeddings(

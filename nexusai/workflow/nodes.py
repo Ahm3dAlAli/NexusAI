@@ -1,4 +1,5 @@
 import asyncio
+from datetime import datetime
 from typing import Any
 
 from langchain_core.messages import AIMessage, SystemMessage, ToolMessage
@@ -49,7 +50,11 @@ class WorkflowNodes:
 
     def decision_making_node(self, state: AgentState) -> dict[str, Any]:
         """Entry point node that decides whether research is needed."""
-        system_prompt = SystemMessage(content=decision_making_prompt)
+        system_prompt = SystemMessage(
+            content=decision_making_prompt.format(
+                current_date=datetime.now().strftime("%Y-%m-%d"),
+            )
+        )
         response: DecisionMakingOutput = self.decision_making_llm.invoke(
             [system_prompt] + state["messages"]
         )
@@ -62,7 +67,10 @@ class WorkflowNodes:
     def planning_node(self, state: AgentState) -> dict[str, Any]:
         """Planning node that creates a research strategy."""
         system_prompt = SystemMessage(
-            content=planning_prompt.format(tools=self.__format_tools_description())
+            content=planning_prompt.format(
+                tools=self.__format_tools_description(),
+                current_date=datetime.now().strftime("%Y-%m-%d"),
+            )
         )
         response = self.planning_llm.invoke([system_prompt] + state["messages"])
 
@@ -88,7 +96,7 @@ class WorkflowNodes:
             )
 
     def tools_node(self, state: AgentState) -> dict[str, Any]:
-        """Node that executes tools based on the plan."""
+        """Node that executes tool calls based on the plan. It runs them asynchronously to reduce latency."""
 
         async def run_tool_calls() -> list[ToolMessage]:
             tasks = [
@@ -102,7 +110,9 @@ class WorkflowNodes:
 
     def agent_node(self, state: AgentState) -> dict[str, Any]:
         """Node that uses the LLM with tools to process results."""
-        system_prompt = SystemMessage(content=agent_prompt)
+        system_prompt = SystemMessage(
+            content=agent_prompt.format(current_date=datetime.now().strftime("%Y-%m-%d"))
+        )
         messages = get_agent_messages(state)
         response = self.agent_llm.invoke([system_prompt] + messages)
         return {"messages": [response]}
@@ -114,7 +124,9 @@ class WorkflowNodes:
         if num_feedback_requests >= MAX_FEEDBACK_REQUESTS:
             return {"is_good_answer": True}
 
-        system_prompt = SystemMessage(content=judge_prompt)
+        system_prompt = SystemMessage(
+            content=judge_prompt.format(current_date=datetime.now().strftime("%Y-%m-%d"))
+        )
         response: JudgeOutput = self.judge_llm.invoke(
             [system_prompt] + state["messages"]
         )

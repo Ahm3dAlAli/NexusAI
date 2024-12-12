@@ -31,7 +31,10 @@ async def read_root():
 
 @app.websocket("/ws")
 async def process_query_websocket(websocket: WebSocket):
+    """Chat with the agent through a websocket."""
+
     async def send_intermediate_message(message: AgentMessage):
+        """Callback function to send intermediate messages to the client."""
         await manager.send_message(message.model_dump(), websocket)
 
     await manager.connect(websocket)

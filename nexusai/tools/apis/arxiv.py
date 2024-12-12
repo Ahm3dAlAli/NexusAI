@@ -11,7 +11,7 @@ from nexusai.utils.logger import logger
 
 
 class ArxivAPIWrapper:
-    """Simple wrapper around the arXiv API."""
+    """Wrapper around the arXiv API."""
 
     name = "arxiv"
 
@@ -35,32 +35,24 @@ class ArxivAPIWrapper:
             query_parts.append(f'ti:"{input.title}"')
 
         if input.year_range:
-            date_conditions = []
-            if input.year_range[0]:
-                date_conditions.append(
-                    f"submittedDate:[{input.year_range[0]}0101 TO 99991231]"
-                )
-            if input.year_range[1]:
-                date_conditions.append(
-                    f"submittedDate:[00000101 TO {input.year_range[1]}1231]"
-                )
-            if date_conditions:
-                query_parts.append("; ".join(date_conditions))
+            query_parts.append(
+                f"submittedDate:[{input.year_range[0] or 0000}0101 TO {input.year_range[1] or 9999}1231]"
+            )
 
         query = "; ".join(query_parts)
-        logger.info(f"Built query: {query}")
+        logger.info(f"Built Arxiv query: {query}")
         return query
 
     def __get_search_results(self, query: str, max_papers: int = 1) -> list:
         """Execute search query with retry mechanism."""
         if cached_results := self.cache_manager.get_query_results(query):
-            logger.info(f"Found search results for '{query}' in cache")
+            logger.info(f"Found Arxiv search results for '{query}' in cache")
             return cached_results
 
         http = urllib3.PoolManager()
         for attempt in range(MAX_RETRIES):
             logger.info(
-                f"Searching for '{query}' (attempt {attempt + 1}/{MAX_RETRIES})"
+                f"Searching Arxiv for '{query}' (attempt {attempt + 1}/{MAX_RETRIES})"
             )
             response = http.request(
                 "GET",
@@ -72,10 +64,14 @@ class ArxivAPIWrapper:
                     "sortOrder": "descending",
                 },
             )
-
             if 200 <= response.status < 300:
-                logger.info(f"Successfully got search results from arxiv for '{query}'")
-                break
+                feed = feedparser.parse(response.data)
+                results = feed.entries
+                print(results)
+                if not results:
+                    raise Exception(f"No results found from Arxiv for '{query}'")
+                logger.info(f"Successfully got Arxiv search results for '{query}'")
+                return results
             elif attempt < MAX_RETRIES - 1 and response.status not in [429, 500]:
                 sleep_time = RETRY_BASE_DELAY ** (attempt + 2)
                 logger.warning(
@@ -87,10 +83,6 @@ class ArxivAPIWrapper:
                 raise Exception(
                     f"Got non 2xx response from arXiv API: {response.status}"
                 )
-
-        feed = feedparser.parse(response.data)
-        results = feed.entries
-        return results
 
     def __format_results(self, results: list) -> str:
         """Format the search results into a string."""

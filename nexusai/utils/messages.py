@@ -5,6 +5,7 @@ from nexusai.models.outputs import AgentMessage, AgentMessageType
 
 
 def build_messages(history: list[AgentMessage]) -> list[BaseMessage]:
+    """Build a list of langchain messages from the agent history."""
     messages = []
     for message in history:
         if message.type == AgentMessageType.system:
