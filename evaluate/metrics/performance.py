@@ -1,4 +1,25 @@
 from typing import Dict, Any
+import re
+from dataclasses import dataclass
+from typing import Optional, List
+@dataclass
+class ToolCall:
+    id: str
+    function: Dict[str, str]
+    type: str
+
+@dataclass
+class TokenUsage:
+    completion_tokens: int
+    prompt_tokens: int
+    total_tokens: int
+
+@dataclass
+class ResponseMetadata:
+    token_usage: TokenUsage
+    model_name: str
+    system_fingerprint: str
+    finish_reason: str
 
 class PerformanceMetrics:
     """
@@ -6,7 +27,6 @@ class PerformanceMetrics:
     Focuses on response time and processing efficiency metrics.
     """
     def evaluate(self, result: Dict[str, Any], latency: float) -> Dict[str, float]:
-
         """
         Calculates performance metrics based on response time and output size.
         
@@ -15,18 +35,18 @@ class PerformanceMetrics:
             latency: Time taken in seconds to generate the response
             
         Returns:
-            Dictionary containing:
-                - latency: Raw response time in seconds
-                - tokens_per_second: Processing speed (response length / time taken)
-                
-        Example:
-            For a 1000-character response taking 2 seconds:
-            {
-                "latency": 2.0,
-                "tokens_per_second": 500.0  # 1000 chars / 2 seconds
-            }
+            Dictionary containing performance metrics:
+            - latency: Raw response time in seconds
+            - tokens_per_second: Token processing speed
+            - total_tokens: Total tokens used in the interaction
         """
-        return {
+        # Extract token usage from response metadata
+ 
+        token_usage = result.get("metadata", {}).get("tokens", {}).get("completion_tokens",0)
+        
+        metrics = {
             "latency": latency,
-            "tokens_per_second": len(str(result)) / latency if latency > 0 else 0,
+            "tokens_per_second": token_usage / latency if latency > 0 else 0
         }
+        
+        return metrics

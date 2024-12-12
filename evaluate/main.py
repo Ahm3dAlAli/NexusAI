@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import Dict, List, Any, Optional
 from pathlib import Path
 import pandas as pd
-
+import numpy as np 
 # Use absolute imports
 from config import EvalConfig, ServiceType
 from services.our_agent import OurAgentEvaluator
@@ -38,23 +38,28 @@ class Evaluator:
                     "query": result.get("query", ""),
                     "latency": result.get("latency", 0.0),
                     "success": result.get("success", False),
-                    "answer": result.get("answer", "")
+                    "answer": result.get("answer", ""),
+                    "price": result.get("price",0)
                 }
 
                 # Add performance metrics
                 if "performance_metrics" in result:
                     for key, value in result["performance_metrics"].items():
-                        row[f"performance_{key}"] = value
+                        row[f"{key}"] = value
 
+              
                 # Add quality metrics
                 if "quality_metrics" in result:
                     for key, value in result["quality_metrics"].items():
-                        row[f"quality_{key}"] = value
+                        row[f"{key}"] = value
+                
+
 
                 # Add scientific metrics
                 if "scientific_metrics" in result:
                     for key, value in result["scientific_metrics"].items():
-                        row[f"scientific_{key}"] = value
+                        row[f"{key}"] = value
+      
 
                 rows.append(row)
 
@@ -76,7 +81,7 @@ class Evaluator:
         
         return df
 
-    # In evaluate/main.py (update the _analyze_results method)
+    
 
     def _analyze_results(self, df: pd.DataFrame) -> Dict[str, Any]:
         """Analyze evaluation results across all metrics."""
@@ -89,7 +94,7 @@ class Evaluator:
         try:
             for service in df["service"].unique():
                 service_df = df[df["service"] == service]
-                
+
                 # Calculate all available metrics
                 metrics = {
                     # Performance metrics
@@ -102,17 +107,16 @@ class Evaluator:
                     
                     # Quality metrics
                     "quality_metrics": {
-                        "paper_coverage": float(service_df["quality_paper_coverage"].mean() if "quality_paper_coverage" in service_df else 0),
-                        "temporal_accuracy": float(service_df["quality_temporal_accuracy"].mean() if "quality_temporal_accuracy" in service_df else 0),
-                        "response_completeness": float(service_df["quality_response_completeness"].mean() if "quality_response_completeness" in service_df else 0)
+                        "success_rate": float(service_df["success_rate"].mean() if "success_rate" in service_df else 0),
+                        "query_relevance": float(service_df["query_relevance"].mean() if "query_relevance" in service_df else 0),
+                        "response_completeness": float(service_df["response_completeness"].mean() if "response_completeness" in service_df else 0)
                     },
                     
                     # Scientific metrics
                     "scientific_metrics": {
-                        "citation_quality": float(service_df["scientific_citation_quality"].mean() if "scientific_citation_quality" in service_df else 0),
-                        "scientific_structure": float(service_df["scientific_scientific_structure"].mean() if "scientific_scientific_structure" in service_df else 0),
-                        "technical_depth": float(service_df["scientific_technical_depth"].mean() if "scientific_technical_depth" in service_df else 0),
-                        "academic_rigor": float(service_df["scientific_academic_rigor"].mean() if "scientific_academic_rigor" in service_df else 0),
+                        "scientific_structure": float(service_df["scientific_structure"].mean() if "scientific_structure" in service_df else 0),
+                        "technical_depth": float(service_df["technical_depth"].mean() if "technical_depth" in service_df else 0),
+                        "academic_rigor": float(service_df["academic_rigor"].mean() if "academic_rigor" in service_df else 0)
                     },
                     
                     # Overall statistics
@@ -127,8 +131,8 @@ class Evaluator:
                 metrics["aggregate_scores"] = {
                     "overall_quality": sum(metrics["quality_metrics"].values()) / len(metrics["quality_metrics"]),
                     "scientific_rigor": sum(metrics["scientific_metrics"].values()) / len(metrics["scientific_metrics"]),
-                    "performance_score": 1.0 / (1.0 + metrics["latency_metrics"]["average_latency"]),  # Higher is better
-                    "reliability": (metrics["success_metrics"]["success_rate"] - metrics["success_metrics"]["error_rate"])/metrics["success_metrics"]["success_rate"]
+                    "performance_score": 1-(1.0 / (1.0 + metrics["latency_metrics"]["average_latency"])),  # Higher is better
+                    "reliability": 0.5* (metrics["scientific_metrics"]["academic_rigor"] + 0.2*  metrics["scientific_metrics"]["scientific_structure"]+ 0.3*  metrics["quality_metrics"]["query_relevance"])
                 }
                 
                 analysis[service] = metrics
@@ -164,7 +168,6 @@ class Evaluator:
             print(f"Running evaluation for {service_type.value} (Run {run + 1}/{self.config.NUM_RUNS})")
             try:
                 run_results = await service.evaluate_queries(self.config.DEFAULT_QUERIES)
-                
                 # Ensure each result has the basic required structure
                 for result in run_results:
                     if isinstance(result, dict) and "success" in result:

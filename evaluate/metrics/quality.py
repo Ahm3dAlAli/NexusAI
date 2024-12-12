@@ -1,64 +1,105 @@
-from typing import Dict, Any
+from typing import Dict, Any, List
 import re
+from dataclasses import dataclass
+from typing import Optional
+
+@dataclass
+class TokenUsage:
+    completion_tokens: int
+    prompt_tokens: int
+    total_tokens: int
+
+@dataclass
+class ResponseMetadata:
+    token_usage: TokenUsage
+    model_name: str
+    system_fingerprint: str
+    finish_reason: str
 
 class QualityMetrics:
     """
     Evaluates the quality and accuracy of research agent responses.
-    Measures paper coverage, temporal accuracy, and response completeness.
+    Measures success rate, query relevance, and response completeness.
     """
     def evaluate(self, result: Dict[str, Any], query_data: Dict[str, Any]) -> Dict[str, float]:
-
         """
         Analyzes response quality through multiple dimensions.
         
         Args:
             result: Response containing answer text and metadata
-            query_data: Original query parameters including expected papers and date ranges
+            query_data: Original query parameters
             
         Returns:
             Dictionary of quality metrics:
-                - paper_coverage: Ratio of found papers to expected papers (0.0-1.0)
-                - temporal_accuracy: Proportion of years within requested range (0.0-1.0)
-                - response_completeness: Assessment of response detail (0.0-1.0)
-                
-        Metric Details:
-            - paper_coverage: If 8 papers requested and 6 found: 6/8 = 0.75
-            - temporal_accuracy: For date range 2020-2023, percentage of mentioned years in range
-            - response_completeness: Based on response length, with 100+ characters considered complete
-            
-        Example:
-            For a query requesting 5 papers from 2020-2023:
-            {
-                "paper_coverage": 0.8,      # Found 4 of 5 papers
-                "temporal_accuracy": 0.9,    # 90% of years in range
-                "response_completeness": 1.0 # Response longer than 100 chars
-            }
+                - success_rate: Success based on content presence (0.0-1.0)
+                - query_relevance: Assessment of response relevance to query (0.0-1.0)
+                - response_completeness: Assessment of response completeness (0.0-1.0)
         """
+        # Extract content
+        content = self._extract_content(result)
         
-        text = str(result.get("answer", ""))
+        # Calculate success rate based on content presence
+        success_rate = 1.0 if content.strip() else 0.0
         
-        # Count papers
-        paper_count = len(re.findall(r"Title:", text))
-        expected_papers = query_data.get("expected_papers", 0)
+        # Calculate query relevance
+        query_terms = self._extract_query_terms(query_data)
+        query_relevance = self._calculate_query_relevance(content, query_terms)
         
-        # Check year constraints
-        min_year = query_data.get("min_year")
-        max_year = query_data.get("max_year")
-        years_mentioned = re.findall(r"(\d{4})", text)
-        years_in_range = 0
-        if years_mentioned:
-            for year in years_mentioned:
-                year = int(year)
-                if min_year and year < min_year:
-                    continue
-                if max_year and year > max_year:
-                    continue
-                years_in_range += 1
-                
+        # Calculate response completeness
+        response_completeness = self._calculate_completeness(result)
+        
         metrics = {
-            "paper_coverage": paper_count / expected_papers if expected_papers else 1.0,
-            "temporal_accuracy": years_in_range / len(years_mentioned) if years_mentioned else 1.0,
-            "response_completeness": 1.0 if len(text) > 100 else len(text) / 100,
+            "success_rate": success_rate,
+            "query_relevance": query_relevance,
+            "response_completeness": response_completeness
         }
         
         return metrics
+    
+    def _extract_content(self, result: Dict[str, Any]) -> str:
+        """Extract content from response."""
+        # Try different possible content locations
+        content_locations = [
+            result.get("content", ""),
+            result.get("choices", [{}])[0].get("message", {}).get("content", ""),
+            result.get("answer", "")
+        ]
+        
+        # Return first non-empty content found
+        for content in content_locations:
+            if content and content.strip():
+                return content.strip()
+        return ""
+
+    def _extract_query_terms(self, query_data: Dict[str, Any]) -> List[str]:
+        """Extract key terms from the query for relevance calculation."""
+        query = query_data.get("query", "")
+        # Remove special operators and clean query
+        clean_query = re.sub(r'AND|OR|\d{4}|[^\w\s]', '', query)
+        return [term.lower() for term in clean_query.split()]
+
+    def _calculate_query_relevance(self, content: str, query_terms: List[str]) -> float:
+        """Calculate relevance of response to query terms."""
+        if not query_terms or not content:
+            return 0.0
+        
+        content_lower = content.lower()
+        matches = sum(1 for term in query_terms if term in content_lower)
+        return matches / len(query_terms)
+
+    def _calculate_completeness(self, result: Dict[str, Any]) -> float:
+        """Calculate response completeness based on multiple factors."""
+        content = self._extract_content(result)
+        token_usage = result.get("response_metadata", {}).get("token_usage", {})
+        completion_tokens = token_usage.get("completion_tokens", 0)
+        
+        # Consider both content length and token usage
+        has_sufficient_length = len(content) >= 50
+        has_sufficient_tokens = completion_tokens >= 200
+        
+        if has_sufficient_length and has_sufficient_tokens:
+            return 1.0
+        elif has_sufficient_length or has_sufficient_tokens:
+            return 0.75
+        else:
+            return max(len(content) / 100, completion_tokens / 50)

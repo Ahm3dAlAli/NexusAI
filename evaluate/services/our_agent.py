@@ -34,13 +34,15 @@ class OurAgentEvaluator(BaseServiceEvaluator):
             # Handle error cases
             if "error" in result:
                 raise Exception(result["error"])
-                
+            
             # Return result in standard format
             return {
                 "answer": result.content,
                 "metadata": {
                     "model_used": "gpt-4o-mini",
                     "tools_used": ["search-papers", "download-paper", "ask-human-feedback"],
+                    "tokens":result.get("response_metadata", {}).get("toke_usage", {}).get("completion_token"),
+                    "price": 0.015
                 }
             }
         except Exception as e:

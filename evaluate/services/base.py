@@ -54,6 +54,3 @@ class BaseServiceEvaluator:
                 
         return results
 
-    async def query(self, text: str) -> Dict[str, Any]:
-        """Must be implemented by child classes."""
-        raise NotImplementedError
