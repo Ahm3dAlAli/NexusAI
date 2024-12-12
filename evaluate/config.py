@@ -51,7 +51,7 @@ class EvalConfig:
     ])
     
     # Evaluation parameters
-    NUM_RUNS: int = 3  # Number of evaluation runs
+    NUM_RUNS: int = 1  # Number of evaluation runs
     TIMEOUT: int = 300  # Maximum time per query in seconds
     PARALLEL_QUERIES: bool = True
     MAX_CONCURRENT_QUERIES: int = 3
@@ -62,7 +62,7 @@ class EvalConfig:
             model_name="gpt-4o-mini"
         ),
         ServiceType.PERPLEXITY: ServiceConfig(
-            model_name="gpt-4.0-mini",  # Updated model name
+            model_name="llama-small-online-128k",  # Updated model name
             api_key=os.getenv("PERPLEXITY_API_KEY")
         )
     })
