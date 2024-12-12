@@ -25,26 +25,44 @@ import matplotlib.transforms as transforms
 
 
 class ServiceTradeoffAnalyzer:
+    """Analyzes and visualizes tradeoffs between different service metrics."""
+    
     def __init__(self, df: pd.DataFrame, timestamp: str):
         self.df = df
         self.timestamp = timestamp
-        self.colors = sns.color_palette("husl", n_colors=len(df['service'].unique()))
+        self.colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728'][:len(df['service'].unique())]
         Path("evaluation_plots").mkdir(exist_ok=True)
         
+        # Define metrics structure
         self.metric_classes = {
-            'Quality': ['quality_paper_coverage', 'quality_temporal_accuracy', 'quality_response_completeness'],
-            'Scientific': ['scientific_citation_quality', 'scientific_technical_depth', 'scientific_academic_rigor'],
-            'Performance': ['latency', 'performance_tokens_per_second']
+            'Quality': ['success_rate', 'query_relevance', 'response_completeness'],
+            'Scientific': ['scientific_structure', 'technical_depth', 'academic_rigor'],
+            'Performance': ['latency', 'tokens_per_second']
         }
-    @property
-    def metric_classes(self):
-        return self._metric_classes
+
+        # Set plotting style
+        plt.rcParams['figure.facecolor'] = 'white'
+        plt.rcParams['axes.facecolor'] = '#f8f9fa'
+        plt.rcParams['grid.alpha'] = 0.3
+        plt.rcParams['grid.color'] = '#cccccc'
+        plt.rcParams['axes.labelsize'] = 11
+        plt.rcParams['axes.titlesize'] = 13
+        plt.rcParams['lines.linewidth'] = 2
+        plt.rcParams['patch.edgecolor'] = 'none'
+        plt.rcParams['axes.grid'] = True
+        plt.rcParams['axes.grid.axis'] = 'both'
+        plt.rcParams['grid.linestyle'] = '--'
 
     def analyze_tradeoffs(self):
         """Generate comprehensive tradeoff analysis visualizations."""
         # 1. Multi-dimensional tradeoff plot
         self._plot_multidimensional_tradeoff()
+
+        # 2. Multi-diemnsional tradeoff plot 
+        self._plot_price_scientific_tradeoff()
         
+        self._plot_reliability_cost_tradeoff()
+
         # 2. Radar chart for metric classes
         self._plot_class_radar()
         
@@ -55,36 +73,44 @@ class ServiceTradeoffAnalyzer:
         """Create enhanced multi-dimensional tradeoff visualization."""
         fig, ax = plt.subplots(figsize=(12, 10))
         
-        # Define colormap
-        cmap = plt.cm.RdYlBu
-
         # Fixed latency boundaries
         max_latency = 10
         mid_latency = 5
 
-        # Create the regions with legend
+        # Create regions
         handles = []
-        handles.append(ax.axvspan(0, mid_latency, ymin=0.5, ymax=1, alpha=0.1, color='green', label='Optimal Region'))
-        handles.append(ax.axvspan(mid_latency, max_latency, ymin=0.5, ymax=1, alpha=0.1, color='yellow', label='Scientific Focus Region'))
-        handles.append(ax.axvspan(0, mid_latency, ymin=0, ymax=0.5, alpha=0.1, color='yellow', label='Speed Focus Region'))
-        handles.append(ax.axvspan(mid_latency, max_latency, ymin=0, ymax=0.5, alpha=0.1, color='red', label='Improvement Needed Region'))
+        handles.append(ax.axvspan(0, mid_latency, ymin=0.5, ymax=1, alpha=0.1, 
+                                color='green', label='Optimal Region'))
+        handles.append(ax.axvspan(mid_latency, max_latency, ymin=0.5, ymax=1, alpha=0.1, 
+                                color='yellow', label='Scientific Focus Region'))
+        handles.append(ax.axvspan(0, mid_latency, ymin=0, ymax=0.5, alpha=0.1, 
+                                color='yellow', label='Speed Focus Region'))
+        handles.append(ax.axvspan(mid_latency, max_latency, ymin=0, ymax=0.5, alpha=0.1, 
+                                color='red', label='Improvement Needed Region'))
 
-        # Plot data points for each service
+        # Plot data points
         service_points = []
         for service, color in zip(self.df['service'].unique(), self.colors):
             service_df = self.df[self.df['service'] == service]
-            latency = service_df['latency'].mean()
-            scientific_score = np.mean([service_df[col].mean() * 100 
-                                      for col in self.metric_classes['Scientific']])
             
+            # Calculate metrics
+            latency = service_df['latency'].mean()
+            scientific_score = np.mean([
+                service_df[col].mean() for col in self.metric_classes['Scientific']
+            ]) * 100
+            quality_score = np.mean([
+                service_df[col].mean() for col in self.metric_classes['Quality']
+            ]) * 100
+            
+            # Plot point with size based on quality score
             point = ax.scatter(latency, scientific_score,
-                             s=300,
+                             s=300 * (quality_score/100),
                              c=[color],
                              alpha=0.7,
-                             label=f'{service}')
-        service_points.append(point)
-
-        # Add quadrant text without boxes
+                             label=f'{service} (Q: {quality_score:.1f}%)')
+            service_points.append(point)
+            
+        # Add region labels
         ax.text(mid_latency/2, 75, 'OPTIMAL\nFast & Accurate', 
                 ha='center', va='center', alpha=0.7)
         ax.text(mid_latency*1.5, 75, 'QUALITY FOCUSED\nSlow but Accurate', 
@@ -98,51 +124,218 @@ class ServiceTradeoffAnalyzer:
         ax.set_xlabel('Response Latency (seconds) - Lower is Better →')
         ax.set_ylabel('Scientific Rigor Score (%) - Higher is Better →')
         ax.set_title('Service Performance Analysis')
-        
-        # Add gridlines
         ax.grid(True, alpha=0.3)
         
-        # Create two separate legends
-        # Region legend (top right)
+        # Add legends
         region_legend = ax.legend(handles, 
                                 ['Optimal Region', 'Scientific Focus Region', 
                                  'Speed Focus Region', 'Improvement Needed Region'],
                                 loc='upper right',
                                 title='Performance Regions',
                                 bbox_to_anchor=(1.15, 1))
-        
-        # Add the first legend back
         ax.add_artist(region_legend)
-        
-        # Service legend (lower right)
         service_legend = ax.legend(service_points,
                                  [p.get_label() for p in service_points],
                                  loc='lower right',
                                  title='Services',
                                  bbox_to_anchor=(1.15, 0))
         
-        # Set axis limits
+        # Set limits
         ax.set_xlim(0, max_latency)
         ax.set_ylim(0, 100)
-
-        # Add vertical line at latency cutoff
         ax.axvline(x=mid_latency, color='gray', linestyle='--', alpha=0.5)
         
-        # Adjust layout to prevent text cutoff
         plt.tight_layout()
         plt.savefig(f'evaluation_plots/multidim_tradeoff_{self.timestamp}.png',
                    dpi=300, bbox_inches='tight')
         plt.close()
 
+    def _plot_price_scientific_tradeoff(self):
+        """Create enhanced multi-dimensional tradeoff visualization for price vs scientific metrics."""
+        fig, ax = plt.subplots(figsize=(12, 10))
+        
+        # Fixed price boundaries
+        max_price = 0.05  # $0.05 per request
+        mid_price = 0.025  # $0.025 per request
+        
+        # Create regions
+        handles = []
+        handles.append(ax.axvspan(0, mid_price, ymin=0.5, ymax=1, alpha=0.1,
+                                color='green', label='Optimal Region'))
+        handles.append(ax.axvspan(mid_price, max_price, ymin=0.5, ymax=1, alpha=0.1,
+                                color='yellow', label='Scientific Focus Region'))
+        handles.append(ax.axvspan(0, mid_price, ymin=0, ymax=0.5, alpha=0.1,
+                                color='yellow', label='Cost Focus Region'))
+        handles.append(ax.axvspan(mid_price, max_price, ymin=0, ymax=0.5, alpha=0.1,
+                                color='red', label='Improvement Needed Region'))
+        
+        # Plot data points
+        service_points = []
+        for service, color in zip(self.df['service'].unique(), self.colors):
+            service_df = self.df[self.df['service'] == service]
+            
+            # Calculate metrics with updated weights for scientific score
+            scientific_score = (
+                0.33 * service_df['academic_rigor'].mean() +
+                0.33 * service_df['technical_depth'].mean() +
+                0.33 * service_df['scientific_structure'].mean()
+            ) * 100
+            
+            quality_score = np.mean([
+                service_df[col].mean() for col in self.metric_classes['Quality']
+            ]) * 100
+            
+            price = service_df['price'].mean()
+            
+            # Plot point with size based on quality score
+            point = ax.scatter(price, scientific_score,
+                            s=300 * (quality_score/100),
+                            c=[color],
+                            alpha=0.7,
+                            label=f'{service} (Q: {quality_score:.1f}%)')
+            service_points.append(point)
+            
+        # Add region labels
+        ax.text(mid_price/2, 75, 'OPTIMAL\nHigh Scientific Quality & Low Cost',
+                ha='center', va='center', alpha=0.7)
+        ax.text(mid_price*1.5, 75, 'QUALITY FOCUSED\nHigh Scientific Quality but Expensive',
+                ha='center', va='center', alpha=0.7)
+        ax.text(mid_price/2, 25, 'BUDGET\nLow Cost but Lower Scientific Quality',
+                ha='center', va='center', alpha=0.7)
+        ax.text(mid_price*1.5, 25, 'NEEDS IMPROVEMENT\nExpensive & Lower Scientific Quality',
+                ha='center', va='center', alpha=0.7)
+        
+        # Customize plot
+        ax.set_xlabel('Cost per Request ($) - Lower is Better →')
+        ax.set_ylabel('Scientific Rigor Score (%) - Higher is Better →')
+        ax.set_title('Cost-Scientific Tradeoff Analysis')
+        ax.grid(True, alpha=0.3)
+        
+        # Add legends
+        region_legend = ax.legend(handles,
+                                ['Optimal Region', 'Scientific Focus Region',
+                                'Cost Focus Region', 'Improvement Needed Region'],
+                                loc='upper right',
+                                title='Performance Regions',
+                                bbox_to_anchor=(1.15, 1))
+        ax.add_artist(region_legend)
+        service_legend = ax.legend(service_points,
+                                [p.get_label() for p in service_points],
+                                loc='lower right',
+                                title='Services',
+                                bbox_to_anchor=(1.15, 0))
+        
+        # Set limits
+        ax.set_xlim(0, max_price)
+        ax.set_ylim(0, 100)
+        ax.axvline(x=mid_price, color='gray', linestyle='--', alpha=0.5)
+        
+        plt.tight_layout()
+        plt.savefig(f'evaluation_plots/price_scientific_tradeoff_{self.timestamp}.png',
+                    dpi=300, bbox_inches='tight')
+        plt.close()
+    
+    def _plot_reliability_cost_tradeoff(self):
+
+        """Create enhanced multi-dimensional tradeoff visualization for reliability vs cost."""
+        fig, ax = plt.subplots(figsize=(12, 10))
+        
+        # Fixed price boundaries
+        max_price = 0.05  # $0.05 per request
+        mid_price = 0.025  # $0.025 per request
+        
+        # Create regions
+        handles = []
+        handles.append(ax.axvspan(0, mid_price, ymin=0.5, ymax=1, alpha=0.1,
+                                color='green', label='Optimal Region'))
+        handles.append(ax.axvspan(mid_price, max_price, ymin=0.5, ymax=1, alpha=0.1,
+                                color='yellow', label='Reliability Focus Region'))
+        handles.append(ax.axvspan(0, mid_price, ymin=0, ymax=0.5, alpha=0.1,
+                                color='yellow', label='Cost Focus Region'))
+        handles.append(ax.axvspan(mid_price, max_price, ymin=0, ymax=0.5, alpha=0.1,
+                                color='red', label='Improvement Needed Region'))
+        
+        # Plot data points
+        service_points = []
+        for service, color in zip(self.df['service'].unique(), self.colors):
+            service_df = self.df[self.df['service'] == service]
+            
+            # Calculate reliability score with specified weights
+            reliability_score = (
+                0.5 * service_df['academic_rigor'].mean() +     # 50% academic rigor
+                0.2 * service_df['scientific_structure'].mean() + # 20% scientific structure
+                0.3 * service_df['query_relevance'].mean()       # 30% query relevance
+            ) * 100
+            
+            # Calculate other metrics
+            scientific_score = np.mean([
+                service_df[col].mean() for col in self.metric_classes['Scientific']
+            ]) * 100
+            
+            price = service_df['price'].mean()
+            
+            # Plot point with size based on scientific score
+            point = ax.scatter(price, reliability_score,
+                            s=300 * (scientific_score/100),
+                            c=[color],
+                            alpha=0.7,
+                            label=f'{service} (S: {scientific_score:.1f}%)')
+            service_points.append(point)
+        
+        # Add region labels
+        ax.text(mid_price/2, 75, 'OPTIMAL\nReliable & Cost-Effective',
+                ha='center', va='center', alpha=0.7)
+        ax.text(mid_price*1.5, 75, 'RELIABILITY FOCUSED\nReliable but Expensive',
+                ha='center', va='center', alpha=0.7)
+        ax.text(mid_price/2, 25, 'BUDGET\nLow Cost but Less Reliable',
+                ha='center', va='center', alpha=0.7)
+        ax.text(mid_price*1.5, 25, 'NEEDS IMPROVEMENT\nExpensive & Less Reliable',
+                ha='center', va='center', alpha=0.7)
+        
+        # Customize plot
+        ax.set_xlabel('Cost per Request ($) - Lower is Better →')
+        ax.set_ylabel('Reliability Score (%) - Higher is Better →')
+        ax.set_title('Reliability-Cost Tradeoff Analysis')
+        ax.grid(True, alpha=0.3)
+        
+        # Add legends
+        region_legend = ax.legend(handles,
+                                ['Optimal Region', 'Reliability Focus Region',
+                                'Cost Focus Region', 'Improvement Needed Region'],
+                                loc='upper right',
+                                title='Performance Regions',
+                                bbox_to_anchor=(1.15, 1))
+        ax.add_artist(region_legend)
+        service_legend = ax.legend(service_points,
+                                [p.get_label() for p in service_points],
+                                loc='lower right',
+                                title='Services',
+                                bbox_to_anchor=(1.15, 0))
+        
+        # Set limits
+        ax.set_xlim(0, max_price)
+        ax.set_ylim(0, 100)
+        ax.axvline(x=mid_price, color='gray', linestyle='--', alpha=0.5)
+        
+        plt.tight_layout()
+        plt.savefig(f'evaluation_plots/reliability_cost_tradeoff_{self.timestamp}.png',
+                    dpi=300, bbox_inches='tight')
+        plt.close()
     def _plot_class_radar(self):
-        """Create intuitive radar chart comparing metric classes."""
+        """Create radar chart comparing metric classes."""
         fig = plt.figure(figsize=(12, 12))
         ax = fig.add_subplot(111, projection='polar')
 
-        class_names = ['Quality\n(Higher Better)', 
-                      'Scientific Rigor\n(Higher Better)', 
-                      'Latency \n(Lower Better)']  # Changed from Speed
-        angles = np.linspace(0, 2*np.pi, len(class_names), endpoint=False)
+        # Define metrics and labels
+        metrics = [
+            'Quality Score',
+            'Scientific Rigor',
+            'Response Speed',
+            'Completeness',
+            'Technical Depth'
+        ]
+        
+        angles = np.linspace(0, 2*np.pi, len(metrics), endpoint=False)
         angles = np.concatenate((angles, [angles[0]]))
         
         ax.set_theta_offset(np.pi / 2)
@@ -151,68 +344,37 @@ class ServiceTradeoffAnalyzer:
         for service, color in zip(self.df['service'].unique(), self.colors):
             service_df = self.df[self.df['service'] == service]
             
-            # Calculate normalized metrics
-            quality_score = np.mean([service_df[m].mean() * 100 
-                                   for m in self.metric_classes['Quality']])
-            scientific_score = np.mean([service_df[m].mean() * 100 
-                                      for m in self.metric_classes['Scientific']])
-            # Invert latency score since lower is better
-            latency_score = 100 * (1 / (1 + service_df['latency'].mean()))
+            # Calculate scores
+            quality_score = np.mean([
+                service_df[m].mean() for m in self.metric_classes['Quality']
+            ]) * 100
             
-            values = [quality_score, scientific_score, latency_score]
+            scientific_score = np.mean([
+                service_df[m].mean() for m in self.metric_classes['Scientific']
+            ]) * 100
+            
+            response_speed = 100 * (1 / (1 + service_df['latency'].mean()))
+            completeness = service_df['response_completeness'].mean() * 100
+            technical_depth = service_df['technical_depth'].mean() * 100
+            
+            values = [
+                quality_score,
+                scientific_score,
+                response_speed,
+                completeness,
+                technical_depth
+            ]
             values = np.concatenate((values, [values[0]]))
             
             ax.plot(angles, values, 'o-', linewidth=2, label=service, color=color)
             ax.fill(angles, values, alpha=0.25, color=color)
 
         ax.set_xticks(angles[:-1])
-        ax.set_xticklabels(class_names)
+        ax.set_xticklabels(metrics)
         ax.set_ylim(0, 100)
-        
-        # Add circular gridlines with labels
         ax.set_rticks([20, 40, 60, 80, 100])
+        
         ax.text(0, 110, 'Service Performance Overview', 
-               ha='center', va='center', fontsize=14)
-        
-        plt.legend(loc='upper right', bbox_to_anchor=(1.3, 1.1),
-                  title='Services')
-
-        """Create intuitive radar chart comparing metric classes."""
-        fig = plt.figure(figsize=(12, 12))
-        ax = fig.add_subplot(111, projection='polar')
-
-        class_names = ['Quality\n(Higher Better)', 
-                      'Scientific Rigor\n(Higher Better)', 
-                      'Latency\n(Higher Better)']
-        angles = np.linspace(0, 2*np.pi, len(class_names), endpoint=False)
-        angles = np.concatenate((angles, [angles[0]]))
-        
-        ax.set_theta_offset(np.pi / 2)
-        ax.set_theta_direction(-1)
-
-        for service, color in zip(self.df['service'].unique(), self.colors):
-            service_df = self.df[self.df['service'] == service]
-            
-            # Calculate normalized metrics
-            quality_score = np.mean([service_df[m].mean() * 100 
-                                   for m in self.metric_classes['Quality']])
-            scientific_score = np.mean([service_df[m].mean() * 100 
-                                      for m in self.metric_classes['Scientific']])
-            speed_score = 100 * (1 / (1 + service_df['latency'].mean()))
-            
-            values = [quality_score, scientific_score, speed_score]
-            values = np.concatenate((values, [values[0]]))
-            
-            ax.plot(angles, values, 'o-', linewidth=2, label=service, color=color)
-            ax.fill(angles, values, alpha=0.25, color=color)
-
-        ax.set_xticks(angles[:-1])
-        ax.set_xticklabels(class_names)
-        ax.set_ylim(0, 100)
-        
-        # Add circular gridlines with labels
-        ax.set_rticks([20, 40, 60, 80, 100])
-        ax.text(0, 110, 'Performance Overview', 
                ha='center', va='center', fontsize=14)
         
         plt.legend(loc='upper right', bbox_to_anchor=(1.3, 1.1),
@@ -229,7 +391,6 @@ class ServiceTradeoffAnalyzer:
         for idx, (class_name, metrics) in enumerate(self.metric_classes.items()):
             ax = axes[idx]
             
-            # Prepare data for boxplot
             plot_data = []
             labels = []
             for metric in metrics:
@@ -239,19 +400,18 @@ class ServiceTradeoffAnalyzer:
                     if 'latency' not in metric:
                         values = values * 100
                     plot_data.append(values)
-                    labels.append(f"{service}\n{metric.split('_')[-1]}")
+                    labels.append(f"{service}\n{metric.replace('_', ' ').title()}")
             
-            # Create enhanced boxplot
             bp = ax.boxplot(plot_data, labels=labels, patch_artist=True)
             
-            # Color boxes by service
+            # Color boxes
             for i, service in enumerate(self.df['service'].unique()):
                 for j in range(len(metrics)):
                     box_idx = i * len(metrics) + j
                     bp['boxes'][box_idx].set_facecolor(self.colors[i])
                     bp['boxes'][box_idx].set_alpha(0.6)
             
-            # Add statistical significance
+            # Add significance indicators
             if len(self.df['service'].unique()) >= 2:
                 sig_height = np.max([np.max(x) for x in plot_data]) * 1.1
                 services = list(self.df['service'].unique())
@@ -272,7 +432,6 @@ class ServiceTradeoffAnalyzer:
             ax.set_ylabel('Score (%)' if class_name != 'Performance' else 'Value')
             ax.grid(True, axis='y')
             
-            # Add explanation of significance
             if idx == 0:
                 ax.text(0.98, 0.98, 
                        'Significance: *** p<0.001, ** p<0.01, * p<0.05, ns: not significant',
@@ -283,227 +442,6 @@ class ServiceTradeoffAnalyzer:
         plt.savefig(f'evaluation_plots/intraclass_comparison_{self.timestamp}.png',
                    dpi=300, bbox_inches='tight')
         plt.close()
-
-
-    def __init__(self, df: pd.DataFrame, timestamp: str):
-        self.df = df
-        self.timestamp = timestamp
-        self.colors = sns.color_palette("husl", n_colors=len(df['service'].unique()))
-        Path("evaluation_plots").mkdir(exist_ok=True)
-        self.metrics = {
-            'quality': ['quality_paper_coverage', 'quality_temporal_accuracy', 'quality_response_completeness'],
-            'scientific': ['scientific_citation_quality', 'scientific_technical_depth', 'scientific_academic_rigor'],
-            'performance': ['latency', 'performance_tokens_per_second']
-        }
-        
-    def create_statistical_dashboard(self):
-        """Create comprehensive statistical analysis dashboard."""
-        fig = plt.figure(figsize=(20, 15))
-        gs = plt.GridSpec(3, 2, figure=fig)
-        
-        # 1. T-Test Results (Top Left)
-        ax1 = fig.add_subplot(gs[0, 0])
-        self._plot_ttest_results(ax1)
-        
-        # 2. Correlation Matrix (Top Right)
-        ax2 = fig.add_subplot(gs[0, 1])
-        self._plot_correlation_matrix(ax2)
-        
-        # 3. Cost-Benefit Trade-offs (Middle Row)
-        ax3 = fig.add_subplot(gs[1, :])
-        self._plot_tradeoff_analysis(ax3)
-        
-        # 4. Distribution Analysis (Bottom Left)
-        ax4 = fig.add_subplot(gs[2, 0])
-        self._plot_distribution_analysis(ax4)
-        
-        # 5. Statistical Summary (Bottom Right)
-        ax5 = fig.add_subplot(gs[2, 1])
-        self._plot_statistical_summary(ax5)
-        
-        plt.tight_layout()
-        plt.savefig(f'evaluation_plots/statistical_dashboard_{self.timestamp}.png', 
-                   dpi=300, bbox_inches='tight')
-        plt.close()
-
-    def _plot_ttest_results(self, ax):
-        """Plot t-test results between services for key metrics."""
-        services = list(self.df['service'].unique())
-        if len(services) < 2:
-            ax.text(0.5, 0.5, 'Need at least 2 services\nfor statistical comparison',
-                   ha='center', va='center')
-            return
-            
-        results = []
-        for metric in ['quality_paper_coverage', 'latency', 'scientific_technical_depth']:
-            service1_data = self.df[self.df['service'] == services[0]][metric]
-            service2_data = self.df[self.df['service'] == services[1]][metric]
-            
-            t_stat, p_val = stats.ttest_ind(service1_data, service2_data)
-            results.append({
-                'metric': metric.split('_')[-1].title(),
-                'p_value': p_val,
-                'significant': p_val < 0.05,
-                't_statistic': t_stat
-            })
-        
-        y_pos = np.arange(len(results))
-        p_values = [-np.log10(r['p_value']) for r in results]
-        
-        ax.barh(y_pos, p_values)
-        ax.set_yticks(y_pos)
-        ax.set_yticklabels([r['metric'] for r in results])
-        ax.axvline(-np.log10(0.05), color='r', linestyle='--', label='p=0.05 threshold')
-        ax.set_xlabel('-log10(p-value)')
-        ax.set_title('Statistical Significance of Service Differences')
-        ax.legend()
-
-    def _plot_correlation_matrix(self, ax):
-        """Plot correlation matrix between metrics."""
-        metrics = ['latency', 'quality_paper_coverage', 'scientific_technical_depth',
-                  'performance_tokens_per_second']
-        
-        corr_data = self.df[metrics].corr()
-        sns.heatmap(corr_data, annot=True, cmap='coolwarm', ax=ax)
-        ax.set_title('Metric Correlations')
-        plt.xticks(rotation=45)
-
-    def _plot_tradeoff_analysis(self, ax):
-        """Plot trade-off analysis between different metrics."""
-        for service, color in zip(self.df['service'].unique(), self.colors):
-            service_df = self.df[self.df['service'] == service]
-            
-            quality = service_df['quality_paper_coverage'].mean() * 100
-            latency = service_df['latency'].mean()
-            tokens_per_sec = service_df['performance_tokens_per_second'].mean()
-            
-            size = np.pi * (tokens_per_sec / 10) ** 2
-            ax.scatter(latency, quality, s=size, label=service, color=color, alpha=0.6)
-            
-        ax.set_xlabel('Latency (s)')
-        ax.set_ylabel('Quality Score (%)')
-        ax.set_title('Quality-Latency Trade-off\n(bubble size represents tokens/sec)')
-        ax.legend()
-        ax.grid(True)
-
-    def _plot_distribution_analysis(self, ax):
-        """Plot distribution analysis for key metrics."""
-        metrics = ['latency', 'quality_paper_coverage']
-        
-        for metric in metrics:
-            for service, color in zip(self.df['service'].unique(), self.colors):
-                data = self.df[self.df['service'] == service][metric]
-                if 'quality' in metric:
-                    data = data * 100
-                sns.kdeplot(data=data, ax=ax, label=f'{service} - {metric}', color=color)
-        
-        ax.set_title('Metric Distributions')
-        ax.legend()
-        ax.grid(True)
-
-    def _plot_statistical_summary(self, ax):
-        """Plot statistical summary table."""
-        summary_data = []
-        
-        for service in self.df['service'].unique():
-            service_df = self.df[self.df['service'] == service]
-            
-            for metric_category, metric_list in self.metrics.items():
-                for metric in metric_list:
-                    if metric in service_df.columns:
-                        data = service_df[metric]
-                        if 'quality' in metric or 'scientific' in metric:
-                            data = data * 100
-                            
-                        summary_data.append({
-                            'Service': service,
-                            'Metric': metric.split('_')[-1].title(),
-                            'Mean': data.mean(),
-                            'Std': data.std(),
-                            'CV': data.std() / data.mean() if data.mean() != 0 else np.nan
-                        })
-        
-        summary_df = pd.DataFrame(summary_data)
-        ax.axis('off')
-        table = ax.table(cellText=summary_df.values,
-                        colLabels=summary_df.columns,
-                        cellLoc='center',
-                        loc='center',
-                        bbox=[0, 0, 1, 1])
-        table.auto_set_font_size(False)
-        table.set_fontsize(9)
-        ax.set_title('Statistical Summary', pad=20)
-
-    def create_advanced_analysis(self):
-        """Create additional advanced statistical analysis plots."""
-        #self._create_anova_analysis()
-        #self._create_statistical_tests()
-
-    def _create_anova_analysis(self):
-        """Create ANOVA analysis plots."""
-        fig, ax = plt.subplots(figsize=(10, 6))
-        
-        # Perform one-way ANOVA for quality scores across services
-        quality_data = [group['quality_paper_coverage'].values * 100 
-                       for name, group in self.df.groupby('service')]
-        f_stat, p_val = stats.f_oneway(*quality_data)
-        
-        # Plot quality distributions
-        sns.violinplot(data=self.df, x='service', y='quality_paper_coverage',
-                      inner='box', ax=ax)
-        ax.set_title(f'Quality Score Distribution by Service\nANOVA p-value: {p_val:.4f}')
-        ax.set_ylabel('Quality Score')
-        
-        plt.tight_layout()
-        plt.savefig(f'evaluation_plots/anova_analysis_{self.timestamp}.png',
-                   dpi=300, bbox_inches='tight')
-        plt.close()
-
-    def _create_statistical_tests(self):
-        """Create comprehensive statistical tests visualization."""
-        results = []
-        
-        # Perform various statistical tests
-        services = list(self.df['service'].unique())
-        for metric in self.metrics['quality'] + self.metrics['performance']:
-            if len(services) >= 2:
-                # T-test
-                service1_data = self.df[self.df['service'] == services[0]][metric]
-                service2_data = self.df[self.df['service'] == services[1]][metric]
-                t_stat, p_val = stats.ttest_ind(service1_data, service2_data)
-                
-                # Mann-Whitney U test
-                u_stat, u_p_val = stats.mannwhitneyu(service1_data, service2_data, 
-                                                    alternative='two-sided')
-                
-                results.append({
-                    'Metric': metric,
-                    'Test': 'T-test',
-                    'Statistic': t_stat,
-                    'pvalue': p_val  # Changed from 'P-value' to 'pvalue'
-                })
-                results.append({
-                    'Metric': metric,
-                    'Test': 'Mann-Whitney U',
-                    'Statistic': u_stat,
-                    'pvalue': u_p_val  # Changed from 'P-value' to 'pvalue'
-                })
-        
-        # Create summary plot
-        fig, ax = plt.subplots(figsize=(12, 8))
-        results_df = pd.DataFrame(results)
-        # Use 'pvalue' instead of 'P-value' in the scatter plot
-        sns.scatterplot(data=results_df, x='pvalue', y='Metric', 
-                    hue='Test', size='Statistic', ax=ax)
-        ax.axvline(0.05, color='r', linestyle='--', label='p=0.05 threshold')
-        ax.set_xscale('log')
-        ax.set_title('Statistical Test Results')
-        
-        plt.tight_layout()
-        plt.savefig(f'evaluation_plots/statistical_tests_{self.timestamp}.png',
-                    dpi=300, bbox_inches='tight')
-        plt.close()
-
 
 class StatisticalDashboardGenerator:
     def __init__(self, df: pd.DataFrame, timestamp: str):
@@ -534,10 +472,11 @@ class StatisticalDashboardGenerator:
         
         Path("evaluation_plots").mkdir(exist_ok=True)
         
+        # Updated metrics structure
         self.metrics = {
-            'Quality': ['quality_paper_coverage', 'quality_temporal_accuracy', 'quality_response_completeness'],
-            'Scientific': ['scientific_citation_quality', 'scientific_technical_depth', 'scientific_academic_rigor'],
-            'Performance': ['latency', 'performance_tokens_per_second']
+            'Quality': ['success_rate', 'query_relevance', 'response_completeness'],
+            'Scientific': ['scientific_structure', 'academic_rigor', 'technical_depth'],
+            'Performance': ['latency', 'tokens_per_second']
         }
         
         # Set better default style
@@ -547,7 +486,7 @@ class StatisticalDashboardGenerator:
         plt.rcParams['grid.color'] = '#cccccc'
         plt.rcParams['axes.labelsize'] = 11
         plt.rcParams['axes.titlesize'] = 13
-        
+
     def create_statistical_dashboard(self):
         """Create enhanced statistical analysis dashboard."""
         fig = plt.figure(figsize=(20, 15))
@@ -578,71 +517,99 @@ class StatisticalDashboardGenerator:
 
     def _plot_enhanced_tradeoff(self, ax):
         """Plot enhanced tradeoff analysis with query type differentiation."""
-        legend_elements = []
-        
         for service in self.df['service'].unique():
             color = self.service_colors[service]
             
             for query in self.unique_queries:
                 service_query_df = self.df[(self.df['service'] == service) & 
-                                         (self.df['query'] == query)]
+                                        (self.df['query'] == query)]
                 
                 if len(service_query_df) == 0:
                     continue
                 
                 # Calculate metrics
-                quality = service_query_df['quality_paper_coverage'].mean() * 100
+                quality_score = (
+                    0.25 * service_query_df['success_rate'].mean() +
+                    0.35 * service_query_df['query_relevance'].mean() +
+                    0.40 * service_query_df['response_completeness'].mean()
+                ) * 100
+                
                 latency = service_query_df['latency'].mean()
-                scientific = service_query_df['scientific_technical_depth'].mean() * 100
-                tokens_per_sec = service_query_df['performance_tokens_per_second'].mean()
+                scientific_score = (
+                    0.33 * service_query_df['scientific_structure'].mean() +
+                    0.33 * service_query_df['academic_rigor'].mean() +
+                    0.34 * service_query_df['technical_depth'].mean()
+                ) * 100
                 
                 # Size based on processing speed
-                size = 300 * (tokens_per_sec / self.df['performance_tokens_per_second'].max())
+                size = 300 * (1 / (1 + latency))
                 
                 # Plot main point
                 marker = self.query_markers[query]
-                scatter = ax.scatter(latency, scientific, 
-                                   s=size, color=color, alpha=0.7,
-                                   marker=marker,
-                                   label=f'{service} - {self.query_labels[query]}')
-                
+                ax.scatter(latency, scientific_score, 
+                        s=size, color=color, alpha=0.7,
+                        marker=marker,
+                        label=f'{service} - {self.query_labels[query]}')
+               
                 # Add confidence ellipse if enough points
-                if len(service_query_df) > 2:
-                    confidence_ellipse(
-                        service_query_df['latency'].values,
-                        service_query_df['scientific_technical_depth'].values * 100,
-                        ax, n_std=2.0, facecolor=color, alpha=0.1
-                    )
-                
+                if len(service_query_df) >= 3:
+    
+                        # Convert scientific score to array of same length as latency
+                        scientific_values = np.full_like(
+                            service_query_df['latency'].values,
+                            scientific_score
+                        )
+                        
+                        # Add confidence ellipse using external function
+                        ellipse =confidence_ellipse(
+                            x=service_query_df['latency'].values,
+                            y=scientific_values,
+                            ax=ax,
+                            n_std=3,
+                            facecolor=color,
+                            alpha=0.1,
+                            edgecolor=color,
+                            linewidth=1
+                        )
+                        ax.add_patch(ellipse)
                 # Annotate point
-                ax.annotate(f'{service} {self.query_labels[query]}\nQuality: {quality:.1f}%\nLatency: {latency:.2f}s',
-                           (latency, scientific),
-                           xytext=(10, 10), textcoords='offset points',
-                           bbox=dict(facecolor='white', alpha=0.8))
+                ax.annotate(
+                    f'{service} {self.query_labels[query]}\n'
+                    f'Quality: {quality_score:.1f}%\n'
+                    f'Scientific: {scientific_score:.1f}%\n'
+                    f'Latency: {latency:.2f}s',
+                    (latency, scientific_score),
+                    xytext=(10, 10), textcoords='offset points',
+                    bbox=dict(facecolor='white', alpha=0.8)
+                )
 
-        # Create custom legend
+        # Create custom legends
         from matplotlib.lines import Line2D
         
         # Service legend
-        service_legend = [Line2D([0], [0], marker='o', color='w', 
-                               markerfacecolor=color, label=service, markersize=10)
-                         for service, color in self.service_colors.items()]
+        service_legend = [
+            Line2D([0], [0], marker='o', color='w', 
+                markerfacecolor=color, label=service, markersize=10)
+            for service, color in self.service_colors.items()
+        ]
         
         # Query type legend
-        query_legend = [Line2D([0], [0], marker=self.query_markers[query], color='black', 
-                             label=f'{self.query_labels[query]}: {query[:30]}...' if len(query) > 30 else query,
-                             markersize=10)
-                       for query in self.unique_queries]
+        query_legend = [
+            Line2D([0], [0], marker=self.query_markers[query], color='black', 
+                label=f'{self.query_labels[query]}: {query[:30]}...' if len(query) > 30 else query,
+                markersize=10)
+            for query in self.unique_queries
+        ]
         
         # Add both legends
         leg1 = ax.legend(handles=service_legend, title='Services', 
                         bbox_to_anchor=(1.05, 1))
         ax.add_artist(leg1)
         ax.legend(handles=query_legend, title='Queries',
-                 bbox_to_anchor=(1.05, 0.5))
+                bbox_to_anchor=(1.05, 0.5))
         
         ax.set_xlabel('Response Latency (seconds) - Lower is Better →')
-        ax.set_ylabel('Scientific Quality (%) - Higher is Better →')
+        ax.set_ylabel('Scientific Score (%) - Higher is Better →')
         ax.set_title('Service Performance Tradeoff Analysis')
         ax.grid(True, alpha=0.2)
 
@@ -654,31 +621,33 @@ class StatisticalDashboardGenerator:
                    ha='center', va='center')
             return
         
-        metrics = ['Response Latency', 'Scientific Quality', 'Processing Speed']
-        data = []
+        # Define metrics to compare
+        comparison_metrics = [
+            ('Response Time', 'latency', 1.0),  # value is multiplier
+            ('Scientific Quality', 'scientific_structure', 100.0),
+            ('Query Relevance', 'query_relevance', 100.0)
+        ]
         
-        for metric in metrics:
-            if metric == 'Response Latency':
+        data = []
+        for metric_name, column, multiplier in comparison_metrics:
+            try:
                 stat = stats.ttest_ind(
-                    self.df[self.df['service'] == services[0]]['latency'],
-                    self.df[self.df['service'] == services[1]]['latency']
+                    self.df[self.df['service'] == services[0]][column] * multiplier,
+                    self.df[self.df['service'] == services[1]][column] * multiplier
                 )
-            elif metric == 'Scientific Quality':
-                stat = stats.ttest_ind(
-                    self.df[self.df['service'] == services[0]]['scientific_technical_depth'] * 100,
-                    self.df[self.df['service'] == services[1]]['scientific_technical_depth'] * 100
-                )
-            else:
-                stat = stats.ttest_ind(
-                    self.df[self.df['service'] == services[0]]['performance_tokens_per_second'],
-                    self.df[self.df['service'] == services[1]]['performance_tokens_per_second']
-                )
-            
-            data.append({
-                'Metric': metric,
-                'p_value': -np.log10(stat.pvalue),
-                'significant': stat.pvalue < 0.05
-            })
+                
+                data.append({
+                    'Metric': metric_name,
+                    'p_value': -np.log10(stat.pvalue),
+                    'significant': stat.pvalue < 0.05
+                })
+            except Exception as e:
+                print(f"Error calculating statistics for {metric_name}: {e}")
+        
+        if not data:
+            ax.text(0.5, 0.5, 'No statistical comparison available',
+                   ha='center', va='center')
+            return
         
         # Create bar plot
         bars = ax.barh([d['Metric'] for d in data],
@@ -702,11 +671,12 @@ class StatisticalDashboardGenerator:
 
     def _plot_enhanced_correlations(self, ax):
         """Plot enhanced correlation matrix."""
+        # Define key metrics for correlation analysis
         metrics = {
             'Response Time': 'latency',
-            'Scientific Quality': 'scientific_technical_depth',
-            'Processing Speed': 'performance_tokens_per_second',
-            'Overall Quality': 'quality_paper_coverage'
+            'Success Rate': 'success_rate',
+            'Query Relevance': 'query_relevance',
+            'Scientific Score': 'scientific_structure'
         }
         
         # Calculate correlation matrix
@@ -735,7 +705,7 @@ class StatisticalDashboardGenerator:
 
     def _plot_performance_distribution(self, ax):
         """Plot enhanced performance distribution with query type differentiation."""
-        linestyles = ['-', '--', ':', '-.', '-']  # different line styles for queries
+        linestyles = ['-', '--', ':', '-.', '-']
         
         for service in self.df['service'].unique():
             color = self.service_colors[service]
@@ -749,12 +719,13 @@ class StatisticalDashboardGenerator:
                 
                 # Plot latency distribution
                 sns.kdeplot(data=service_query_df['latency'], ax=ax, 
-                          color=color, linestyle=linestyles[i],
+                          color=color, linestyle=linestyles[i % len(linestyles)],
                           label=f'{service} - {self.query_labels[query]}', alpha=0.7)
                 
                 # Add mean marker
                 mean_latency = service_query_df['latency'].mean()
-                ax.axvline(mean_latency, color=color, linestyle=linestyles[i], alpha=0.5)
+                ax.axvline(mean_latency, color=color, linestyle=linestyles[i % len(linestyles)], 
+                          alpha=0.5)
                 ax.text(mean_latency, ax.get_ylim()[1] * (0.9 - 0.1 * i),
                        f'{self.query_labels[query]}: {mean_latency:.2f}s',
                        color=color, ha='right', va='top')
@@ -789,46 +760,55 @@ def confidence_ellipse(x, y, ax, n_std=3.0, facecolor='none', **kwargs):
         .translate(np.mean(x), np.mean(y))
     
     ellipse.set_transform(transf + ax.transData)
-    return ax.add_patch(ellipse)
+    return ellipse
+
 
 class DashboardGenerator:
     """Generates comprehensive evaluation dashboards."""
     
     def __init__(self, df: pd.DataFrame, timestamp: str):
-
         self.df = df
         self.timestamp = timestamp
         self.colors = ['#08519c', '#3182bd', '#6baed6', '#bdd7e7'][:len(df['service'].unique())]
         Path("evaluation_plots").mkdir(exist_ok=True)
-        self.calculate_aggregate_metrics()
         
-        # Pre-calculate common metrics
-        self.calculate_aggregate_metrics()
-
-    def calculate_aggregate_metrics(self):
-        """Calculate aggregate metrics for each service."""
-        self.aggregates = {}
+        # Calculate weighted metrics once
+        self._calculate_weighted_metrics()
+    def _calculate_weighted_metrics(self):
+        """Calculate weighted metrics for each service."""
+        self.weighted_metrics = {}
         
         for service in self.df['service'].unique():
             service_df = self.df[self.df['service'] == service]
             
-            self.aggregates[service] = {
-                'Overall Quality': np.mean([
-                    service_df['quality_paper_coverage'].mean() * 100,
-                    service_df['quality_temporal_accuracy'].mean() * 100,
-                    service_df['quality_response_completeness'].mean() * 100
-                ]),
-                'Scientific Rigor': np.mean([
-                    service_df['scientific_citation_quality'].mean() * 100,
-                    service_df['scientific_scientific_structure'].mean() * 100,
-                    service_df['scientific_technical_depth'].mean() * 100,
-                    service_df['scientific_academic_rigor'].mean() * 100
-                ]),
-                'Performance Score': 100 * (1 / (1 + service_df['latency'].mean())),
-                'Tokens/Second': service_df['performance_tokens_per_second'].mean(),
-                'Reliability': service_df['success'].mean() * 100
-            }
+           
+        
+            # Calculate quality score
+            quality_score = float(
+                    0.25 * service_df['success_rate'].mean() +
+                    0.35 * service_df['query_relevance'].mean() +
+                    0.40 * service_df['response_completeness'].mean()
+                ) * 100
+                
+            # Calculate scientific score
+            scientific_score = float(
+                    0.33 * service_df['scientific_structure'].mean() +
+                    0.33 * service_df['academic_rigor'].mean() +
+                    0.33 * service_df['technical_depth'].mean()
+                ) * 100
+                
+            # Calculate performance and reliability scores
+            performance_score = float(1 - (1.0 / (1.0 + service_df['latency'].mean()))) * 100
+            reliability_score =  float(0.3* service_df["scientific_structure"].mean()+0.5*service_df["academic_rigor"].mean()+ 0.2*service_df["query_relevance"].mean()) *100
+                
+            self.weighted_metrics[service] = {
+                    'Overall Quality': quality_score,
+                    'Scientific Rigor': scientific_score,
+                    'Performance Score': performance_score,
+                    'Reliability': reliability_score
+                }
 
+    
     def create_main_dashboard(self):
         """Create main dashboard with all key metrics."""
         # Set better default style
@@ -868,10 +848,7 @@ class DashboardGenerator:
         ax7 = fig.add_subplot(gs[2, 2])
         self._plot_success_metrics(ax7)
         
-        # Add overall title
         fig.suptitle('AI Research Assistant Performance Analysis', fontsize=16, y=1.02)
-        
-        # Adjust layout
         plt.tight_layout()
         plt.savefig(f'evaluation_plots/main_dashboard_{self.timestamp}.png', 
                    dpi=300, bbox_inches='tight')
@@ -880,141 +857,142 @@ class DashboardGenerator:
     def _plot_aggregate_scores(self, ax):
         """Plot aggregate scores for each service."""
         metrics = ['Overall Quality', 'Scientific Rigor', 'Performance Score', 'Reliability']
-        
         x = np.arange(len(metrics))
-        width = 0.35
         
-        for i, service in enumerate(self.aggregates.keys()):
-            values = [self.aggregates[service][m] for m in metrics]
-            ax.bar(x + i*width, values, width, label=service, color=self.colors[i])
+        # Calculate width based on number of services
+        n_services = len(self.weighted_metrics)
+        width = 0.8 / n_services
         
+        # Plot bars for each service
+        for i, (service, scores) in enumerate(self.weighted_metrics.items()):
+            # Convert values to floats, handling different formats
+            values = []
+            for metric in metrics:
+                value = scores.get(metric, 0)
+                values.append(value)
+
+            # Convert to numpy array after ensuring all values are floats
+            values = np.array(values, dtype=np.float64)
+            
+            # Create bars
+            ax.bar(x + i * width,
+                values,
+                width,
+                label=service,
+                color=self.colors[i % len(self.colors)])
+        
+        # Customize plot
         ax.set_title('Aggregate Scores')
-        ax.set_xticks(x + width/2)
-        ax.set_xticklabels(metrics, rotation=45)
+        ax.set_xticks(x + width * (n_services - 1) / 2)
+        ax.set_xticklabels(metrics, rotation=45, ha='right')
         ax.set_ylabel('Score (%)')
+        ax.set_ylim(0, 100)
         ax.legend()
         ax.grid(True, alpha=0.3)
 
     def _plot_radar(self, ax):
         """Create radar plot for key metrics."""
         metrics = [
-            'Paper Coverage',
-            'Citation Quality',
-            'Technical Depth',
             'Response Time',
-            'Tokens/Second'
+            'Overall Quality',
+            'Scientific Rigor',
+            'Performance Score',
+            'Reliability'
         ]
         
         angles = np.linspace(0, 2*np.pi, len(metrics), endpoint=False)
         angles = np.concatenate((angles, [angles[0]]))
         
+        ax.set_theta_offset(np.pi / 2)
+        ax.set_theta_direction(-1)
+        
         for service, color in zip(self.df['service'].unique(), self.colors):
             service_df = self.df[self.df['service'] == service]
+            scores = self.weighted_metrics[service]
+            
+            # Calculate response time score (inverse, since lower is better)
+            response_time = float(service_df['latency'].quantile(0.95))
+            response_score = max(0, min(100, 100 * (1 - response_time/10)))
+
             values = [
-                service_df['quality_paper_coverage'].mean() * 100,
-                service_df['scientific_citation_quality'].mean() * 100,
-                service_df['scientific_technical_depth'].mean() * 100,
-                100 * (1 / (1 + service_df['latency'].mean())),
-                min(100, service_df['performance_tokens_per_second'].mean() / 10)
+                response_score,
+                scores['Overall Quality'],
+                scores['Scientific Rigor'],
+                scores['Performance Score'],
+                scores['Reliability']
             ]
             values = np.concatenate((values, [values[0]]))
-            
+
+
             ax.plot(angles, values, 'o-', linewidth=2, label=service, color=color)
             ax.fill(angles, values, alpha=0.25, color=color)
         
         ax.set_xticks(angles[:-1])
         ax.set_xticklabels(metrics)
         ax.set_ylim(0, 100)
+        plt.legend(loc='upper right', bbox_to_anchor=(1.3, 1.1))
 
     def _plot_cost_benefit(self, ax):
-        """Create cost-benefit analysis plot."""
+        """Create enhanced cost-benefit analysis plot."""
         for service, color in zip(self.df['service'].unique(), self.colors):
             service_df = self.df[self.df['service'] == service]
+            scores = self.weighted_metrics[service]
             
-            benefit = np.mean([
-                service_df['quality_paper_coverage'].mean() * 100,
-                service_df['scientific_citation_quality'].mean() * 100,
-                service_df['scientific_technical_depth'].mean() * 100
-            ])
+            # Calculate benefit as weighted average of all scores
+            benefit = (
+                0.3 * scores['Overall Quality'] +
+                0.3 * scores['Scientific Rigor'] +
+                0.15 * scores['Performance Score'] +
+                0.25 * scores['Reliability']
+            )
             
-            tokens_per_second = service_df['performance_tokens_per_second'].mean()
+            # Cost metric (price)
+            cost = service_df['price'].mean()
             
-            ax.scatter(tokens_per_second, benefit, s=200, label=service, color=color)
-            ax.annotate(service, (tokens_per_second, benefit), 
-                       xytext=(10, 10), textcoords='offset points')
+            # Plot with size based on reliability
+            size = 100 + scores['Reliability'] * 2
+            scatter = ax.scatter(cost, benefit, s=size, label=service, color=color, alpha=0.7)
+            
+            # Add annotation
+            ax.annotate(
+                f"{service}\nQuality: {scores['Overall Quality']:.1f}%\n"
+                f"Scientific: {scores['Scientific Rigor']:.1f}%\n"
+                f"Performance: {scores['Performance Score']:.1f}%",
+                (cost, benefit),
+                xytext=(10, 10),
+                textcoords='offset points',
+                bbox=dict(facecolor='white', alpha=0.8)
+            )
         
-        ax.set_xlabel('Tokens per Second')
-        ax.set_ylabel('Quality Score (%)')
+        ax.set_xlabel('Cost per Request ($)')
+        ax.set_ylabel('Weighted Benefit Score (%)')
         ax.set_title('Cost-Benefit Analysis')
-        ax.grid(True)
+        ax.grid(True, alpha=0.3)
         ax.legend()
-
-    def _create_metric_dashboard(self, metrics, title, transform_funcs=None):
-        """Create a dashboard for a specific category of metrics."""
-        if transform_funcs is None:
-            transform_funcs = {}
-
-        fig, axes = plt.subplots(2, 1, figsize=(15, 12))
-        
-        # Box plots
-        plot_data = []
-        for metric in ['performance_latency','performance_tokens_per_second','success']:
-
-            for service in self.df['service'].unique():
-
-                service_data = self.df[self.df['service'] == service][metric]
-                if metric in transform_funcs:
-                    service_data = transform_funcs[metric](service_data)
-                plot_data.append({
-                    'Service': service,
-                    'Metric': metric.split('_')[-1].replace('_', ' ').title(),
-                    'Value': service_data.mean()
-                })
-        
-        plot_df = pd.DataFrame(plot_data)
-        sns.boxplot(data=plot_df, x='Metric', y='Value', hue='Service', ax=axes[0])
-        axes[0].set_title(f'{title} Metrics Distribution')
-        
-        # Time series
-        for service, color in zip(self.df['service'].unique(), self.colors):
-            service_df = self.df[self.df['service'] == service]
-            for metric in ['performance_latency','performance_tokens_per_second','success']:
-                data = service_df[metric]
-                if metric in transform_funcs:
-                    data = transform_funcs[metric](data)
-                axes[1].plot(range(len(data)), data, 
-                           label=f'{service} - {metric.split("_")[-1].title()}',
-                           color=color, marker='o', linestyle='--')
-        
-        axes[1].set_title(f'{title} Metrics Over Time')
-        axes[1].set_xlabel('Run Number')
-        axes[1].set_ylabel('Value')
-        axes[1].legend(bbox_to_anchor=(1.05, 1), loc='upper left')
-        axes[1].grid(True)
-        
-        plt.tight_layout()
-        plt.savefig(f'evaluation_plots/{title.lower()}_dashboard_{self.timestamp}.png',
-                   dpi=300, bbox_inches='tight')
-        plt.close()
 
     def _plot_performance_timeline(self, ax):
         """Plot performance metrics over time."""
         metrics = {
             'Response Time': lambda x: x['latency'],
-            'Tokens/Second': lambda x: x['performance_tokens_per_second'],
-            'Quality': lambda x: x['quality_paper_coverage'] * 100
+            'Success Rate': lambda x: x['success_rate'] * 100,
+            'Quality Score': lambda x: (
+                0.25 * x['success_rate'] +
+                0.35 * x['query_relevance'] +
+                0.40 * x['response_completeness']
+            ) * 100
         }
         
         for service, color in zip(self.df['service'].unique(), self.colors):
-            service_df = self.df[self.df['service'] == service]
+            service_df = self.df[self.df['service'] == service].copy()
+            service_df = service_df.sort_values('latency')  # Sort for better visualization
             runs = range(1, len(service_df) + 1)
             
             for metric_name, metric_func in metrics.items():
                 try:
                     values = metric_func(service_df)
-                    label = f'{service} - {metric_name}'
-                    ax.plot(runs, values, label=label, color=color, 
-                        marker='o', linestyle='--' if metric_name != 'Response Time' else '-')
+                    linestyle = '--' if metric_name != 'Response Time' else '-'
+                    ax.plot(runs, values, label=f'{service} - {metric_name}',
+                           color=color, marker='o', linestyle=linestyle, alpha=0.7)
                 except Exception as e:
                     print(f"Couldn't plot {metric_name} for {service}: {e}")
         
@@ -1026,62 +1004,66 @@ class DashboardGenerator:
 
     def _plot_quality_metrics(self, ax):
         """Plot quality metrics."""
-        metrics = ['paper_coverage', 'temporal_accuracy', 'response_completeness']
+        metrics = ['success_rate', 'query_relevance', 'response_completeness']
+        labels = ['Success Rate', 'Query Relevance', 'Completeness']
+        
         x = np.arange(len(metrics))
-        width = 0.35
+        width = 0.8 / len(self.df['service'].unique())
         
         for i, service in enumerate(self.df['service'].unique()):
             values = []
             for metric in metrics:
                 try:
-                    col = f'quality_{metric}'
-                    values.append(self.df[self.df['service'] == service][col].mean() * 100)
+                    values.append(self.df[self.df['service'] == service][metric].mean() * 100)
                 except Exception as e:
                     print(f"Couldn't calculate {metric} for {service}: {e}")
                     values.append(0)
             ax.bar(x + i*width, values, width, label=service, color=self.colors[i])
         
         ax.set_title('Quality Metrics')
-        ax.set_xticks(x + width/2)
-        ax.set_xticklabels(['Coverage', 'Accuracy', 'Completeness'])
+        ax.set_xticks(x + width*(len(self.df['service'].unique())-1)/2)
+        ax.set_xticklabels(labels, rotation=45)
         ax.set_ylabel('Score (%)')
+        ax.set_ylim(0, 100)
         ax.legend()
         ax.grid(True, alpha=0.3)
 
     def _plot_scientific_metrics(self, ax):
         """Plot scientific metrics."""
-        metrics = ['citation_quality', 'scientific_structure', 'technical_depth', 'academic_rigor']
+        metrics = ['scientific_structure', 'academic_rigor', 'technical_depth']
+        labels = ['Structure', 'Academic Rigor', 'Technical Depth']
+        
         x = np.arange(len(metrics))
-        width = 0.35
+        width = 0.8 / len(self.df['service'].unique())
         
         for i, service in enumerate(self.df['service'].unique()):
             values = []
             for metric in metrics:
                 try:
-                    col = f'scientific_{metric}'
-                    values.append(self.df[self.df['service'] == service][col].mean() * 100)
+                    values.append(self.df[self.df['service'] == service][metric].mean() * 100)
                 except Exception as e:
                     print(f"Couldn't calculate {metric} for {service}: {e}")
                     values.append(0)
             ax.bar(x + i*width, values, width, label=service, color=self.colors[i])
         
         ax.set_title('Scientific Metrics')
-        ax.set_xticks(x + width/2)
-        ax.set_xticklabels(['Citations', 'Structure', 'Technical', 'Academic'])
+        ax.set_xticks(x + width*(len(self.df['service'].unique())-1)/2)
+        ax.set_xticklabels(labels, rotation=45)
         ax.set_ylabel('Score (%)')
+        ax.set_ylim(0, 100)
         ax.legend()
         ax.grid(True, alpha=0.3)
 
     def _plot_success_metrics(self, ax):
         """Plot success metrics."""
         metrics = {
-            'Success Rate': lambda x: x['success'].mean() * 100,
-            'Completion': lambda x: 100 - (x['error_count'].mean() * 10),
-            'Quality Score': lambda x: x['quality_paper_coverage'].mean() * 100
+            'Success Rate': lambda x: x['success_rate'].mean() * 100,
+            'Quality Score': lambda x: x['response_completeness'].mean() * 50 + x['response_completeness'].mean() * 50,
+            'Reliability': lambda x: x['scientific_structure'].mean() * 30 +x['academic_rigor'].mean() * 50+ x['query_relevance'].mean() * 20
         }
         
         x = np.arange(len(metrics))
-        width = 0.35
+        width = 0.8 / len(self.df['service'].unique())
         
         for i, service in enumerate(self.df['service'].unique()):
             service_df = self.df[self.df['service'] == service]
@@ -1090,13 +1072,15 @@ class DashboardGenerator:
                 try:
                     values.append(metric_func(service_df))
                 except Exception as e:
+                    print(f"Couldn't calculate metric for {service}: {e}")
                     values.append(0)
             ax.bar(x + i*width, values, width, label=service, color=self.colors[i])
         
         ax.set_title('Success Metrics')
-        ax.set_xticks(x + width/2)
-        ax.set_xticklabels(metrics.keys())
+        ax.set_xticks(x + width*(len(self.df['service'].unique())-1)/2)
+        ax.set_xticklabels(metrics.keys(), rotation=45)
         ax.set_ylabel('Score (%)')
+        ax.set_ylim(0, 100)
         ax.legend()
         ax.grid(True, alpha=0.3)
 
@@ -1104,8 +1088,20 @@ class ScientificBenchmarkDashboard:
     def __init__(self, df: pd.DataFrame, timestamp: str):
         self.df = df
         self.timestamp = timestamp
-        self.colors = sns.color_palette("husl", n_colors=len(df['service'].unique()))
+        self.colors = ['#08519c',  # Dark Blue
+                        '#3182bd',  # Medium Blue
+                        '#6baed6',  # Light Blue
+                        '#bdd7e7'   # Very Light Blue
+                        ][:len(df['service'].unique())]
+        
         Path("evaluation_plots").mkdir(exist_ok=True)
+        
+        # Define metric groups
+        self.metrics = {
+            'Quality': ['success_rate', 'query_relevance', 'response_completeness'],
+            'Scientific': ['scientific_structure', 'academic_rigor', 'technical_depth'],
+            'Performance': ['latency', 'tokens_per_second']
+        }
         
     def create_benchmark_dashboard(self):
         """Generate comprehensive scientific benchmarking visualization."""
@@ -1132,103 +1128,114 @@ class ScientificBenchmarkDashboard:
         ax5 = fig.add_subplot(gs[2, :], projection='polar')
         self._plot_comparative_analysis(ax5)
         
+        plt.suptitle('Scientific Benchmark Analysis', fontsize=16, y=1.02)
         plt.tight_layout()
         plt.savefig(f'evaluation_plots/scientific_benchmark_{self.timestamp}.png',
                    dpi=300, bbox_inches='tight')
         plt.close()
 
     def _plot_performance_metrics(self, ax):
-        """Plot performance metrics."""
+        """Plot performance metrics distribution."""
         for service, color in zip(self.df['service'].unique(), self.colors):
             service_df = self.df[self.df['service'] == service]
             
             # Plot latency distribution
-            sns.kdeplot(service_df['performance_latency'], 
+            sns.kdeplot(service_df['latency'], 
                        ax=ax, color=color, label=f"{service} - Latency")
             
             # Plot tokens per second
-            sns.kdeplot(service_df['performance_tokens_per_second'],
+            sns.kdeplot(service_df['tokens_per_second'],
                        ax=ax, color=color, linestyle='--', 
                        label=f"{service} - Tokens/s")
-            
-        ax.set_xlabel('Value')
+        
+        ax.set_xlabel('Value (Latency in seconds / Tokens per second)')
         ax.set_ylabel('Density')
         ax.set_title('Performance Metrics Distribution')
-        ax.legend()
-        ax.grid(True)
+        ax.legend(bbox_to_anchor=(1.05, 1))
+        ax.grid(True, alpha=0.3)
 
     def _plot_scientific_latency_tradeoff(self, ax):
-        """Plot scientific metrics vs latency."""
+        """Plot scientific metrics vs latency tradeoff."""
         for service, color in zip(self.df['service'].unique(), self.colors):
             service_df = self.df[self.df['service'] == service]
             
-            scientific_score = np.mean([
-                service_df['scientific_citation_quality'],
-                service_df['scientific_academic_rigor'],
-                service_df['scientific_technical_depth']
-            ], axis=0) * 100
+            # Calculate weighted scientific score
+            scientific_score = (
+                0.33 * service_df['scientific_structure'].mean() +
+                0.33 * service_df['academic_rigor'].mean() +
+                0.34 * service_df['technical_depth'].mean()
+            ) * 100
             
-            ax.scatter(service_df['performance_latency'], scientific_score,
+            latency = service_df['latency']
+            
+            # Plot scatter with confidence interval
+            ax.scatter(latency, [scientific_score] * len(latency),
                       c=color, label=service, alpha=0.6, s=100)
             
-        ax.set_xlabel('Latency (s)')
+            # Add confidence interval
+            if len(service_df) > 2:
+                confidence_ellipse(
+                    latency.values,
+                    np.array([scientific_score] * len(latency)),
+                    ax, n_std=2.0, facecolor=color, alpha=0.1
+                )
+        
+        ax.set_xlabel('Latency (seconds)')
         ax.set_ylabel('Scientific Score (%)')
         ax.set_title('Scientific Performance Trade-off')
-        ax.legend()
-        ax.grid(True)
+        ax.legend(bbox_to_anchor=(1.05, 1))
+        ax.grid(True, alpha=0.3)
 
     def _plot_quality_analysis(self, ax):
         """Plot quality metrics comparison."""
-        metrics = ['quality_paper_coverage', 'quality_temporal_accuracy', 
-                  'quality_response_completeness']
-        metric_labels = ['Paper Coverage', 'Temporal Accuracy', 'Completeness']
+        metrics = self.metrics['Quality']
+        labels = ['Success Rate', 'Query Relevance', 'Response Completeness']
         
         x = np.arange(len(metrics))
-        width = 0.35
+        width = 0.8 / len(self.df['service'].unique())
         
-        for i, service in zip(range(len(self.df['service'].unique())), 
-                            self.df['service'].unique()):
+        for i, service in enumerate(self.df['service'].unique()):
             service_df = self.df[self.df['service'] == service]
             values = [service_df[m].mean() * 100 for m in metrics]
-            ax.bar(x + i*width, values, width, label=service)
+            ax.bar(x + i*width, values, width, label=service, color=self.colors[i])
         
-        ax.set_xticks(x + width/2)
-        ax.set_xticklabels(metric_labels)
+        ax.set_xticks(x + width * (len(self.df['service'].unique()) - 1) / 2)
+        ax.set_xticklabels(labels, rotation=45, ha='right')
         ax.set_ylabel('Score (%)')
+        ax.set_ylim(0, 100)
         ax.set_title('Quality Metrics Comparison')
-        ax.legend()
-        ax.grid(True)
+        ax.legend(bbox_to_anchor=(1.05, 1))
+        ax.grid(True, alpha=0.3)
 
     def _plot_scientific_analysis(self, ax):
         """Plot scientific metrics comparison."""
-        metrics = ['scientific_citation_quality', 'scientific_technical_depth',
-                  'scientific_academic_rigor']
-        metric_labels = ['Citation', 'Technical', 'Academic']
+        metrics = self.metrics['Scientific']
+        labels = ['Structure', 'Academic Rigor', 'Technical Depth']
         
         x = np.arange(len(metrics))
-        width = 0.35
+        width = 0.8 / len(self.df['service'].unique())
         
-        for i, service in zip(range(len(self.df['service'].unique())), 
-                            self.df['service'].unique()):
+        for i, service in enumerate(self.df['service'].unique()):
             service_df = self.df[self.df['service'] == service]
             values = [service_df[m].mean() * 100 for m in metrics]
-            ax.bar(x + i*width, values, width, label=service)
+            ax.bar(x + i*width, values, width, label=service, color=self.colors[i])
         
-        ax.set_xticks(x + width/2)
-        ax.set_xticklabels(metric_labels)
+        ax.set_xticks(x + width * (len(self.df['service'].unique()) - 1) / 2)
+        ax.set_xticklabels(labels, rotation=45, ha='right')
         ax.set_ylabel('Score (%)')
+        ax.set_ylim(0, 100)
         ax.set_title('Scientific Metrics Comparison')
-        ax.legend()
-        ax.grid(True)
+        ax.legend(bbox_to_anchor=(1.05, 1))
+        ax.grid(True, alpha=0.3)
 
     def _plot_comparative_analysis(self, ax):
-        """Create radar plot for key metrics."""
+        """Create radar plot for comprehensive metric comparison."""
         metrics = [
-            'Paper Coverage',
-            'Citation Quality',
+            'Success Rate',
+            'Scientific Rigor',
             'Technical Depth',
-            'Response Time',
-            'Tokens/Second'
+            'Response Speed',
+            'Quality Score'
         ]
         
         angles = np.linspace(0, 2*np.pi, len(metrics), endpoint=False)
@@ -1239,12 +1246,18 @@ class ScientificBenchmarkDashboard:
         
         for service, color in zip(self.df['service'].unique(), self.colors):
             service_df = self.df[self.df['service'] == service]
+            
+            # Calculate composite scores
             values = [
-                service_df['quality_paper_coverage'].mean() * 100,
-                service_df['scientific_citation_quality'].mean() * 100,
-                service_df['scientific_technical_depth'].mean() * 100,
-                100 * (1 / (1 + service_df['latency'].mean())),
-                min(100, service_df['performance_tokens_per_second'].mean() / 10)
+                service_df['success_rate'].mean() * 100,
+                (0.33 * service_df['scientific_structure'].mean() +
+                 0.33 * service_df['academic_rigor'].mean() +
+                 0.34 * service_df['technical_depth'].mean()) * 100,
+                service_df['technical_depth'].mean() * 100,
+                100 * (1 / (1 + service_df['latency'].mean())),  # Response speed
+                (0.4 * service_df['success_rate'].mean() +
+                 0.3 * service_df['query_relevance'].mean() +
+                 0.3 * service_df['response_completeness'].mean()) * 100
             ]
             values = np.concatenate((values, [values[0]]))
             
@@ -1254,8 +1267,200 @@ class ScientificBenchmarkDashboard:
         ax.set_xticks(angles[:-1])
         ax.set_xticklabels(metrics)
         ax.set_ylim(0, 100)
-        ax.set_title('Core Metrics Comparison')
+        ax.set_title('Comprehensive Metric Comparison')
         ax.legend(loc='upper right', bbox_to_anchor=(1.3, 1.1))
+        
+        # Add circular gridlines
+        ax.set_rticks([20, 40, 60, 80, 100])
+        ax.grid(True, alpha=0.3)
+
+class MetricsVisualizer:
+    """Class for creating intuitive visualizations of metrics and tradeoffs."""
+    
+    def __init__(self, df: pd.DataFrame, timestamp: str):
+        self.df = df
+        self.timestamp = timestamp
+        self.colors = sns.color_palette("husl", n_colors=len(df['service'].unique()))
+        Path("evaluation_plots").mkdir(exist_ok=True)
+        
+        # Set better default style
+        plt.rcParams['figure.facecolor'] = 'white'
+        plt.rcParams['axes.facecolor'] = '#f8f9fa'
+        plt.rcParams['grid.alpha'] = 0.3
+        plt.rcParams['grid.color'] = '#cccccc'
+        plt.rcParams['axes.labelsize'] = 11
+        plt.rcParams['axes.titlesize'] = 13
+
+    def calculate_metrics(self, service_df: pd.DataFrame) -> Dict[str, float]:
+        """Calculate all key metrics for a service."""
+        metrics = {
+            'quality': (0.25 * service_df['success_rate'].mean() +
+                       0.35 * service_df['query_relevance'].mean() +
+                       0.40 * service_df['response_completeness'].mean()) * 100,
+            
+            'technical': (0.3 * service_df['technical_depth'].mean() +
+                        0.5 * service_df['academic_rigor'].mean() +
+                        0.2 * service_df['scientific_structure'].mean()) * 100,
+            
+            'reliability': (0.5 * service_df['academic_rigor'].mean() +
+                          0.2 * service_df['scientific_structure'].mean() +
+                          0.3 * service_df['query_relevance'].mean()) * 100,
+            
+            'speed': 100 * (1 / (1 + service_df['latency'].mean())),
+            
+            'cost_efficiency': 100 * (1 / (1 + service_df['price'].mean() * 1000)),
+            
+            'cost': service_df['price'].mean() * 1000  # Convert to millicents
+        }
+        return metrics
+
+    def create_visualizations(self):
+        """Create all visualizations."""
+        # Create main figure with subplots
+        fig = plt.figure(figsize=(20, 15))
+        gs = plt.GridSpec(2, 2)
+        
+        # 1. Bubble Chart: Cost-Quality-Technical
+        ax1 = fig.add_subplot(gs[0, 0])
+        self._plot_bubble_tradeoff(ax1)
+        
+        # 2. Spider/Radar Chart: Key Metrics
+        ax2 = fig.add_subplot(gs[0, 1], projection='polar')
+        self._plot_spider_metrics(ax2)
+        
+        # 3. Stacked Bar: Metric Composition
+        ax3 = fig.add_subplot(gs[1, 0])
+        self._plot_stacked_metrics(ax3)
+        
+        # 4. Tradeoff Matrix
+        ax4 = fig.add_subplot(gs[1, 1])
+        self._plot_tradeoff_matrix(ax4)
+        
+        plt.suptitle('Metrics Tradeoff Analysis', fontsize=16, y=1.02)
+        plt.tight_layout()
+        plt.savefig(f'evaluation_plots/metrics_analysis_{self.timestamp}.png',
+                   dpi=300, bbox_inches='tight')
+        plt.close()
+
+    def _plot_bubble_tradeoff(self, ax):
+        """Create bubble chart showing cost vs quality with technical score as size."""
+        for service, color in zip(self.df['service'].unique(), self.colors):
+            service_df = self.df[self.df['service'] == service]
+            metrics = self.calculate_metrics(service_df)
+            
+            # Plot bubble with size based on technical score
+            size = 500 * (metrics['technical']/100)
+            scatter = ax.scatter(metrics['cost'], metrics['quality'], 
+                               s=size, color=color, alpha=0.6,
+                               label=f'{service}\nTech: {metrics["technical"]:.1f}%')
+            
+            # Add label
+            ax.annotate(service,
+                       (metrics['cost'], metrics['quality']),
+                       xytext=(10, 10),
+                       textcoords='offset points')
+        
+        ax.set_title('Cost-Quality Tradeoff\n(Bubble size indicates Technical Score)')
+        ax.set_xlabel('Cost (millicents per request)')
+        ax.set_ylabel('Quality Score (%)')
+        ax.grid(True, alpha=0.3)
+        ax.legend(bbox_to_anchor=(1.05, 1))
+
+    def _plot_spider_metrics(self, ax):
+        """Create spider/radar chart for key metrics."""
+        metrics = ['Quality', 'Technical', 'Reliability', 'Speed', 'Cost-Efficiency']
+        angles = np.linspace(0, 2*np.pi, len(metrics), endpoint=False)
+        angles = np.concatenate((angles, [angles[0]]))
+        
+        ax.set_theta_offset(np.pi / 2)
+        ax.set_theta_direction(-1)
+        
+        for service, color in zip(self.df['service'].unique(), self.colors):
+            service_df = self.df[self.df['service'] == service]
+            metrics_values = self.calculate_metrics(service_df)
+            
+            values = [
+                metrics_values['quality'],
+                metrics_values['technical'],
+                metrics_values['reliability'],
+                metrics_values['speed'],
+                metrics_values['cost_efficiency']
+            ]
+            values = np.concatenate((values, [values[0]]))
+            
+            ax.plot(angles, values, 'o-', linewidth=2, label=service, color=color)
+            ax.fill(angles, values, alpha=0.25, color=color)
+        
+        ax.set_xticks(angles[:-1])
+        ax.set_xticklabels(metrics)
+        ax.set_ylim(0, 100)
+        ax.set_title('Metrics Comparison')
+        plt.legend(loc='upper right', bbox_to_anchor=(1.3, 1.1))
+
+    def _plot_stacked_metrics(self, ax):
+        """Create stacked bar chart showing metric composition."""
+        services = self.df['service'].unique()
+        metrics = {
+            'Academic': 'academic_rigor',
+            'Technical': 'technical_depth',
+            'Structure': 'scientific_structure',
+            'Relevance': 'query_relevance',
+            'Completeness': 'response_completeness'
+        }
+        
+        bottoms = np.zeros(len(services))
+        width = 0.8
+        
+        for metric_name, column in metrics.items():
+            values = [self.df[self.df['service'] == service][column].mean() * 100 
+                     for service in services]
+            ax.bar(services, values, width, bottom=bottoms, label=metric_name)
+            bottoms += values
+        
+        ax.set_title('Metric Composition by Service')
+        ax.set_ylabel('Score (%)')
+        ax.grid(True, alpha=0.3)
+        ax.legend()
+
+    def _plot_tradeoff_matrix(self, ax):
+        """Create tradeoff matrix visualization."""
+        services = self.df['service'].unique()
+        n_services = len(services)
+        
+        # Calculate metrics for all services
+        service_metrics = {
+            service: self.calculate_metrics(self.df[self.df['service'] == service])
+            for service in services
+        }
+        
+        # Create tradeoff matrix
+        matrix = np.zeros((n_services, n_services))
+        for i, service1 in enumerate(services):
+            for j, service2 in enumerate(services):
+                if i != j:
+                    # Calculate tradeoff score
+                    s1, s2 = service_metrics[service1], service_metrics[service2]
+                    
+                    # Higher score means service1 is better
+                    score = 0
+                    score += (s1['quality'] - s2['quality']) / 100
+                    score += (s1['technical'] - s2['technical']) / 100
+                    score -= (s1['cost'] - s2['cost']) / (max(m['cost'] for m in service_metrics.values()))
+                    
+                    matrix[i, j] = score
+        
+        # Plot heatmap
+        im = ax.imshow(matrix, cmap='RdYlBu')
+        
+        # Add labels
+        ax.set_xticks(range(n_services))
+        ax.set_yticks(range(n_services))
+        ax.set_xticklabels(services)
+        ax.set_yticklabels(services)
+        
+        plt.colorbar(im, ax=ax, label='Tradeoff Score')
+        ax.set_title('Service Tradeoff Matrix\n(Higher score means row service better than column)')
+        plt.setp(ax.get_xticklabels(), rotation=45, ha="right")
 
 def create_query_performance_breakdown(df: pd.DataFrame, timestamp: str):
     """
@@ -1418,23 +1623,28 @@ def generate_comprehensive_dashboard(df: pd.DataFrame, timestamp: str):
     
     # Generate all plots
  
-
     create_query_performance_breakdown(df, timestamp)
+   
     create_detailed_performance_visualization(df, timestamp)
-
+    
+    
     generator = DashboardGenerator(df, timestamp)
     generator.create_main_dashboard()
+    
 
-
- 
     stat_generator = StatisticalDashboardGenerator(df, timestamp)
     stat_generator.create_statistical_dashboard()
-
-
+    
     
     sci_generator = ScientificBenchmarkDashboard(df, timestamp)
     sci_generator.create_benchmark_dashboard()
     
-
+    
     tradeoff_analyzer = ServiceTradeoffAnalyzer(df, timestamp)
     tradeoff_analyzer.analyze_tradeoffs()
+
+    # Create visualizer and generate all plots
+    visualizer = MetricsVisualizer(df, timestamp)
+    visualizer.create_visualizations()
+
+
