@@ -4,6 +4,7 @@ import json
 import redis
 
 from nexusai.config import REDIS_URL
+from nexusai.models.inputs import SearchPapersInput
 from nexusai.utils.logger import logger
 
 
@@ -42,22 +43,22 @@ class CacheManager:
         key = self.__generate_key("pdf", url)
         self.redis.set(key, json.dumps(pages))
 
-    def get_query_results(self, query: str) -> str | None:
-        """Get query results from cache."""
+    def get_search_results(self, input: SearchPapersInput) -> str | None:
+        """Get search results from cache."""
         if not self.redis:
             return None
 
-        key = self.__generate_key("query", query)
+        key = self.__generate_key("search", input.model_dump_json())
         data = self.redis.get(key)
         return json.loads(data) if data else None
 
-    def store_query_results(
-        self, query: str, results: str, expire_seconds: int = 86400 * 7
+    def store_search_results(
+        self, input: SearchPapersInput, results: str, expire_seconds: int = 86400 * 7
     ) -> None:
-        """Store query results in cache with 7-day default expiration."""
+        """Store search results in cache with 7-day default expiration."""
         if not self.redis:
             return None
 
-        logger.info(f"Storing query results in cache for '{query}'")
-        key = self.__generate_key("query", query)
+        logger.info(f"Storing search results in cache for '{input.model_dump_json()}'")
+        key = self.__generate_key("search", input.model_dump_json())
         self.redis.set(key, json.dumps(results), ex=expire_seconds)

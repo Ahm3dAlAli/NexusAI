@@ -63,10 +63,6 @@ class SerpAPIWrapper:
 
     def __get_search_results(self, query: str, max_papers: int = 1) -> list:
         """Execute search query with retry mechanism."""
-        if cached_results := self.cache_manager.get_query_results(query):
-            logger.info(f"Found SERP search results for '{query}' in cache")
-            return cached_results
-
         http = urllib3.PoolManager()
         for attempt in range(MAX_RETRIES):
             logger.info(
@@ -120,10 +116,14 @@ class SerpAPIWrapper:
 
     def search(self, input: SearchPapersInput) -> str:
         """Search for papers and format results."""
+        if cached_results := self.cache_manager.get_search_results(input):
+            logger.info(f"Found SERP search results for '{input.model_dump_json()}' in cache")
+            return cached_results
+
         query = self.__build_query(input)
         results = self.__get_search_results(query, input.max_papers)
         formatted_results = self.__format_results(results)
 
         # Cache the results
-        self.cache_manager.store_query_results(query, formatted_results)
+        self.cache_manager.store_search_results(input, formatted_results)
         return formatted_results

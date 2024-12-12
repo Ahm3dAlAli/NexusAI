@@ -1,6 +1,6 @@
 import json
 
-from langchain_core.messages import BaseMessage, ToolMessage
+from langchain_core.messages import BaseMessage, ToolMessage, AIMessage
 from langgraph.graph import END, StateGraph
 from langgraph.graph.state import CompiledStateGraph
 
@@ -97,14 +97,17 @@ class ResearchWorkflow:
         elif message.type == "tool":
             return AgentMessageType.tool
 
-    def __build_content_from_tool_calls(self, message: BaseMessage) -> str:
-        """Build the message content from tool calls."""
-        content = "Calling the following tools:\n\n"
+    def __add_tool_calls_to_message(self, message: AIMessage) -> str:
+        """Add tool calls to the message content."""
+        content = ""
+        if message.content:
+            content += message.content + "\n\n"
+        content += "Calling the following tools:\n\n"
         tool_calls_strs = []
         for tool_call in message.tool_calls:
             tool_calls_strs.append(
                 f"- **Tool name:** {tool_call['name']}\n"
-                f"- **Args:** {json.dumps(tool_call['args'])}\n"
+                f"- **Args:** {json.dumps(tool_call['args'], indent=2)}\n"
             )
         return content + "\n---\n".join(tool_calls_strs)
 
@@ -132,8 +135,8 @@ class ResearchWorkflow:
                                     tool_call_id=message.tool_call_id,
                                 )
 
-                            if not message.content:
-                                message.content = self.__build_content_from_tool_calls(
+                            if isinstance(message, AIMessage) and message.tool_calls:
+                                message.content = self.__add_tool_calls_to_message(
                                     message
                                 )
 

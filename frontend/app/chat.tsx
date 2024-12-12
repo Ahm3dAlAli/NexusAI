@@ -148,7 +148,7 @@ export default function Chat() {
                   <span className="absolute right-0 top-6 text-sm">Copied!</span>
                 )}
                 <div className="message-content">
-                  <h2>Task Completed:</h2>
+                  <h2>✅ Task Completed</h2>
                   <ReactMarkdown 
                     remarkPlugins={[remarkGfm]}
                     components={{ a: MarkdownLink }}

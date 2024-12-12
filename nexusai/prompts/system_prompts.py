@@ -23,7 +23,9 @@ The current date is: {current_date}.
 
 Subtasks should not rely on any assumptions or guesses, but only rely on the information provided in the context or look up for any additional information.
 
-If any feedback or instructions are given on how to improve the answer, incorporate them in your new planning. Use them to come up with a new plan that tackles the problem from a different angle.
+If any feedback or instructions are given on how to improve the answer, incorporate them in your new planning. 
+Use them to come up with a new plan that tackles the problem from a different angle. 
+For example, search for a paper using keywords instead of the direct titles, changing the keywords used for search, or increase the number of papers to search for to have more options.
 
 Don't thank for the instructions, but silently incorporate them.
 
