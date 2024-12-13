@@ -54,7 +54,9 @@ if LANGCHAIN_API_KEY := os.getenv("LANGCHAIN_API_KEY"):
     os.environ["LANGCHAIN_PROJECT"] = LANGCHAIN_PROJECT
     logger.info("Langsmith tracing enabled.")
 else:
-    logger.warning("LANGCHAIN_API_KEY environment variable is not set. Agent runs will not be traced.")
+    logger.warning(
+        "LANGCHAIN_API_KEY environment variable is not set. Agent runs will not be traced."
+    )
 
 # Request Configuration
 MAX_RETRIES = 5
@@ -62,6 +64,7 @@ RETRY_BASE_DELAY = 2  # seconds
 
 # State Management Configuration
 MAX_FEEDBACK_REQUESTS = 2
+RECURSION_LIMIT = 50
 
 # PDF Downloader Configuration
 MAX_PAGES = 50

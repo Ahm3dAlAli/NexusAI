@@ -112,20 +112,20 @@ We would like to thank Dimant AI and Langchain for hosting the Agent Craft Hacka
 <table>
   <tr>
     <td align="center">
-      <a href="https://github.com/Ahm3dAlAli">
-        <img src="https://avatars.githubusercontent.com/u/84172381?v=4" width="100px;" alt="Ahmed Al Ali"/><br />
-        <sub><b>Ahmed Al Ali</b></sub>
-      </a><br />
-      <a href="https://www.linkedin.com/in/ahmed-a-295933211/" title="LinkedIn">
-        <img src="https://img.shields.io/badge/-LinkedIn-0A66C2?style=flat&logo=linkedin" />
-      </a>
-    </td>
-    <td align="center">
       <a href="https://github.com/vincenzofanizza">
         <img src="https://avatars.githubusercontent.com/u/104767369?v=4" width="100px;" alt="Vincenzo Fanizza"/><br />
         <sub><b>Vincenzo Fanizza</b></sub>
       </a><br />
       <a href="https://www.linkedin.com/in/vincenzo-fanizza/" title="LinkedIn">
+        <img src="https://img.shields.io/badge/-LinkedIn-0A66C2?style=flat&logo=linkedin" />
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://github.com/Ahm3dAlAli">
+        <img src="https://avatars.githubusercontent.com/u/84172381?v=4" width="100px;" alt="Ahmed Al Ali"/><br />
+        <sub><b>Ahmed Al Ali</b></sub>
+      </a><br />
+      <a href="https://www.linkedin.com/in/ahmed-a-295933211/" title="LinkedIn">
         <img src="https://img.shields.io/badge/-LinkedIn-0A66C2?style=flat&logo=linkedin" />
       </a>
     </td>

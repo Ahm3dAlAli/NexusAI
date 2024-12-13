@@ -107,7 +107,9 @@ class ArxivAPIWrapper:
     def search(self, input: SearchPapersInput) -> str:
         """Search for papers and format results."""
         if cached_results := self.cache_manager.get_search_results(input):
-            logger.info(f"Found Arxiv search results for '{input.model_dump_json()}' in cache")
+            logger.info(
+                f"Found Arxiv search results for '{input.model_dump_json()}' in cache"
+            )
             return cached_results
 
         query = self.__build_query(input)

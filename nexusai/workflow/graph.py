@@ -1,13 +1,14 @@
 import json
 
-from langchain_core.messages import BaseMessage, ToolMessage, AIMessage
+from langchain_core.messages import AIMessage, BaseMessage, ToolMessage
 from langgraph.graph import END, StateGraph
 from langgraph.graph.state import CompiledStateGraph
 
-from ..models.agent_state import AgentState
-from ..models.outputs import AgentMessage, AgentMessageType
-from ..utils.logger import logger
-from ..workflow.nodes import WorkflowNodes
+from nexusai.config import RECURSION_LIMIT
+from nexusai.models.agent_state import AgentState
+from nexusai.models.outputs import AgentMessage, AgentMessageType
+from nexusai.utils.logger import logger
+from nexusai.workflow.nodes import WorkflowNodes
 
 
 class ResearchWorkflow:
@@ -118,7 +119,9 @@ class ResearchWorkflow:
         try:
             all_messages: list[BaseMessage] = []
             async for chunk in self.workflow.astream(
-                {"messages": messages + [query]}, stream_mode="updates"
+                {"messages": messages + [query]},
+                config={"recursion_limit": RECURSION_LIMIT},
+                stream_mode="updates",
             ):
                 for updates in chunk.values():
                     if messages := updates.get("messages"):

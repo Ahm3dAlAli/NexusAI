@@ -57,40 +57,13 @@ Search APIs:
 - the user can run the agent locally, but they need to provide their own API keys.
 - using the online demo is recommended because we'll have all the keys there, especially semantic scholar which is the best API.
 
-### Priorities 
+## Priorities 
 
-#### Priority 1:  API Wrapper Development (DONE)
-API Integration Layer Implement unified interface for Semantic Scholar
-
-#### Priority 2: Latex Overleaf report and Unit testing
-Documentation and Testing
-Create comprehensive API documentation
-Develop test suites for each component
-Implement integration tests
-Create usage examples and tutorials
-Add Evlauation Metrics and Benchamrking in the report
-
-#### Priority 3: Unstructured Data Processing
-Table Analysis
-
-Implement table extraction from PDFs
-Create comparison framework for tables across papers
-Design standardized table representation format
-Build table data validator
-
-Paper Analysis Pipeline
-
-Create full-text extraction system
-Implement section-wise analysis
-Design citation network analyzer
-Build figure/diagram extractor
-Develop metadata processor
-
-#### Priority 4: User Agent System
-Agent Implementation
-
-Design agent architecture for complex queries
-Implement consecutive NP-hard question handling
-Create context maintenance system
-Develop agent cooperation framework
+### Latex Overleaf report and Unit testing
+- Documentation and Testing
+- Create comprehensive API documentation
+- Develop test suites for each component
+- Implement integration tests
+- Create usage examples and tutorials
+- Add Evlauation Metrics and Benchamrking in the report
 

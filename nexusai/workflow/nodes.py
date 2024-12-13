@@ -6,16 +6,16 @@ from langchain_core.messages import AIMessage, SystemMessage, ToolMessage
 from langchain_core.tools import BaseTool
 from langchain_openai import ChatOpenAI
 
-from ..config import MAX_FEEDBACK_REQUESTS
-from ..models.agent_state import AgentState
-from ..models.outputs import DecisionMakingOutput, JudgeOutput
-from ..prompts.system_prompts import (
+from nexusai.config import MAX_FEEDBACK_REQUESTS
+from nexusai.models.agent_state import AgentState
+from nexusai.models.outputs import DecisionMakingOutput, JudgeOutput
+from nexusai.prompts.system_prompts import (
     agent_prompt,
     decision_making_prompt,
     judge_prompt,
     planning_prompt,
 )
-from ..utils.messages import get_agent_messages
+from nexusai.utils.messages import get_agent_messages
 
 
 class WorkflowNodes:
@@ -111,7 +111,9 @@ class WorkflowNodes:
     def agent_node(self, state: AgentState) -> dict[str, Any]:
         """Node that uses the LLM with tools to process results."""
         system_prompt = SystemMessage(
-            content=agent_prompt.format(current_date=datetime.now().strftime("%Y-%m-%d"))
+            content=agent_prompt.format(
+                current_date=datetime.now().strftime("%Y-%m-%d")
+            )
         )
         messages = get_agent_messages(state)
         response = self.agent_llm.invoke([system_prompt] + messages)
@@ -125,7 +127,9 @@ class WorkflowNodes:
             return {"is_good_answer": True}
 
         system_prompt = SystemMessage(
-            content=judge_prompt.format(current_date=datetime.now().strftime("%Y-%m-%d"))
+            content=judge_prompt.format(
+                current_date=datetime.now().strftime("%Y-%m-%d")
+            )
         )
         response: JudgeOutput = self.judge_llm.invoke(
             [system_prompt] + state["messages"]

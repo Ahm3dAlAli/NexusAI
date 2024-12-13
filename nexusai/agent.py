@@ -1,11 +1,11 @@
 from langsmith import traceable
 
+from nexusai.config import LANGCHAIN_PROJECT
 from nexusai.models.outputs import AgentMessage
 from nexusai.tools.functions import setup_tools
 from nexusai.utils.messages import build_messages
 from nexusai.workflow.graph import ResearchWorkflow
 from nexusai.workflow.nodes import WorkflowNodes
-from nexusai.config import LANGCHAIN_PROJECT
 
 
 @traceable(project_name=LANGCHAIN_PROJECT)
