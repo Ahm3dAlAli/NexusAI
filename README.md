@@ -13,11 +13,9 @@
 > - 🏆 **[11/26/24]** Winner of the AgentCraft Hackathon hosted by Dimant AI x Langchain!
 > - 🚀 **[11/10/24]** Project started.
 
-NexusAI is an intelligent research assistant transforming how researchers interact with scientific literature. It streamlines the paper analysis process through state-driven workflows, advanced language models, and sophisticated validation mechanisms.
+Keeping up with the flood of academic papers is harder than ever for researchers. Manually reviewing this overwhelming volume of studies takes too much time, leading to missed insights or duplicated efforts. Modern research is also more complex, with key information spread across text, figures, tables, and equations, making it difficult to fully understand. Current tools for searching and analyzing papers aren’t smart enough — they struggle to understand deeper connections between studies, extract insights from complex formats, or summarize information effectively.
 
-### Why NexusAI?
-
-**TODO**: Describe our value prop + present an overview of the main results that frame us as better of perplexity.
+NexusAI transforms how researchers interact with scientific literature. It streamlines research by delegating the heavy lifting to an AI agent able to plan its own execution strategy, self-assess the quality of its work, and let the user ask further questions to dive deeper into the results. All with access to the most comprehensive academic search engines (arXiv, CORE, and Google).
 
 ### Demo
 
