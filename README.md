@@ -10,7 +10,8 @@
 
 > [!IMPORTANT]
 > - 📰 **[12/03/24]** Featured in [DiamantAI's newsletter](https://diamantai.substack.com/p/nexus-ai-the-revolutionary-research) with a comprehensive deep-dive into our architecture and impact on research efficiency.
-> - 🏆 **[11/26/24]** Winner of the Agent Craft Hackathon hosted by Dimant AI x Langchain!
+> - 🏆 **[11/26/24]** Winner of the AgentCraft Hackathon hosted by Dimant AI x Langchain!
+> - 🚀 **[11/17/24]** Project started
 
 NexusAI is an intelligent research assistant that transforms how researchers interact with scientific literature. It streamlines the paper analysis process through state-driven workflows, advanced language models, and sophisticated validation mechanisms.
 
@@ -70,13 +71,70 @@ NexusAI offers the following key capabilities:
 
 ## ⚙️ Getting Started
 
+### Prerequisites
+
+Before you begin, ensure you have Docker installed.
+
 ### Installation
 
-**TODO**
+1. **Clone the Repository**
+   ```bash
+   git clone https://github.com/Ahm3dAlAli/NexusAI.git
+   cd NexusAI
+   ```
 
-### Run with Docker
+2. **Set Up Environment Variables**
+   
+   Create a `.env` file by copying the provided template:
+   ```bash
+   cp .env.sample .env
+   ```
 
-**TODO**
+   Configure your environment variables:
+   ```env
+   # Required
+   OPENAI_API_KEY=your_openai_api_key
+
+   # Optional - for enhanced functionality
+   CORE_API_KEY=your_core_api_key
+   SERP_API_KEY=your_serp_api_key
+   LANGCHAIN_API_KEY=your_langchain_api_key
+
+   # Redis configuration (leave as default for Docker setup)
+   REDIS_URL="redis://redis:6379"
+   ```
+
+### Running with Docker
+
+Start the application by running:
+```bash
+docker-compose up --build
+```
+
+If that doesn't work, try running it without the dash:
+```bash
+docker compose up --build
+```
+
+This command starts three services:
+- Frontend (Next.js) - Port 3000
+- Backend (FastAPI) - Port 8000
+- Redis (caching) - Port 6379
+
+Navigate to the frontend interface at [http://localhost:3000](http://localhost:3000) and start automating your research!
+
+### Project Structure
+
+NexusAI/
+├── backend/                 # FastAPI backend service
+│   ├── Dockerfile
+│   └── server/
+├── frontend/               # Next.js frontend application
+│   └── Dockerfile
+├── nexusai/               # Core NexusAI library
+├── docker-compose.yml     # Docker services configuration
+├── requirements.txt       # Python dependencies
+└── .env.sample           # Environment variables template
 
 ## Use Cases
 
@@ -105,7 +163,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Acknowledgments
 
-We would like to thank Dimant AI and Langchain for hosting the Agent Craft Hackathon. Special thanks to CORE API for enabling academic paper access. We are also grateful to our amazing community of contributors.
+We would like to thank Dimant AI and Langchain for hosting the AgentCraft Hackathon. Special thanks to arXiv, CORE, and Serp for providing APIs to access academic papers.
 
 ## Contact
 
