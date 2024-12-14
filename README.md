@@ -10,7 +10,7 @@
 
 > [!IMPORTANT]
 > - 📰 **[12/03/24]** Featured in [DiamantAI's newsletter](https://diamantai.substack.com/p/nexus-ai-the-revolutionary-research) with a comprehensive deep-dive into our architecture and impact on research efficiency.
-> - 🏆 **[11/26/24]** Winner of the AgentCraft Hackathon hosted by Dimant AI x Langchain!
+> - 🏆 **[11/26/24]** Winner of the [AgentCraft Hackathon](https://www.linkedin.com/posts/nir-diamant-ai_the-agentcraft-hackathon-in-conjunction-with-activity-7267552838023577600-_g2Z?utm_source=share&utm_medium=member_desktop) hosted by Dimant AI x Langchain!
 > - 🚀 **[11/10/24]** Project started.
 
 Keeping up with the flood of academic papers is harder than ever for researchers. Manually reviewing this overwhelming volume of studies takes too much time, leading to missed insights or duplicated efforts. Modern research is also more complex, with key information spread across text, figures, tables, and equations, making it difficult to fully understand. Current tools for searching and analyzing papers aren’t smart enough — they struggle to understand deeper connections between studies, extract insights from complex formats, or summarize information effectively.
