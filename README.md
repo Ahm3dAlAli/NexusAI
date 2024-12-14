@@ -11,32 +11,21 @@
 > [!IMPORTANT]
 > - 📰 **[12/03/24]** Featured in [DiamantAI's newsletter](https://diamantai.substack.com/p/nexus-ai-the-revolutionary-research) with a comprehensive deep-dive into our architecture and impact on research efficiency.
 > - 🏆 **[11/26/24]** Winner of the AgentCraft Hackathon hosted by Dimant AI x Langchain!
-> - 🚀 **[11/17/24]** Project started
+> - 🚀 **[11/10/24]** Project started.
 
-NexusAI is an intelligent research assistant that transforms how researchers interact with scientific literature. It streamlines the paper analysis process through state-driven workflows, advanced language models, and sophisticated validation mechanisms.
+NexusAI is an intelligent research assistant transforming how researchers interact with scientific literature. It streamlines the paper analysis process through state-driven workflows, advanced language models, and sophisticated validation mechanisms.
 
 ### Why NexusAI?
 
-**TODO**: Describe our value prop + present overview of main results that frame us as better of perplexity.
+**TODO**: Describe our value prop + present an overview of the main results that frame us as better of perplexity.
 
 ### Demo
 
 **TODO**: Add a demo video
 
-## Table of Contents
-
-- [Architecture](#architecture)
-- [Features](#features)
-- [Getting Started](#getting-started)
-- [Use Cases](#use-cases)
-- [Evaluation](#evaluation)
-- [License](#license)
-- [Acknowledgments](#acknowledgments)
-- [Contact](#contact)
-
 ## Architecture
 
-**TODO**: Add diagram and describe architecture in detail.
+**TODO**: Add a diagram and describe the architecture in detail.
 NexusAI is built upon a layered architecture with three main components:
 
 ### 1. Workflow Engine
@@ -73,7 +62,7 @@ NexusAI offers the following key capabilities:
 
 ### Prerequisites
 
-Before you begin, ensure you have Docker installed.
+Before you begin, make sure you have Docker installed.
 
 ### Installation
 
@@ -125,6 +114,9 @@ Navigate to the frontend interface at [http://localhost:3000](http://localhost:3
 
 ### Project Structure
 
+NexusAI is built on a modular architecture comprising several key components, our implementation is divided into three main parts: backend, frontend, and Redis.
+
+```
 NexusAI/
 ├── backend/                 # FastAPI backend service
 │   ├── Dockerfile
@@ -135,6 +127,7 @@ NexusAI/
 ├── docker-compose.yml     # Docker services configuration
 ├── requirements.txt       # Python dependencies
 └── .env.sample           # Environment variables template
+```
 
 ## Use Cases
 
