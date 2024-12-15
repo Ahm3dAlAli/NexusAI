@@ -1,4 +1,5 @@
-from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
+from langchain_core.messages import (AIMessage, BaseMessage, HumanMessage,
+                                     SystemMessage)
 
 from nexusai.models.agent_state import AgentState
 from nexusai.models.outputs import AgentMessage, AgentMessageType

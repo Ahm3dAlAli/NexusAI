@@ -40,7 +40,7 @@ class PDFDownloader:
             self.embeddings,
             metadatas=[{"page_number": i} for i in range(len(pages))],
         )
-        logger.info(f"Searching for most relevant pages...")
+        logger.info("Searching for most relevant pages...")
         docs = db.similarity_search(self.query, k=MAX_PAGES)
         end_time = time.time()
         logger.info(f"Filtering pages took {end_time - start_time:.2f} seconds")

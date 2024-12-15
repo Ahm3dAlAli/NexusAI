@@ -15,11 +15,22 @@ class CacheManager:
     """
 
     def __init__(self):
-        self.redis = (
-            redis.Redis.from_url(REDIS_URL, decode_responses=False)
-            if REDIS_URL
-            else None
-        )
+        if not REDIS_URL:
+            self.redis = None
+            return
+
+        try:
+            if REDIS_URL.startswith("rediss://"):
+                # SSL enabled
+                kwargs = {
+                    "decode_responses": False,
+                    "ssl_cert_reqs": None,
+                }
+            else:
+                kwargs = {"decode_responses": False}
+            self.redis = redis.Redis.from_url(REDIS_URL, **kwargs)
+        except redis.exceptions.ConnectionError as e:
+            raise Exception(f"Failed to connect to Redis. Reason: {e}")
 
     def __generate_key(self, key_type: str, value: str) -> str:
         """Generate a unique cache key based on type and value."""

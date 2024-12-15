@@ -11,6 +11,7 @@ import {
   Card,
   CardContent,
 } from "@/components/ui/card"
+import { config } from '@/config/environment'
 
 const MarkdownLink = ({
   href,
@@ -35,7 +36,7 @@ export default function Chat() {
 
   useEffect(() => {
     // Initialize WebSocket connection
-    ws.current = new WebSocket('ws://localhost:8000/ws')
+    ws.current = new WebSocket(config.wsUrl)
 
     ws.current.onopen = () => {
       console.log('WebSocket connected')

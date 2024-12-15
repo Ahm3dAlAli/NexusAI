@@ -9,6 +9,15 @@ from nexusai.utils.logger import logger
 # Load environment variables from .env file
 load_dotenv()
 
+# Frontend URL
+if FRONTEND_URL := os.getenv("FRONTEND_URL"):
+    logger.info(f"Frontend URL set to: {FRONTEND_URL}")
+else:
+    raise ValueError(
+        "FRONTEND_URL environment variable is not set. "
+        "Please set it in your .env file."
+    )
+
 # OpenAI
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 if not OPENAI_API_KEY:
@@ -23,8 +32,7 @@ PROVIDERS = ["arxiv"]
 
 # CORE API
 CORE_API_BASE_URL = "https://api.core.ac.uk/v3"
-CORE_API_KEY = os.getenv("CORE_API_KEY")
-if CORE_API_KEY:
+if CORE_API_KEY := os.getenv("CORE_API_KEY"):
     PROVIDERS.append("core")
     logger.info("Found CORE API key. CORE was added to the list of providers.")
 else:
@@ -32,8 +40,7 @@ else:
 
 # Google SERP API
 SERP_API_BASE_URL = "https://serpapi.com"
-SERP_API_KEY = os.getenv("SERP_API_KEY")
-if SERP_API_KEY:
+if SERP_API_KEY := os.getenv("SERP_API_KEY"):
     PROVIDERS.append("serp")
     logger.info("Found SERP API key. SERP was added to the list of providers.")
 else:

@@ -4,6 +4,7 @@ from server.models import QueryRequest
 from server.websocket_manager import WebSocketManager
 
 from nexusai.agent import process_query
+from nexusai.config import FRONTEND_URL
 from nexusai.models.outputs import AgentMessage, AgentMessageType
 from nexusai.utils.logger import logger
 
@@ -16,7 +17,7 @@ manager = WebSocketManager()
 # Middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_origins=[FRONTEND_URL],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -26,7 +27,7 @@ app.add_middleware(
 # Endpoints
 @app.get("/")
 async def read_root():
-    return "Hello, World!"
+    return "🚀 NexusAI is up and running!"
 
 
 @app.websocket("/ws")
