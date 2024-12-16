@@ -21,40 +21,40 @@ NexusAI transforms how researchers interact with scientific literature. It strea
 
 **TODO**: Add a demo video
 
-## Architecture
-
-**TODO**: Add a diagram and describe the architecture in detail.
-NexusAI is built upon a layered architecture with three main components:
-
-### 1. Workflow Engine
-- StateGraph Architecture for orchestrated research
-- Decision Making Node for query intent analysis
-- Planning Node for research strategy formulation
-- Tool Execution Node for paper processing
-- Judge Node for quality validation
-
-### 2. Paper Processing
-- CORE API integration
-- PDF content extraction
-- Text structure preservation
-- Metadata validation
-
-### 3. Analysis Pipeline
-- State-aware processing
-- Multi-step validation
-- Quality improvement cycles
-- Human validation options
-
 ## Features
 
-**TODO**: Describe features in detail.
-NexusAI offers the following key capabilities:
+- 🧠 **Intelligent Query Processing** - Automatically determines if a query needs extensive research or can be answered directly, optimizing response time and computational resources.
+- 📋 **Structured Planning** - Breaks down complex research queries into manageable subtasks with explicit tool mapping for systematic information gathering.
+- 🔄 **Multi-API Paper Search** - Comprehensive research coverage through integration with arXiv, CORE, and Google Scholar APIs, with unified search syntax for consistent results across platforms.
+- 📑 **Smart PDF Processing** - Efficient document handling with on-the-fly RAG and FAISS-powered vector search to extract only the most relevant content from papers.
+- ⚡ **Parallel Processing** - Executes multiple tool calls simultaneously to minimize latency and improve response times.
+- 🔍 **Self-Assessment & Refinement** - Implements quality control through automated self-review and iterative refinement of responses based on internal feedback.
+- 💬 **Follow-up Questions** - Maintains conversation context to allow natural follow-up questions and deeper exploration of research topics without repeating context.
+- 💾 **Redis Caching System** - Optimizes performance and reduces API costs by caching search results and tool outputs for faster subsequent queries.
 
-- **State-Driven Analysis**: Five-node system for orchestrated research with validation gates
-- **Comprehensive Processing**: Automated paper retrieval, content extraction, and structure analysis
-- **Quality Focused**: Multi-step validation and improvement cycles
-- **Human-in-the-Loop**: Flexible validation options for critical research tasks
-- **Academic Integration**: Direct access to 136M+ papers through CORE API
+## Architecture
+
+NexusAI implements a modular architecture powered by a Python/LangChain backend, Next.js frontend, and Redis caching layer. The core agent workflow is orchestrated through a directed graph structure as shown below:
+
+![Agent Workflow](https://i.ibb.co/0BBzkcb/mermaid-diagram-2024-11-17-195744.png)
+
+The system maintains state through the `AgentState` class, tracking research requirements, planning status, feedback iterations, and message history.
+
+Key components of the workflow include:
+
+1. **Decision Making Node**: Determines if a query needs research or can be answered directly, producing a `DecisionMakingOutput`.
+
+2. **Planning Node**: For research queries, breaks down complex tasks into subtasks mapped to specific tools.
+
+3. **Agent Node**: Executes the research plan using a ReAct pattern, coordinating tool usage and synthesizing results.
+
+4. **Tools Node**: Provides two main tools:
+   - **Paper Search**: Unified search across multiple APIs (ArXiv, CORE, SERP) using `SearchPapersInput` schema
+   - **PDF Processing**: Implemented in `PDFDownloader` with RAG-based content filtering
+
+5. **Judge Node**: Quality control through `JudgeOutput`, providing feedback for iterative improvement.
+
+The system employs Redis caching for API responses and parallel processing for tool execution to optimize performance. All communication between nodes uses standardized message types defined in `AgentMessageType`.
 
 ## ⚙️ Getting Started
 
@@ -126,27 +126,6 @@ NexusAI/
 ├── requirements.txt       # Python dependencies
 └── .env.sample           # Environment variables template
 ```
-
-## Use Cases
-
-**TODO**
-
-### 1. Academic Research
-- Literature review and synthesis
-- Paper analysis and summary
-- Citation tracking
-- Research validation
-
-### 2. Industry R&D
-- Technical documentation review
-- Patent analysis
-- Competitive research
-- State-of-the-art tracking
-
-### 3. Education
-- Student research assistance
-- Learning resource identification
-- Research methodology training
 
 ## License
 
