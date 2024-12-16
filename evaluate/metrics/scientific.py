@@ -110,49 +110,42 @@ class ScientificMetrics:
             # Get embedding for input text
             text_embedding = self._get_embeddings([text])[0]
             
-            # Calculate cosine similarities with reference texts
-            similarities = [
+            # Calculate cosine similarities with reference texts for style
+            style_similarities = [
                 1 - cosine(text_embedding, ref_embedding)
                 for ref_embedding in self.reference_embeddings
             ]
-            max_similarity = float(np.max(similarities))
+            style_similarity = float(np.max(style_similarities))
+            
+            # Calculate technical depth using semantic components
+            sentences = [s.strip() for s in text.split('.') if s.strip()]
+            if not sentences:
+                return StyleMetrics(style_similarity=style_similarity, technical_content=0.0)
+            
+            # Get embeddings for each sentence
+            sentence_embeddings = self._get_embeddings(sentences)
+            
+            # Compare each sentence against reference texts and calculate technical scores
+            sentence_scores = []
+            for sent_embedding in sentence_embeddings:
+                similarities = [
+                    1 - cosine(sent_embedding, ref_embedding)
+                    for ref_embedding in self.reference_embeddings
+                ]
+                sentence_scores.append(np.max(similarities))
+            
+            # Calculate final technical score
+            technical_score = float(np.mean(sentence_scores))
+            
+            return StyleMetrics(
+                style_similarity=style_similarity,
+                technical_content=technical_score
+            )
+            
         except Exception as e:
             print(f"Error in style evaluation: {e}")
-            max_similarity = 0.0
-        
-        # Technical terms evaluation
-        technical_terms = {
-            'methodology': [
-                "algorithm", "methodology", "framework", "architecture",
-                "implementation", "procedure", "protocol"
-            ],
-            'analysis': [
-                "empirical", "theoretical", "quantitative", "statistical",
-                "analytical", "comparative", "systematic"
-            ],
-            'evaluation': [
-                "benchmark", "baseline", "ablation", "analysis",
-                "performance", "metric", "evaluation"
-            ],
-            'scientific': [
-                "hypothesis", "experiment", "observation", "evidence",
-                "validation", "verification", "replication"
-            ]
-        }
-        
-        # Calculate weighted technical score
-        category_scores = []
-        text_lower = text.lower()
-        for category, terms in technical_terms.items():
-            category_hits = sum(term in text_lower for term in terms)
-            category_scores.append(min(1.0, category_hits / len(terms)))
-        
-        technical_score = sum(category_scores) / len(technical_terms)
-        
-        return StyleMetrics(
-            style_similarity=max_similarity,
-            technical_content=technical_score
-        )
+            return StyleMetrics(style_similarity=0.0, technical_content=0.0)
+
 
     def _evaluate_content_relevance(self, text: str, query_data: Dict[str, Any]) -> float:
         """Evaluate how well the content addresses the query topic using SPECTER2."""
@@ -184,50 +177,124 @@ class ScientificMetrics:
             
 
     def _evaluate_structure(self, text: str) -> float:
-        """Evaluate academic structure compliance."""
-        structure_elements = {
-            'methodology': [
-                "method", "approach", "technique", "algorithm", "framework",
-                "procedure", "protocol", "implementation", "process"
-            ],
-            'results': [
-                "result", "finding", "performance", "accuracy", "evaluation",
-                "outcome", "achievement", "measurement", "metric", "score"
-            ],
-            'analysis': [
-                "analysis", "comparison", "study", "investigation",
-                "examination", "assessment", "evaluation", "interpretation"
+        """
+        Evaluate academic structure compliance using semantic sentence embeddings.
+        Returns a float score between 0 and 1.
+        """
+        # Split text into sentences
+        sentences = [s.strip() for s in text.split('.') if s.strip()]
+        if not sentences:
+            return 0.0
+
+        # Get embeddings for all sentences
+        sentence_embeddings = self._get_embeddings(sentences)
+        
+        # Define semantic section prototypes
+        section_prototypes = {
+            'introduction': [
+                "This paper presents", "We introduce", "This work explores",
+                "We propose", "This study investigates"
             ],
             'background': [
-                "previous", "prior", "existing", "literature", "background",
-                "context", "foundation", "basis", "motivation"
+                "Prior work has shown", "Previous research indicates",
+                "Existing methods include", "Recent studies have demonstrated"
+            ],
+            'methodology': [
+                "We implement", "Our approach consists of", "The method involves",
+                "We develop", "The system architecture"
+            ],
+            'results': [
+                "Our experiments show", "The results demonstrate",
+                "Performance evaluation indicates", "Analysis reveals"
+            ],
+            'discussion': [
+                "These findings suggest", "The implications of",
+                "Our analysis indicates", "We observe that"
             ],
             'conclusion': [
-                "conclusion", "future work", "directions", "summary",
-                "recommendation", "implication", "contribution", "impact"
+                "In conclusion", "We conclude", "Future work",
+                "This work demonstrates", "Our contributions include"
             ]
         }
         
-        # Calculate weighted scores based on section ordering
-        scores = []
-        last_found_index = -1
+        # Get embeddings for section prototypes
+        prototype_embeddings = {}
+        for section, examples in section_prototypes.items():
+            prototype_embeddings[section] = self._get_embeddings(examples)
         
-        for category, terms in structure_elements.items():
-            # Find the earliest occurrence of any term in this category
-            positions = [text.lower().find(term) for term in terms]
-            positions = [pos for pos in positions if pos != -1]
+        # Identify sections in the text
+        identified_sections = []
+        current_section = None
+        section_scores = []
+        
+        for sent_idx, sent_embedding in enumerate(sentence_embeddings):
+            # Calculate similarity with each section prototype
+            section_similarities = {}
+            for section, proto_embeddings in prototype_embeddings.items():
+                # Calculate average similarity with all examples for this section
+                similarities = [
+                    1 - cosine(sent_embedding, proto_emb)
+                    for proto_emb in proto_embeddings
+                ]
+                section_similarities[section] = np.mean(similarities)
             
-            if positions:
-                current_pos = min(positions)
-                # Check if sections are in expected order
-                if current_pos > last_found_index:
-                    scores.append(1.0)
-                else:
-                    scores.append(0.5)  # Penalty for out of order sections
-                last_found_index = current_pos
-            else:
-                scores.append(0.0)
+            # Get most similar section if similarity is above threshold
+            max_section = max(section_similarities.items(), key=lambda x: x[1])
+            if max_section[1] > 0.6:  # Similarity threshold
+                if max_section[0] != current_section:
+                    identified_sections.append(max_section[0])
+                    current_section = max_section[0]
         
-        return sum(scores) / len(structure_elements)
-
+        # Score based on section coverage and ordering
+        expected_order = ['introduction', 'background', 'methodology', 
+                        'results', 'discussion', 'conclusion']
+        
+        # Calculate coverage score
+        unique_sections = set(identified_sections)
+        coverage_score = len(unique_sections) / len(expected_order)
+        
+        # Calculate ordering score
+        ordering_score = 0.0
+        if identified_sections:
+            # Create a mapping of section to its position in expected order
+            expected_positions = {section: i for i, section in enumerate(expected_order)}
+            
+            # Check if sections appear in relatively correct order
+            correct_order_count = 0
+            for i in range(len(identified_sections) - 1):
+                current_pos = expected_positions.get(identified_sections[i], -1)
+                next_pos = expected_positions.get(identified_sections[i + 1], -1)
+                if current_pos <= next_pos:
+                    correct_order_count += 1
+            
+            # Calculate ordering score based on correct transitions
+            if len(identified_sections) > 1:
+                ordering_score = correct_order_count / (len(identified_sections) - 1)
+            else:
+                ordering_score = 1.0  # Single section is considered correctly ordered
+        
+        # Calculate overall score with weights
+        coverage_weight = 0.6
+        ordering_weight = 0.4
+        final_score = (coverage_weight * coverage_score + 
+                    ordering_weight * ordering_score)
+        
+        return float(final_score)
     
+def _evaluate_section_coherence(self, sentences: List[str], 
+                              section_embeddings: np.ndarray) -> float:
+    """
+    Evaluate the coherence within identified sections.
+    Returns a float score between 0 and 1.
+    """
+    if len(sentences) < 2:
+        return 1.0
+    
+    # Calculate cosine similarity between consecutive sentences
+    coherence_scores = []
+    for i in range(len(section_embeddings) - 1):
+        similarity = 1 - cosine(section_embeddings[i], 
+                              section_embeddings[i + 1])
+        coherence_scores.append(similarity)
+    
+    return float(np.mean(coherence_scores))

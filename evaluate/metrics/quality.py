@@ -94,8 +94,8 @@ class QualityMetrics:
         completion_tokens = token_usage.get("completion_tokens", 0)
         
         # Consider both content length and token usage
-        has_sufficient_length = len(content) >= 50
-        has_sufficient_tokens = completion_tokens >= 200
+        has_sufficient_length = len(content) >= 100
+        has_sufficient_tokens = completion_tokens >= 250
         
         if has_sufficient_length and has_sufficient_tokens:
             return 1.0
