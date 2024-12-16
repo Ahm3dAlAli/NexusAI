@@ -56,6 +56,21 @@ Key components of the workflow include:
 
 The system employs Redis caching for API responses and parallel processing for tool execution to optimize performance. All communication between nodes uses standardized message types defined in `AgentMessageType`.
 
+### Project Structure
+
+```
+NexusAI/
+├── backend/                 # FastAPI backend service
+│   ├── Dockerfile
+│   └── server/
+├── frontend/               # Next.js frontend application
+│   └── Dockerfile
+├── nexusai/               # Core NexusAI library
+├── docker-compose.yml     # Docker services configuration
+├── requirements.txt       # Python dependencies
+└── .env.sample           # Environment variables template
+```
+
 ## ⚙️ Getting Started
 
 ### Prerequisites
@@ -109,23 +124,6 @@ This command starts three services:
 - Redis (caching) - Port 6379
 
 Navigate to the frontend interface at [http://localhost:3000](http://localhost:3000) and start automating your research!
-
-### Project Structure
-
-NexusAI is built on a modular architecture comprising several key components, our implementation is divided into three main parts: backend, frontend, and Redis.
-
-```
-NexusAI/
-├── backend/                 # FastAPI backend service
-│   ├── Dockerfile
-│   └── server/
-├── frontend/               # Next.js frontend application
-│   └── Dockerfile
-├── nexusai/               # Core NexusAI library
-├── docker-compose.yml     # Docker services configuration
-├── requirements.txt       # Python dependencies
-└── .env.sample           # Environment variables template
-```
 
 ## License
 
