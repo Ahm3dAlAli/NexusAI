@@ -9,7 +9,10 @@ from nexusai.utils.logger import logger
 
 @tool("search-papers", args_schema=SearchPapersInput)
 def search_papers(**kwargs) -> str:
-    """Search engine for scientific papers. Queries must be in English.
+    """Search engine for scientific papers.
+
+    This search is limited to English papers. Therefore, keywords, title, and any other search terms must be in English.
+    If you are asked to search for papers with non-English terms, translate them to English first.
 
     Returns:
         A list of the relevant papers found with the corresponding relevant information.

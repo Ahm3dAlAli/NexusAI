@@ -48,6 +48,11 @@ The current date is: {current_date}.
 
 Your thoughts must be in the same language as the user query.
 
+## TOOLS
+
+You have access to the following tools:
+{tools}
+
 ## INCORPORATE FEEDBACK
 
 If any feedback is provided about a previous answer, it means your previous answer was not good enough. Make sure to address the feedback in your next answer.

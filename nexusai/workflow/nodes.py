@@ -109,7 +109,8 @@ class WorkflowNodes:
         """Node that uses the LLM with tools to process results."""
         system_prompt = SystemMessage(
             content=agent_prompt.format(
-                current_date=datetime.now().strftime("%Y-%m-%d")
+                tools=self.__format_tools_description(),
+                current_date=datetime.now().strftime("%Y-%m-%d"),
             )
         )
         messages = get_agent_messages(state)

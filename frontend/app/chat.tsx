@@ -32,7 +32,6 @@ export default function Chat() {
   const ws = useRef<WebSocket | null>(null)
   const [isConnected, setIsConnected] = useState(false)
   const [copiedMessageIndex, setCopiedMessageIndex] = useState<number | null>(null)
-  const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     // Initialize WebSocket connection
@@ -65,10 +64,6 @@ export default function Chat() {
       ws.current?.close()
     }
   }, [])
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages, aiTyping])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInput(e.target.value)
@@ -209,7 +204,6 @@ export default function Chat() {
             </CardContent>
           </Card>
         )}
-        <div ref={messagesEndRef} />
       </div>
       <div className="flex justify-center w-full">
         <form onSubmit={handleSubmit} className="flex space-x-2 mt-4 w-full max-w-[75%]">
