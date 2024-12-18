@@ -3,7 +3,6 @@
 <div align="center">
 <img src="frontend/app/favicon.ico" alt="NexusAI Logo" width="100">
 
-[![GitHub stars](https://img.shields.io/github/stars/Ahm3dAlAli/NexusAI.svg?style=social)](https://github.com/Ahm3dAlAli/NexusAI)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 </div>
