@@ -16,10 +16,6 @@ Keeping up with the flood of academic papers is harder than ever for researchers
 
 NexusAI transforms how researchers interact with scientific literature. It streamlines research by delegating the heavy lifting to an AI agent able to plan its own execution strategy, self-assess the quality of its work, and let the user ask further questions to dive deeper into the results. All with access to the most comprehensive academic search engines (arXiv, CORE, and Google).
 
-### Demo
-
-**TODO**: Add a demo video
-
 ## Features
 
 - 🧠 **Intelligent Query Processing** - Automatically determines if a query needs extensive research or can be answered directly, optimizing response time and computational resources.
