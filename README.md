@@ -102,7 +102,7 @@ Before you begin, make sure you have Docker installed.
 
    # Deployment
    FRONTEND_URL="http://localhost:3000"
-   NEXT_PUBLIC_API_URL="ws://localhost:8000/ws"
+   NEXT_PUBLIC_WS_URL="ws://localhost:8000/ws"
    ```
 
 ### Running with Docker
