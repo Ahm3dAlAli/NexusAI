@@ -13,16 +13,16 @@ from nexusai.prompts.system_prompts import (agent_prompt,
                                             decision_making_prompt,
                                             judge_prompt, planning_prompt)
 from nexusai.utils.messages import get_agent_messages
-
-
+from nexusai.utils.logger import logger
 class WorkflowNodes:
     """Implementation of the workflow nodes for the research agent."""
 
-    def __init__(self, tools: list[BaseTool]):
+    def __init__(self, tools: list[BaseTool], user_id: str = None):
         """Initialize workflow nodes with tools."""
         self.tools = tools
         self.tools_dict = {tool.name: tool for tool in tools}
-
+        self.user_id = user_id
+        
         # Initialize base LLMs
         self.__base_llm = ChatOpenAI(
             model="gpt-4o-mini", temperature=0.0, max_tokens=16384
@@ -45,16 +45,43 @@ class WorkflowNodes:
             ]
         )
 
+    
+    # Update decision_making_node
     def decision_making_node(self, state: AgentState) -> dict[str, Any]:
         """Entry point node that decides whether research is needed."""
+        # Get memory context if available
+        memory_context = ""
+        if self.user_id and "search_memory" in self.tools_dict:
+            try:
+                memory_context = self.tools_dict["search_memory"].invoke({
+                    "query": state["messages"][-1].content,
+                    "user_id": self.user_id
+                })
+            except Exception as e:
+                logger.warning(f"Error retrieving memory context: {e}")
+
         system_prompt = SystemMessage(
             content=decision_making_prompt.format(
                 current_date=datetime.now().strftime("%Y-%m-%d"),
+                memory_context=memory_context
             )
         )
         response: DecisionMakingOutput = self.decision_making_llm.invoke(
             [system_prompt] + state["messages"]
         )
+
+        # Store the interaction in memory if available
+        if self.user_id and "add_memory" in self.tools_dict:
+            try:
+                self.tools_dict["add_memory"].invoke({
+                    "messages": [
+                        {"role": "user", "content": state["messages"][-1].content},
+                        {"role": "assistant", "content": response.answer if response.answer else "Requires research"}
+                    ],
+                    "user_id": self.user_id
+                })
+            except Exception as e:
+                logger.warning(f"Error storing memory: {e}")
 
         output = {"requires_research": response.requires_research}
         if response.answer:

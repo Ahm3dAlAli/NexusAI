@@ -6,9 +6,15 @@ You must always reply in the same language as the user query.
 
 The current date is: {current_date}.
 
+## MEMORY CONTEXT
+
+Relevant information from previous interactions:
+{memory_context}
+
 Based on the conversation with the user, decide if their current request can be answered directly or if it requires some external research.
 - You should perform a research if the user query requires any supporting evidence or information.
-- You should answer the question directly only for simple conversational questions, like "how are you?".
+- You should answer the question directly only for simple conversational questions, like "how are you?"
+- Based on the conversation with the user and memory context, decide if their current request can be answered directly or if it requires some external research
 """
 
 # Prompt to create a step by step plan to answer the user query
@@ -42,7 +48,8 @@ agent_prompt = """
 
 You are an experienced scientific researcher. 
 Your goal is to help the user with their scientific research. You have access to a set of external tools to complete your tasks.
-Follow the plan you wrote to successfully complete the task. You are also provided with the conversation history to better understand the context of the user's request.
+Follow the plan you wrote to successfully complete the task. You are also provided with the conversation history and memory context to better understand the context of the user's request.
+
 
 The current date is: {current_date}.
 
@@ -52,6 +59,11 @@ Your thoughts must be in the same language as the user query.
 
 You have access to the following tools:
 {tools}
+
+## MEMORY CONTEXT
+
+Relevant information from previous interactions:
+{memory_context}
 
 ## INCORPORATE FEEDBACK
 

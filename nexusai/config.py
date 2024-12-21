@@ -26,6 +26,16 @@ if not OPENAI_API_KEY:
         "Please set it in your .env file."
     )
 
+
+# Mem0 Configuration
+MEM0_API_KEY = os.getenv("MEM0_API_KEY")
+if MEM0_API_KEY:
+    logger.info("Mem0 API key found. Memory integration enabled.")
+else:
+    logger.warning("MEM0_API_KEY environment variable is not set. Memory features will be disabled.")
+
+MEM0_ORG_ID = os.getenv("MEM0_ORG_ID")
+MEM0_PROJECT_ID = os.getenv("MEM0_PROJECT_ID")
 # Arxiv API
 ARXIV_API_BASE_URL = "http://export.arxiv.org/api"
 PROVIDERS = ["arxiv"]
