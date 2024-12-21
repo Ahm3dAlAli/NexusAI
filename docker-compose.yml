@@ -10,17 +10,17 @@ services:
 
   backend:
     build:
-      context: .
-      dockerfile: backend/Dockerfile
+      context: ./backend
+      dockerfile: Dockerfile
     env_file:
       - .env
     ports:
       - "8000:8000"
     restart: unless-stopped
 
-  frontend:
+  platform:
     build:
-      context: ./frontend
+      context: ./platform
       dockerfile: Dockerfile
       args:
         - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
