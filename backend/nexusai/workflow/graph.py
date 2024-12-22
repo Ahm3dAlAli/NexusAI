@@ -125,7 +125,6 @@ class ResearchWorkflow:
             ):
                 for updates in chunk.values():
                     if messages := updates.get("messages"):
-                        all_messages.extend(messages)
                         for message in messages:
                             # Truncate long tool messages
                             if (
@@ -148,6 +147,7 @@ class ResearchWorkflow:
                                 msg_type = self.__infer_message_type(message)
                                 await message_callback(
                                     AgentMessage(
+                                        order=len(all_messages) + 1,
                                         type=msg_type,
                                         content=message.content,
                                         tool_name=(
@@ -158,23 +158,28 @@ class ResearchWorkflow:
                                     )
                                 )
 
+                            all_messages.append(message)
                             logger.info(f"New message:\n{message.json(indent=2)}")
 
             # Return final message
             if not all_messages:
                 return AgentMessage(
+                    order=1,
                     type=AgentMessageType.final,
                     content="No answer provided.",
                 )
 
             final_message = all_messages[-1]
             return AgentMessage(
+                order=len(all_messages) + 1,
                 type=AgentMessageType.final,
                 content=final_message.content,
             )
         except Exception as e:
             logger.error(f"Error processing query: {str(e)}")
             return AgentMessage(
+                order=len(all_messages) + 1,
                 type=AgentMessageType.error,
                 content=str(e),
             )
+

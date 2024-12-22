@@ -8,6 +8,18 @@ services:
     command: redis-server --save 60 1 --loglevel notice
     restart: unless-stopped
 
+  postgres:
+    image: postgres:15-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=mydb
+    env_file:
+      - .env
+    restart: unless-stopped
+
   backend:
     build:
       context: ./backend

@@ -10,6 +10,9 @@ body {
   .text-balance {
     text-wrap: balance;
   }
+  .hover-light-primary:hover {
+    background-color: hsl(220, 60%, 25%);
+  }
 }
 
 @layer base {
@@ -182,36 +185,6 @@ body {
   display: none;  /* Chrome, Safari and Opera */
 }
 
-/* Add these styles at the end of the file */
-body::before,
-body::after {
-  content: '';
-  position: absolute;
-  z-index: -1;
-  opacity: 0.2;
-}
-
-body::before {
-  background: var(--third-glow);
-  border-radius: 50%;
-  width: 50vw;
-  height: 50vw;
-  margin-left: -200px;
-  filter: blur(120px);
-  top: calc(50vh - 50vw/2);
-  left: calc(50vw);
-}
-
-body::after {
-  background: var(--secondary-glow);
-  border-radius: 50%;
-  width: 500px;
-  height: 700px;
-  filter: blur(120px);
-  top: calc(50vh - 50vw/2);
-  left: calc(50vw - 50vw/2);
-}
-
 /* Keyframes for the typing dots animation */
 @keyframes typingDots {
   0% {
@@ -245,7 +218,6 @@ body::after {
   position: absolute;
   left: 0;
   top: 0;
-  /* Ensure the animated dots appear right after the word "Thinking" */
   margin-left: 0.25rem;
 }
 

@@ -35,6 +35,7 @@ class AgentMessageType(StrEnum):
 
 
 class AgentMessage(BaseModel):
+    order: int
     type: AgentMessageType
     content: str
     tool_name: str | None = None

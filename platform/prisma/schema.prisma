@@ -1,0 +1,37 @@
+generator client {
+  provider = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AgentMessageType {
+  system
+  human
+  agent
+  tool
+  error
+  final
+}
+
+model Conversation {
+  id          String    @id @default(uuid())
+  title       String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  messages    Message[]
+}
+
+model Message {
+  id             String         @id @default(uuid())
+  conversation   Conversation    @relation(fields: [conversationId], references: [id])
+  conversationId String
+  order          Int
+  type           AgentMessageType
+  content        String
+  toolName       String? 
+  createdAt      DateTime        @default(now())
+}

@@ -49,6 +49,7 @@ async def process_query_websocket(websocket: WebSocket):
             except ValueError:
                 await manager.send_message(
                     AgentMessage(
+                        order=len(history),
                         type=AgentMessageType.error,
                         content="Invalid request format. Expected {'query': 'your question'}",
                     ).model_dump(),
@@ -63,7 +64,11 @@ async def process_query_websocket(websocket: WebSocket):
                 message_callback=send_intermediate_message,
             )
             history.append(
-                AgentMessage(type=AgentMessageType.human, content=request.query)
+                AgentMessage(
+                    order=len(history),
+                    type=AgentMessageType.human,
+                    content=request.query,
+                )
             )
             history.append(result)
 
