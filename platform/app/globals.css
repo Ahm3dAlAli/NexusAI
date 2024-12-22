@@ -96,6 +96,20 @@ body {
   }
 }
 
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;     /* Firefox */
+}
+
+.scrollbar-stable {
+  scrollbar-gutter: stable;
+}
+
 /* Add styles for markdown content */
 .message-content {
   @apply min-w-[60px] max-w-full;

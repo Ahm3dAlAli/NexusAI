@@ -15,6 +15,7 @@ import {
 import { MarkdownLink } from '@/components/ui/markdown-link'
 import { config } from '@/config/environment'
 import { saveMessage } from '@/lib/conversations'
+import { motion } from 'framer-motion'
 
 interface ChatProps {
   conversationId?: string
@@ -134,12 +135,19 @@ export default function Chat({ conversationId, initialMessage }: ChatProps) {
   }
 
   return (
-    <div className="flex flex-col h-screen max-w-5xl mx-auto">
-      <div className="text-center mb-4 pt-4">
+    <div className="flex flex-col h-screen max-w-5xl mx-auto no-scrollbar">
+      <motion.div 
+        className="text-center mb-4 pt-4 max-w-[800px] mx-auto px-4"
+        initial={{ y: -100 }}
+        animate={{ y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
         <h1 className="text-4xl font-bold mb-2">🤖 NexusAI 📚</h1>
-        <p className="text-xl text-muted-foreground">Your assistant to research scientific literature in minutes instead of hours</p>
-      </div>
-      <div className="flex-1 overflow-y-auto space-y-4 px-4">
+        <p className="text-xl text-muted-foreground">
+          Research scientific literature in minutes, not hours
+        </p>
+      </motion.div>
+      <div className="flex-1 overflow-y-auto space-y-4 px-4 no-scrollbar">
         {messages.map((m, index) => {
           // Skip final messages that follow a system->agent sequence
           if (
@@ -154,7 +162,13 @@ export default function Chat({ conversationId, initialMessage }: ChatProps) {
           // Render final messages outside of the message box
           if (m.type === AgentMessageType.final) {
             return (
-              <div key={index} className="final-message group relative">
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+                className="final-message group relative"
+              >
                 <Button 
                   variant="ghost" 
                   size="icon" 
@@ -175,26 +189,41 @@ export default function Chat({ conversationId, initialMessage }: ChatProps) {
                     {m.content}
                   </ReactMarkdown>
                 </div>
-              </div>
+              </motion.div>
             );
           }
 
           return (
-            <Card
+            <motion.div
               key={index}
-              className={`mb-4 ${
-                m.type === AgentMessageType.human 
-                  ? 'ml-auto bg-primary text-primary-foreground' 
-                  : 'mr-auto'
-              } max-w-[80%]`}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
             >
-              <CardContent className="flex p-3">
-                <span className="mr-2 text-2xl mt-[6px]">{getEmoji(m.type)}</span>
-                {m.type === AgentMessageType.tool ? (
-                  <div className="flex flex-col w-full">
-                    {m.tool_name && (
-                      <div className="font-bold mt-2 mb-2 pb-2 border-b">{m.tool_name}</div>
-                    )}
+              <Card
+                className={`mb-4 ${
+                  m.type === AgentMessageType.human 
+                    ? 'ml-auto bg-primary text-primary-foreground' 
+                    : 'mr-auto'
+                } max-w-[80%]`}
+              >
+                <CardContent className="flex p-3">
+                  <span className="mr-2 text-2xl mt-[6px]">{getEmoji(m.type)}</span>
+                  {m.type === AgentMessageType.tool ? (
+                    <div className="flex flex-col w-full">
+                      {m.tool_name && (
+                        <div className="font-bold mt-2 mb-2 pb-2 border-b">{m.tool_name}</div>
+                      )}
+                      <div className="message-content">
+                        <ReactMarkdown 
+                          remarkPlugins={[remarkGfm]}
+                          components={{ a: MarkdownLink }}
+                        >
+                          {m.content}
+                        </ReactMarkdown>
+                      </div>
+                    </div>
+                  ) : (
                     <div className="message-content">
                       <ReactMarkdown 
                         remarkPlugins={[remarkGfm]}
@@ -203,33 +232,36 @@ export default function Chat({ conversationId, initialMessage }: ChatProps) {
                         {m.content}
                       </ReactMarkdown>
                     </div>
-                  </div>
-                ) : (
-                  <div className="message-content">
-                    <ReactMarkdown 
-                      remarkPlugins={[remarkGfm]}
-                      components={{ a: MarkdownLink }}
-                    >
-                      {m.content}
-                    </ReactMarkdown>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                  )}
+                </CardContent>
+              </Card>
+            </motion.div>
           );
         })}
         {aiTyping && (
-          <Card className="mb-4 mr-auto max-w-[80%]">
-            <CardContent className="flex items-center p-4">
-              <div>
-                💭 <span className="animated-thinking"></span>
-              </div>
-            </CardContent>
-          </Card>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Card className="mb-4 mr-auto max-w-[80%]">
+              <CardContent className="flex items-center p-4">
+                <div>
+                  💭 <span className="animated-thinking"></span>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
         )}
       </div>
-      <div className="flex justify-center w-full p-4 bg-background sticky bottom-0">
-        <form onSubmit={handleSubmit} className="flex space-x-2 w-full max-w-[75%]">
+      <motion.div 
+        className="flex justify-center w-full p-4 bg-background sticky bottom-0"
+        initial={{ y: 100 }}
+        animate={{ y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <form onSubmit={handleSubmit} className="flex w-full max-w-[800px] mx-auto space-x-2">
           <Input
             value={input}
             onChange={handleInputChange}
@@ -241,7 +273,7 @@ export default function Chat({ conversationId, initialMessage }: ChatProps) {
             Send
           </Button>
         </form>
-      </div>
+      </motion.div>
     </div>
   )
 } 

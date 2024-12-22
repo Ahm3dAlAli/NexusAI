@@ -17,7 +17,7 @@ const geistMono = localFont({
 
 export const metadata: Metadata = {
   title: "NexusAI",
-  description: "Your assistant to research scientific literature in minutes instead of hours",
+  description: "Research scientific literature in minutes, not hours",
 };
 
 export default function RootLayout({
@@ -28,11 +28,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased flex`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased flex no-scrollbar overflow-y-hidden`}
       >
         <ConversationsProvider>
           <Navbar />
-          <main className="flex-1">
+          <main className="flex-1 no-scrollbar overflow-y-auto">
             {children}
           </main>
         </ConversationsProvider>

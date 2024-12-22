@@ -6,6 +6,7 @@ import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useConversations } from '@/context/ConversationsContext'
 import { useRouter } from 'next/navigation'
+import { motion } from 'framer-motion'
 
 const Navbar: React.FC = () => {
   const { conversations, loading, setSelectedConversation } = useConversations()
@@ -18,7 +19,7 @@ const Navbar: React.FC = () => {
   }
 
   return (
-    <div className="w-64 bg-primary text-primary-foreground h-screen p-4 flex flex-col">
+    <div className="w-64 bg-primary text-primary-foreground h-screen p-4 flex flex-col no-scrollbar">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-bold">Menu</h2>
         <Button
@@ -30,16 +31,22 @@ const Navbar: React.FC = () => {
           <Plus className="h-4 w-4" />
         </Button>
       </div>
-      <ul className="flex-1 overflow-y-auto">
+      <ul className="flex-1 overflow-y-auto no-scrollbar">
         {!loading && conversations.map((conv) => (
-          <li key={conv.id} className="mb-2">
+          <motion.li
+            key={conv.id}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3 }}
+            className="mb-2"
+          >
             <Link 
               href={`/conversations/${conv.id}`}
               className="block p-2 rounded hover-light-primary truncate"
             >
               {conv.title}
             </Link>
-          </li>
+          </motion.li>
         ))}
       </ul>
     </div>
