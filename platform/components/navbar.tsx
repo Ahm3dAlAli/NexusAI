@@ -9,16 +9,12 @@ import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Card, CardContent } from '@/components/ui/card'
+import { signOut, useSession } from 'next-auth/react'
 
 const Navbar: React.FC = () => {
   const { conversations, loading, setSelectedConversation } = useConversations()
   const router = useRouter()
-
-  // Mock user data
-  const mockUser = {
-    name: "John Doe",
-    email: "john@example.com"
-  }
+  const { data: session } = useSession()
 
   const handleNewChat = (e: React.MouseEvent) => {
     e.preventDefault()
@@ -27,9 +23,14 @@ const Navbar: React.FC = () => {
   }
 
   const handleLogout = () => {
-    // TODO: Implement logout logic
-    console.log("Logout clicked")
+    signOut({ callbackUrl: '/login' })
   }
+
+  if (!session) {
+    return null
+  }
+
+  const user = session.user
 
   return (
     <div className="w-64 bg-primary text-primary-foreground h-screen p-4 flex flex-col no-scrollbar">
@@ -62,17 +63,17 @@ const Navbar: React.FC = () => {
           </motion.li>
         ))}
       </ul>
-      
+
       <Card className="mt-auto bg-primary-foreground/10 border-primary-foreground/20">
         <CardContent className="p-4 flex items-center gap-3">
           <Avatar className="h-10 w-10 border-2 border-primary-foreground/20">
             <AvatarFallback className="bg-primary-foreground/10 text-primary-foreground">
-              {mockUser.name.charAt(0)}
+              {user?.name?.charAt(0)}
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate text-primary-foreground">{mockUser.name}</p>
-            <p className="text-xs text-primary-foreground/70 truncate">{mockUser.email}</p>
+            <p className="text-sm font-medium truncate text-primary-foreground">{user?.name}</p>
+            <p className="text-xs text-primary-foreground/70 truncate">{user?.email}</p>
           </div>
           <Button
             variant="ghost"

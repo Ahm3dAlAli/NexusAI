@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { fetchConversations, createConversation as apiCreateConversation } from '@/lib/conversations'
+import { useSession } from 'next-auth/react'
 
 interface CreateConversationParams {
   title: string
@@ -36,8 +37,10 @@ export const ConversationsProvider: React.FC<{ children: ReactNode }> = ({ child
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [loading, setLoading] = useState(false)
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null)
+  const { data: session } = useSession()
 
   const loadConversations = async () => {
+    if (!session) return
     setLoading(true)
     try {
       const convs = await fetchConversations()
@@ -50,6 +53,7 @@ export const ConversationsProvider: React.FC<{ children: ReactNode }> = ({ child
   }
 
   const createConversation = async ({ title, initialMessage }: CreateConversationParams): Promise<Conversation | null> => {
+    if (!session) return null
     try {
       const newConv = await apiCreateConversation({ title, initialMessage })
       setConversations((prev) => [newConv, ...prev])
@@ -63,7 +67,7 @@ export const ConversationsProvider: React.FC<{ children: ReactNode }> = ({ child
 
   useEffect(() => {
     loadConversations()
-  }, [])
+  }, [session])
 
   return (
     <ConversationsContext.Provider value={{ 

@@ -1,6 +1,8 @@
 "use client"
 
 import { useState } from "react"
+import { signIn } from "next-auth/react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -12,16 +14,38 @@ export function SignupForm() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
+  const router = useRouter()
 
-  // TODO: Implement signup logic
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
-      console.log("name", name)
-      console.log("email", email)
-      console.log("password", password)
-    } catch (error) {
-      console.error("Signup error:", error)
+      const res = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        setError(data.error || 'Something went wrong')
+        return
+      }
+
+      // Automatically sign in the user after signup
+      const signInRes = await signIn("credentials", {
+        redirect: false,
+        email,
+        password,
+      })
+
+      if (signInRes?.error) {
+        setError(signInRes.error)
+      } else {
+        router.push('/')
+      }
+    } catch (err) {
+      console.error("Signup error:", err)
       setError("An error occurred. Please try again.")
     }
   }

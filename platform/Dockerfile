@@ -3,10 +3,6 @@ FROM node:18-alpine AS builder
 
 WORKDIR /app
 
-# Next.js build arg
-ARG NEXT_PUBLIC_WS_URL
-ENV NEXT_PUBLIC_WS_URL=${NEXT_PUBLIC_WS_URL}
-
 COPY package*.json ./
 RUN npm install
 
@@ -18,9 +14,15 @@ COPY . .
 RUN npm run build
 
 # Production stage
-FROM node:18-alpine AS runner
+FROM node:18-slim AS runner
 
 WORKDIR /app
+
+# Install OpenSSL and other required dependencies
+RUN apt-get update -y && \
+    apt-get install -y openssl && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 # Install prisma as a production dependency for migrations
 RUN npm install prisma
@@ -36,8 +38,13 @@ EXPOSE 3000
 # Create a shell script to run migrations and start the application
 COPY <<-"EOF" /docker-entrypoint.sh
 #!/bin/sh
-npx prisma migrate deploy
-exec node server.js
+set -e
+
+echo "Running Prisma migrations..."
+npx prisma migrate deploy || { echo "Prisma migration failed"; exit 1; }
+
+echo "Starting Next.js server..."
+node server.js || { echo "Failed to start Next.js server"; exit 1; }
 EOF
 
 RUN chmod +x /docker-entrypoint.sh

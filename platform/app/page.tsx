@@ -6,6 +6,8 @@ import { Input, InputWrapper } from '@/components/ui/input'
 import Chat from '@/components/chat'
 import { useConversations } from '@/context/ConversationsContext'
 import { motion } from 'framer-motion'
+import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 
 const Home: React.FC = () => {
   const [input, setInput] = useState('')
@@ -13,6 +15,13 @@ const Home: React.FC = () => {
   const [initialMessage, setInitialMessage] = useState<string | null>(null)
   const { createConversation, selectedConversation } = useConversations()
   const [, setWindowHeight] = useState(0)
+  const { data: session, status } = useSession()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (status === "loading") return
+    if (!session) router.push('/login')
+  }, [session, status, router])
 
   useEffect(() => {
     setWindowHeight(window.innerHeight)
@@ -40,6 +49,10 @@ const Home: React.FC = () => {
     } finally {
       setLoading(false)
     }
+  }
+
+  if (!session) {
+    return null
   }
 
   return (
@@ -99,5 +112,4 @@ const Home: React.FC = () => {
     </>
   )
 }
-
 export default Home

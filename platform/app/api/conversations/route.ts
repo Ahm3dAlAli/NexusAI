@@ -1,9 +1,17 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma'
 import { AgentMessageType } from '@prisma/client'
+import { getServerSession } from "next-auth"
+import { authOptions } from '../auth/[...nextauth]/auth'
 
 export async function GET() {
+  const session = await getServerSession(authOptions)
+  if (!session || !session.user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   const conversations = await prisma.conversation.findMany({
+    where: { userId: session.user.id },
     orderBy: {
       updatedAt: 'desc',
     },
@@ -16,6 +24,11 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+  const session = await getServerSession(authOptions)
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   const { title, initialMessage } = await req.json()
   if (!title) {
     return NextResponse.json({ error: 'Title is required' }, { status: 400 })
@@ -24,6 +37,7 @@ export async function POST(req: Request) {
   const conversation = await prisma.conversation.create({
     data: {
       title,
+      userId: session.user.id,
       messages: {
         create: initialMessage ? {
           order: 0,
@@ -36,6 +50,6 @@ export async function POST(req: Request) {
       messages: true,
     }
   })
-  
+
   return NextResponse.json(conversation, { status: 201 })
 }

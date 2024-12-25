@@ -1,6 +1,8 @@
 "use client"
 
 import { useState } from "react"
+import { signIn } from "next-auth/react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -11,15 +13,24 @@ export function LoginForm() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
+  const router = useRouter()
 
-  // TODO: Implement login logic
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
-      console.log("email", email)
-      console.log("password", password)
-    } catch (error) {
-      console.error("Login error:", error)
+      const res = await signIn("credentials", {
+        redirect: false,
+        email,
+        password,
+      })
+
+      if (res?.error) {
+        setError(res.error)
+      } else {
+        router.push('/')
+      }
+    } catch (err) {
+      console.error("Login error:", err)
       setError("An error occurred. Please try again.")
     }
   }
