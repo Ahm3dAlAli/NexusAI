@@ -9,7 +9,7 @@ const ConversationPage = () => {
   const params = useParams()
   const id = params?.id as string
   const router = useRouter()
-  const { setSelectedConversation, conversations } = useConversations()
+  const { setSelectedConversation, conversations, loading } = useConversations()
 
   useEffect(() => {
     if (!id) {
@@ -17,20 +17,21 @@ const ConversationPage = () => {
       return
     }
 
-    // Find and set the selected conversation based on the URL parameter
-    const conversation = conversations.find(conv => conv.id === id)
-    if (conversation) {
-      setSelectedConversation(conversation)
-    } else {
-      // If conversation not found, redirect to home
-      router.push('/')
+    // Only redirect if we're sure conversations have loaded and the ID wasn't found
+    if (!loading && conversations.length > 0) {
+      const conversation = conversations.find(conv => conv.id === id)
+      if (conversation) {
+        setSelectedConversation(conversation)
+      } else {
+        router.push('/')
+      }
     }
-  }, [id, conversations, setSelectedConversation, router])
+  }, [id, conversations, setSelectedConversation, router, loading])
 
-  if (!id) return null
+  if (!id || loading) return null
 
   return (
-    <Chat conversationId={id as string} />
+    <Chat conversationId={id} />
   )
 }
 

@@ -29,7 +29,7 @@ class PDFDownloader:
 
     def __filter_pages(self, pages: list[str]) -> list[str]:
         """Filter pages with RAG to keep only the most relevant ones."""
-        logger.warning(f"The PDF has {MAX_PAGES}, filtering content...")
+        logger.warning(f"The PDF has more than {MAX_PAGES} pages, filtering content...")
         logger.info(f"Generating embeddings for {len(pages)} pages...")
         assert self.query, "Query is required to filter pages"
 
