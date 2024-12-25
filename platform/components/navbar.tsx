@@ -41,6 +41,7 @@ const Navbar: React.FC = () => {
           size="icon"
           className="h-8 w-8 text-primary-foreground hover-light-primary"
           onClick={handleNewChat}
+          title="New chat"
         >
           <Plus className="h-4 w-4" />
         </Button>
@@ -80,6 +81,7 @@ const Navbar: React.FC = () => {
             size="icon"
             className="text-primary-foreground hover-light-primary"
             onClick={handleLogout}
+            title="Logout"
           >
             <LogOut className="h-4 w-4" />
           </Button>

@@ -1,10 +1,12 @@
 # TODO
 
 - handle incomplete conversations
-- add auth and user management
-    - allow calls to backend only from authorized platform requests (add secret key?)
-- optimize platform docker image
-    - deprecated packages
+- improve server security
+    - allow calls to backend only from authorized platform requests (use jwt validation with user query?)
+    - if secret key is not set, accept all requests but display warning in console
+- add text when hovering over buttons:
+    - logout
+    - new conversation
 - integrate azure
     - auth
     - use azure openai for chat

@@ -1,4 +1,5 @@
 services:
+  # NOTE: We don't need to deploy this service on Azure. We can use Azure cache for Redis.
   redis:
     image: redis:7-alpine
     ports:
@@ -8,6 +9,7 @@ services:
     command: redis-server --save 60 1 --loglevel notice
     restart: unless-stopped
 
+  # NOTE: We don't need to deploy this service on Azure. We can use Azure SQL.
   postgres:
     image: postgres:15-alpine
     ports:
@@ -36,6 +38,8 @@ services:
     build:
       context: ./platform
       dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_WS_URL=${NEXT_PUBLIC_WS_URL}
     env_file:
       - .env
     ports:
