@@ -37,8 +37,7 @@ const Home: React.FC = () => {
     setLoading(true)
     try {
       const conversation = await createConversation({ 
-        title: input.trim(),
-        initialMessage: input.trim()
+        title: input.trim()
       })
       if (conversation) {
         setInitialMessage(input.trim())

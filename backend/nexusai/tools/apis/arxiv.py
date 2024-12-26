@@ -3,7 +3,6 @@ from datetime import datetime
 
 import feedparser
 import urllib3
-
 from nexusai.cache.cache_manager import CacheManager
 from nexusai.config import ARXIV_API_BASE_URL, MAX_RETRIES, RETRY_BASE_DELAY
 from nexusai.models.inputs import SearchPapersInput

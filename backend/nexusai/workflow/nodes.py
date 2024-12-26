@@ -5,7 +5,6 @@ from typing import Any
 from langchain_core.messages import AIMessage, SystemMessage, ToolMessage
 from langchain_core.tools import BaseTool
 from langchain_openai import ChatOpenAI
-
 from nexusai.config import MAX_FEEDBACK_REQUESTS
 from nexusai.models.agent_state import AgentState
 from nexusai.models.outputs import DecisionMakingOutput, JudgeOutput
@@ -87,7 +86,7 @@ class WorkflowNodes:
             )
         except Exception as e:
             return ToolMessage(
-                content=f"Error executing tool {tool_call['name']}: {str(e)}",
+                content=f"Error executing tool {tool_call['name']}: {e}",
                 name=tool_call["name"],
                 tool_call_id=tool_call["id"],
             )

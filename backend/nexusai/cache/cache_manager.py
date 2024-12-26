@@ -2,7 +2,6 @@ import hashlib
 import json
 
 import redis
-
 from nexusai.config import REDIS_URL
 from nexusai.models.inputs import SearchPapersInput
 from nexusai.utils.logger import logger

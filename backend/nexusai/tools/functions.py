@@ -1,5 +1,4 @@
 from langchain_core.tools import BaseTool, tool
-
 from nexusai.config import PROVIDERS
 from nexusai.models.inputs import SearchPapersInput
 from nexusai.tools.apis import providers_list

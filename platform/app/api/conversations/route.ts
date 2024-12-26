@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma'
-import { AgentMessageType } from '@prisma/client'
 import { getServerSession } from "next-auth"
 import { authOptions } from '../auth/[...nextauth]/auth'
 
@@ -29,7 +28,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const { title, initialMessage } = await req.json()
+  const { title } = await req.json()
   if (!title) {
     return NextResponse.json({ error: 'Title is required' }, { status: 400 })
   }
@@ -38,13 +37,6 @@ export async function POST(req: Request) {
     data: {
       title,
       userId: session.user.id,
-      messages: {
-        create: initialMessage ? {
-          order: 0,
-          type: AgentMessageType.human,
-          content: initialMessage,
-        } : undefined
-      }
     },
     include: {
       messages: true,

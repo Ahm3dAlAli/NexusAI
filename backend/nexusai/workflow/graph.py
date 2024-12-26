@@ -3,7 +3,6 @@ import json
 from langchain_core.messages import AIMessage, BaseMessage, ToolMessage
 from langgraph.graph import END, StateGraph
 from langgraph.graph.state import CompiledStateGraph
-
 from nexusai.config import RECURSION_LIMIT
 from nexusai.models.agent_state import AgentState
 from nexusai.models.outputs import AgentMessage, AgentMessageType
@@ -176,10 +175,9 @@ class ResearchWorkflow:
                 content=final_message.content,
             )
         except Exception as e:
-            logger.error(f"Error processing query: {str(e)}")
+            logger.error(f"Error processing query: {e}")
             return AgentMessage(
                 order=len(all_messages) + 1,
                 type=AgentMessageType.error,
                 content=str(e),
             )
-

@@ -92,15 +92,17 @@ Before you begin, make sure you have Docker installed.
    # Required
    OPENAI_API_KEY=your_openai_api_key
 
-   # Optional - for enhanced functionality
+   # Optional - Scientific papers databases
    CORE_API_KEY=your_core_api_key
    SERP_API_KEY=your_serp_api_key
+
+   # Optional - Agent tracing and monitoring
    LANGCHAIN_API_KEY=your_langchain_api_key
 
-   # Redis configuration (leave as default for Docker setup)
+   # Redis configuration (default for Docker setup)
    REDIS_URL="redis://redis:6379"
 
-   # Deployment
+   # Deployment URLs (default for local setup)
    FRONTEND_URL="http://localhost:3000"
    NEXT_PUBLIC_WS_URL="ws://localhost:8000/ws"
    ```

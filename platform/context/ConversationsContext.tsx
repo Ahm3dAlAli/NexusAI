@@ -6,7 +6,6 @@ import { useSession } from 'next-auth/react'
 
 interface CreateConversationParams {
   title: string
-  initialMessage: string
 }
 
 interface Conversation {
@@ -52,10 +51,10 @@ export const ConversationsProvider: React.FC<{ children: ReactNode }> = ({ child
     }
   }
 
-  const createConversation = async ({ title, initialMessage }: CreateConversationParams): Promise<Conversation | null> => {
+  const createConversation = async ({ title }: CreateConversationParams): Promise<Conversation | null> => {
     if (!session) return null
     try {
-      const newConv = await apiCreateConversation({ title, initialMessage })
+      const newConv = await apiCreateConversation({ title })
       setConversations((prev) => [newConv, ...prev])
       setSelectedConversation(newConv)
       return newConv

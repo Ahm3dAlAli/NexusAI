@@ -1,12 +1,11 @@
 from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
-from server.models import MessageRequest, MessageType
-from server.websocket_manager import WebSocketManager
-
 from nexusai.agent import process_query
 from nexusai.config import FRONTEND_URL
 from nexusai.models.outputs import AgentMessage, AgentMessageType
 from nexusai.utils.logger import logger
+from server.models import MessageRequest
+from server.websocket_manager import WebSocketManager
 
 # FastAPI app
 app = FastAPI()
@@ -50,7 +49,7 @@ async def process_query_websocket(websocket: WebSocket):
                 logger.error(e)
                 await manager.send_message(
                     AgentMessage(
-                        order=len(history),
+                        order=0,
                         type=AgentMessageType.error,
                         content=str(e),
                     ).model_dump(),
@@ -58,30 +57,26 @@ async def process_query_websocket(websocket: WebSocket):
                 )
                 continue
 
-            # Initialize conversation with history
-            if request.type == MessageType.init:
-                logger.info(f"Initializing conversation with {len(request.messages)} messages")
-                history = request.messages
-                continue
-
-            # Process the query using the agent's workflow
-            result: AgentMessage = await process_query(
-                query=request.query,
-                history=history,
-                message_callback=send_intermediate_message,
-            )
-            history.append(
-                AgentMessage(
-                    order=len(history),
-                    type=AgentMessageType.human,
-                    content=request.query,
+            history = request.history or history
+            if request.query:
+                # Process the query using the agent's workflow
+                result: AgentMessage = await process_query(
+                    query=request.query,
+                    history=history,
+                    message_callback=send_intermediate_message,
                 )
-            )
-            history.append(result)
+                history.append(
+                    AgentMessage(
+                        order=len(history),
+                        type=AgentMessageType.human,
+                        content=request.query,
+                    )
+                )
+                history.append(result)
 
-            # Send final message
-            await manager.send_message(result.model_dump(), websocket)
+                # Send final message
+                await manager.send_message(result.model_dump(), websocket)
     except Exception as e:
-        logger.error(e)
+        logger.error(f"Error with websocket: {e}")
     finally:
         await manager.disconnect(websocket)

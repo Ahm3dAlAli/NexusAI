@@ -19,14 +19,12 @@ export async function fetchConversation(id: string): Promise<Conversation> {
 
 export async function createConversation({ 
   title,
-  initialMessage
 }: { 
   title: string 
-  initialMessage: string
 }): Promise<Conversation> {
   const response = await fetch('/api/conversations', {
     method: 'POST',
-    body: JSON.stringify({ title, initialMessage }),
+    body: JSON.stringify({ title }),
   })
   if (!response.ok) {
     throw new Error('Failed to create conversation')
@@ -40,9 +38,11 @@ export async function fetchMessages(conversationId: string): Promise<AgentMessag
     throw new Error('Failed to fetch messages')
   }
   const data = await response.json()
-  return data.messages.map((msg: Message) => ({
-    ...msg,
+  return data.messages.map((msg: Message): AgentMessage => ({
+    order: msg.order,
     type: msg.type as AgentMessageType,
+    content: msg.content,
+    tool_name: msg.toolName ?? undefined
   }))
 }
 

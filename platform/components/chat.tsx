@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input"
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { AgentMessage } from '@/types/AgentMessage'
-import { MessageType, MessageRequest } from '@/types/MessageRequest'
+import { MessageRequest } from '@/types/MessageRequest'
 import { AgentMessageType } from '@prisma/client'
 import { Copy } from "lucide-react"
 import {
@@ -24,64 +24,95 @@ interface ChatProps {
 }
 
 export default function Chat({ conversationId, initialMessage }: ChatProps) {
+  const initialMessageSent = useRef(false)
+  const ws = useRef<WebSocket | null>(null)
   const [messages, setMessages] = useState<AgentMessage[]>([])
   const [input, setInput] = useState('')
   const [aiTyping, setAiTyping] = useState(false)
-  const ws = useRef<WebSocket | null>(null)
   const [isConnected, setIsConnected] = useState(false)
   const [copiedMessageIndex, setCopiedMessageIndex] = useState<number | null>(null)
-  const [initialMessageSent, setInitialMessageSent] = useState(false)
 
   useEffect(() => {
-    if (conversationId) {
-      fetchMessages(conversationId)
-        .then((sortedMessages) => {
-          // Display all messages
-          setMessages(sortedMessages)
-
-          // Only use user and final messages for websocket communication
-          const filteredMessages = sortedMessages.filter((msg: AgentMessage) => 
-            msg.type === AgentMessageType.human || msg.type === AgentMessageType.final
-          )
-          initializeWebSocket(filteredMessages)
-        })
-        .catch(error => {
-          console.error('Error fetching sorted messages:', error)
-        })
-    } else {
-      initializeWebSocket([])
+    if (!ws.current) {
+      initializeWebSocket()
     }
 
     return () => {
+      console.log('Cleaning up WebSocket connection.')
       ws.current?.close()
+      ws.current = null
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  useEffect(() => {
+    if (!conversationId) return
+
+    console.log(`Loading messages for conversation: ${conversationId}`)
+    fetchMessages(conversationId)
+      .then((sortedMessages) => {
+        setMessages(sortedMessages)
+        
+        if (ws.current?.readyState === WebSocket.OPEN) {
+          const payload: MessageRequest = { history: sortedMessages }
+          ws.current.send(JSON.stringify(payload))
+        }
+        
+        if (initialMessage && !initialMessageSent.current && ws.current?.readyState === WebSocket.OPEN) {
+          handleInitialMessage(sortedMessages)
+          initialMessageSent.current = true
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching sorted messages:', error)
+      })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conversationId])
 
-  const initializeWebSocket = (previousMessages: AgentMessage[]) => {
+  const handleInitialMessage = (previousMessages: AgentMessage[]) => {
+    const payload: MessageRequest = {
+      history: previousMessages,
+      query: initialMessage
+    }
+
+    if (initialMessage) {
+      const message: AgentMessage = {
+        order: 0,
+        type: AgentMessageType.human,
+        content: initialMessage,
+      }
+
+      setAiTyping(true)
+      setMessages(prev => [...prev, message])
+      if (conversationId) {
+        saveMessage(conversationId, message)
+      }
+
+      ws.current?.send(JSON.stringify(payload))
+    }
+  }
+
+  const initializeWebSocket = () => {
+    console.log('Initializing WebSocket')
     ws.current = new WebSocket(config.wsUrl)
 
     ws.current.onopen = () => {
       console.log('WebSocket connected')
       setIsConnected(true)
-      if (conversationId && previousMessages.length > 0) {
-        // Send initial message with history
-        const payload: MessageRequest = { type: MessageType.init, messages: previousMessages }
+      
+      if (messages.length > 0) {
+        const payload: MessageRequest = { history: messages }
         ws.current?.send(JSON.stringify(payload))
-      } else if (initialMessage && !initialMessageSent) {
-        // Send the initial message if it's a new conversation
-        const payload: MessageRequest = { type: MessageType.query, query: initialMessage }
-        ws.current?.send(JSON.stringify(payload))
-        setInitialMessageSent(true)
-        setAiTyping(true)
       }
     }
 
     ws.current.onmessage = async (event) => {
-      if (!conversationId) return
       const message: AgentMessage = JSON.parse(event.data)
       setMessages(prev => [...prev, message])
-      await saveMessage(conversationId, message)
+      
+      if (conversationId) {
+        await saveMessage(conversationId, message)
+      }
 
       if (
         message.type === AgentMessageType.final ||
@@ -108,13 +139,13 @@ export default function Chat({ conversationId, initialMessage }: ChatProps) {
     setInput('')
     setAiTyping(true)
     const userMessage: AgentMessage = {
-      order: messages.length,
+      order: 0,
       type: AgentMessageType.human,
       content: input.trim(),
     }
     setMessages(prev => [...prev, userMessage])
     await saveMessage(conversationId, userMessage)
-    const payload: MessageRequest = { type: MessageType.query, query: input.trim() }
+    const payload: MessageRequest = { query: input.trim() }
     ws.current?.send(JSON.stringify(payload))
   }
 
@@ -160,7 +191,6 @@ export default function Chat({ conversationId, initialMessage }: ChatProps) {
       </motion.div>
       <div className="flex-1 overflow-y-auto space-y-4 px-4 no-scrollbar">
         {messages.map((m, index) => {
-          // Skip final messages that follow a system->agent sequence
           if (
             m.type === AgentMessageType.final &&
             index >= 2 &&
@@ -169,8 +199,6 @@ export default function Chat({ conversationId, initialMessage }: ChatProps) {
           ) {
             return null;
           }
-
-          // Render final messages outside of the message box
           if (m.type === AgentMessageType.final) {
             return (
               <motion.div
@@ -287,7 +315,7 @@ export default function Chat({ conversationId, initialMessage }: ChatProps) {
           ease: "easeOut"
         }}
       >
-        <form onSubmit={handleSubmit} className="flex w-full max-w-[800px] mx-auto space-x-2">
+        <form onSubmit={handleSubmit} className="flex w-full max-w-[800px] space-x-2">
           <Input
             value={input}
             onChange={handleInputChange}

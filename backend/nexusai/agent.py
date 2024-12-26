@@ -1,5 +1,4 @@
 from langsmith import traceable
-
 from nexusai.config import LANGCHAIN_PROJECT
 from nexusai.models.outputs import AgentMessage
 from nexusai.tools.functions import setup_tools
