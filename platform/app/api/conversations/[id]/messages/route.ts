@@ -1,6 +1,29 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
+export async function GET(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const messages = await prisma.message.findMany({
+      where: { conversationId: params.id },
+      orderBy: [
+        { createdAt: 'asc' },
+        { order: 'asc' },
+      ],
+    })
+
+    return NextResponse.json({ messages }, { status: 200 })
+  } catch (error) {
+    console.error('Error fetching messages:', error)
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+
 export async function POST(
   request: Request,
   { params }: { params: { id: string } }

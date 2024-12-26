@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input"
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { AgentMessage } from '@/types/AgentMessage'
+import { MessageType, MessageRequest } from '@/types/MessageRequest'
 import { AgentMessageType } from '@prisma/client'
 import { Copy } from "lucide-react"
 import {
@@ -14,7 +15,7 @@ import {
 } from "@/components/ui/card"
 import { MarkdownLink } from '@/components/ui/markdown-link'
 import { config } from '@/config/environment'
-import { saveMessage } from '@/lib/conversations'
+import { saveMessage, fetchMessages } from '@/lib/conversations'
 import { motion } from 'framer-motion'
 
 interface ChatProps {
@@ -32,12 +33,48 @@ export default function Chat({ conversationId, initialMessage }: ChatProps) {
   const [initialMessageSent, setInitialMessageSent] = useState(false)
 
   useEffect(() => {
-    // Initialize WebSocket connection
+    if (conversationId) {
+      fetchMessages(conversationId)
+        .then((sortedMessages) => {
+          // Display all messages
+          setMessages(sortedMessages)
+
+          // Only use user and final messages for websocket communication
+          const filteredMessages = sortedMessages.filter((msg: AgentMessage) => 
+            msg.type === AgentMessageType.human || msg.type === AgentMessageType.final
+          )
+          initializeWebSocket(filteredMessages)
+        })
+        .catch(error => {
+          console.error('Error fetching sorted messages:', error)
+        })
+    } else {
+      initializeWebSocket([])
+    }
+
+    return () => {
+      ws.current?.close()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conversationId])
+
+  const initializeWebSocket = (previousMessages: AgentMessage[]) => {
     ws.current = new WebSocket(config.wsUrl)
 
     ws.current.onopen = () => {
       console.log('WebSocket connected')
       setIsConnected(true)
+      if (conversationId && previousMessages.length > 0) {
+        // Send initial message with history
+        const payload: MessageRequest = { type: MessageType.init, messages: previousMessages }
+        ws.current?.send(JSON.stringify(payload))
+      } else if (initialMessage && !initialMessageSent) {
+        // Send the initial message if it's a new conversation
+        const payload: MessageRequest = { type: MessageType.query, query: initialMessage }
+        ws.current?.send(JSON.stringify(payload))
+        setInitialMessageSent(true)
+        setAiTyping(true)
+      }
     }
 
     ws.current.onmessage = async (event) => {
@@ -58,37 +95,7 @@ export default function Chat({ conversationId, initialMessage }: ChatProps) {
       console.log('WebSocket disconnected')
       setIsConnected(false)
     }
-
-    return () => {
-      ws.current?.close()
-    }
-  }, [conversationId])
-
-  useEffect(() => {
-    if (conversationId) {
-      fetch(`/api/conversations/${conversationId}`)
-        .then(res => res.json())
-        .then((data: { messages: AgentMessage[] }) => {
-          // Only set messages if we haven't sent the initial message yet
-          if (!initialMessageSent) {
-            setMessages(data.messages)
-          }
-        })
-        .catch(error => {
-          console.error('Error fetching conversation messages:', error)
-        })
-    }
-  }, [conversationId, initialMessageSent])
-
-  // Send the initial message after WebSocket is connected
-  useEffect(() => {
-    if (isConnected && initialMessage && !initialMessageSent) {
-      const payload = { conversationId, query: initialMessage }
-      ws.current?.send(JSON.stringify(payload))
-      setInitialMessageSent(true)
-      setAiTyping(true)
-    }
-  }, [isConnected, initialMessage, initialMessageSent, conversationId])
+  }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInput(e.target.value)
@@ -101,13 +108,14 @@ export default function Chat({ conversationId, initialMessage }: ChatProps) {
     setInput('')
     setAiTyping(true)
     const userMessage: AgentMessage = {
-      order: 0,
+      order: messages.length,
       type: AgentMessageType.human,
       content: input.trim(),
     }
     setMessages(prev => [...prev, userMessage])
     await saveMessage(conversationId, userMessage)
-    ws.current?.send(JSON.stringify({ conversationId, query: input.trim() }))
+    const payload: MessageRequest = { type: MessageType.query, query: input.trim() }
+    ws.current?.send(JSON.stringify(payload))
   }
 
   const getEmoji = (type: AgentMessageType) => {
@@ -140,7 +148,10 @@ export default function Chat({ conversationId, initialMessage }: ChatProps) {
         className="text-center mb-4 pt-4 max-w-[800px] mx-auto px-4"
         initial={{ y: -100 }}
         animate={{ y: 0 }}
-        transition={{ duration: 0.5 }}
+        transition={{ 
+          duration: 0.3,
+          ease: "easeOut"
+        }}
       >
         <h1 className="text-4xl font-bold mb-2">🤖 NexusAI 📚</h1>
         <p className="text-xl text-muted-foreground">
@@ -166,7 +177,11 @@ export default function Chat({ conversationId, initialMessage }: ChatProps) {
                 key={index}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
+                transition={{ 
+                  duration: 0.3,
+                  delay: 0.1,
+                  ease: "easeOut"
+                }}
                 className="final-message group relative"
               >
                 <Button 
@@ -198,7 +213,11 @@ export default function Chat({ conversationId, initialMessage }: ChatProps) {
               key={index}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
+              transition={{ 
+                duration: 0.3,
+                delay: 0.1,
+                ease: "easeOut"
+              }}
             >
               <Card
                 className={`mb-4 ${
@@ -243,7 +262,11 @@ export default function Chat({ conversationId, initialMessage }: ChatProps) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
-            transition={{ duration: 0.3 }}
+            transition={{ 
+              duration: 0.3,
+              delay: 0.1,
+              ease: "easeOut"
+            }}
           >
             <Card className="mb-4 mr-auto max-w-[80%]">
               <CardContent className="flex items-center p-4">
@@ -259,7 +282,10 @@ export default function Chat({ conversationId, initialMessage }: ChatProps) {
         className="flex justify-center w-full p-4 bg-background sticky bottom-0"
         initial={{ y: 100 }}
         animate={{ y: 0 }}
-        transition={{ duration: 0.5 }}
+        transition={{ 
+          duration: 0.3,
+          ease: "easeOut"
+        }}
       >
         <form onSubmit={handleSubmit} className="flex w-full max-w-[800px] mx-auto space-x-2">
           <Input

@@ -4,14 +4,17 @@ import { useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Chat from '@/components/chat'
 import { useConversations } from '@/context/ConversationsContext'
+import { useSession } from 'next-auth/react'
 
 const ConversationPage = () => {
   const params = useParams()
   const id = params?.id as string
   const router = useRouter()
   const { setSelectedConversation, conversations, loading } = useConversations()
+  const { status } = useSession()
 
   useEffect(() => {
+    if (status === "loading") return
     if (!id) {
       router.push('/')
       return
@@ -26,9 +29,9 @@ const ConversationPage = () => {
         router.push('/')
       }
     }
-  }, [id, conversations, setSelectedConversation, router, loading])
+  }, [id, conversations, setSelectedConversation, router, loading, status])
 
-  if (!id || loading) return null
+  if (status === "loading" || !id || loading) return null
 
   return (
     <Chat conversationId={id} />

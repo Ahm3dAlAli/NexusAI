@@ -1,6 +1,6 @@
 from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
-from server.models import QueryRequest
+from server.models import MessageRequest, MessageType
 from server.websocket_manager import WebSocketManager
 
 from nexusai.agent import process_query
@@ -45,16 +45,23 @@ async def process_query_websocket(websocket: WebSocket):
             # Receive and validate message
             data = await manager.receive_message(websocket)
             try:
-                request = QueryRequest(**data)
-            except ValueError:
+                request = MessageRequest(**data)
+            except ValueError as e:
+                logger.error(e)
                 await manager.send_message(
                     AgentMessage(
                         order=len(history),
                         type=AgentMessageType.error,
-                        content="Invalid request format. Expected {'query': 'your question'}",
+                        content=str(e),
                     ).model_dump(),
                     websocket,
                 )
+                continue
+
+            # Initialize conversation with history
+            if request.type == MessageType.init:
+                logger.info(f"Initializing conversation with {len(request.messages)} messages")
+                history = request.messages
                 continue
 
             # Process the query using the agent's workflow
@@ -77,4 +84,4 @@ async def process_query_websocket(websocket: WebSocket):
     except Exception as e:
         logger.error(e)
     finally:
-        manager.disconnect(websocket)
+        await manager.disconnect(websocket)

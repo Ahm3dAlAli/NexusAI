@@ -33,7 +33,15 @@ const Navbar: React.FC = () => {
   const user = session.user
 
   return (
-    <div className="w-64 bg-primary text-primary-foreground h-screen p-4 flex flex-col no-scrollbar">
+    <motion.div 
+      className="w-64 bg-primary text-primary-foreground h-screen p-4 flex flex-col no-scrollbar"
+      initial={{ x: -100, opacity: 0 }}
+      animate={{ x: 0, opacity: 1 }}
+      transition={{ 
+        duration: 0.3,
+        ease: "easeOut"
+      }}
+    >
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-bold">Menu</h2>
         <Button
@@ -52,7 +60,11 @@ const Navbar: React.FC = () => {
             key={conv.id}
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.3 }}
+            transition={{ 
+              duration: 0.3,
+              delay: 0.2,
+              ease: "easeOut"
+            }}
             className="mb-2"
           >
             <Link 
@@ -87,7 +99,7 @@ const Navbar: React.FC = () => {
           </Button>
         </CardContent>
       </Card>
-    </div>
+    </motion.div>
   )
 }
 
