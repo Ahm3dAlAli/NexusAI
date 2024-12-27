@@ -4,8 +4,8 @@ from typing import Any
 
 from langchain_core.messages import AIMessage, SystemMessage, ToolMessage
 from langchain_core.tools import BaseTool
-from langchain_openai import ChatOpenAI
-from nexusai.config import MAX_FEEDBACK_REQUESTS
+from langchain_openai import AzureChatOpenAI, ChatOpenAI
+from nexusai.config import LLM_PROVIDER, MAX_FEEDBACK_REQUESTS
 from nexusai.models.agent_state import AgentState
 from nexusai.models.outputs import DecisionMakingOutput, JudgeOutput
 from nexusai.prompts.system_prompts import (agent_prompt,
@@ -23,9 +23,16 @@ class WorkflowNodes:
         self.tools_dict = {tool.name: tool for tool in tools}
 
         # Initialize base LLMs
-        self.__base_llm = ChatOpenAI(
-            model="gpt-4o-mini", temperature=0.0, max_tokens=16384
-        )
+        if LLM_PROVIDER == "openai":
+            self.__base_llm = ChatOpenAI(
+                model="gpt-4o-mini", temperature=0.0, max_tokens=16384
+            )
+        elif LLM_PROVIDER == "azure":
+            self.__base_llm = AzureChatOpenAI(
+                azure_deployment="gpt-4o",
+                temperature=0.0,
+                max_tokens=16384,
+            )
 
         # Workflow LLMs
         self.planning_llm = self.__base_llm

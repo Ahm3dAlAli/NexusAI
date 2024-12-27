@@ -8,22 +8,20 @@ from nexusai.utils.logger import logger
 # Load environment variables from .env file
 load_dotenv()
 
-# Frontend URL
-if FRONTEND_URL := os.getenv("FRONTEND_URL"):
-    logger.info(f"Frontend URL set to: {FRONTEND_URL}")
+# LLM provider
+OPENAI_API_VERSION = os.getenv("OPENAI_API_VERSION")
+AZURE_OPENAI_API_KEY = os.getenv("AZURE_OPENAI_API_KEY")
+AZURE_OPENAI_ENDPOINT = os.getenv("AZURE_OPENAI_ENDPOINT")
+if all([OPENAI_API_VERSION, AZURE_OPENAI_API_KEY, AZURE_OPENAI_ENDPOINT]):
+    LLM_PROVIDER = "azure"
+elif OPENAI_API_KEY := os.getenv("OPENAI_API_KEY"):
+    LLM_PROVIDER = "openai"
 else:
     raise ValueError(
-        "FRONTEND_URL environment variable is not set. "
-        "Please set it in your .env file."
+        "Neither OpenAI nor Azure OpenAI environment variables are set. "
+        "Please set at least one in your .env file."
     )
-
-# OpenAI
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-if not OPENAI_API_KEY:
-    raise ValueError(
-        "OPENAI_API_KEY environment variable is not set. "
-        "Please set it in your .env file."
-    )
+logger.info(f"Using LLM provider: {LLM_PROVIDER}")
 
 # Arxiv API
 ARXIV_API_BASE_URL = "http://export.arxiv.org/api"
@@ -55,11 +53,6 @@ else:
 
 logger.info(f"Using providers: {PROVIDERS}")
 
-# Redis
-REDIS_URL = os.getenv("REDIS_URL")
-if not REDIS_URL:
-    logger.warning("REDIS_URL environment variable is not set. Not using cache.")
-
 # Traceability with langsmith
 LANGCHAIN_PROJECT = "nexusai"
 if LANGCHAIN_API_KEY := os.getenv("LANGCHAIN_API_KEY"):
@@ -70,6 +63,20 @@ if LANGCHAIN_API_KEY := os.getenv("LANGCHAIN_API_KEY"):
 else:
     logger.warning(
         "LANGCHAIN_API_KEY environment variable is not set. Agent runs will not be traced."
+    )
+
+# Redis
+REDIS_URL = os.getenv("REDIS_URL")
+if not REDIS_URL:
+    logger.warning("REDIS_URL environment variable is not set. Not using cache.")
+
+# Frontend URL
+if FRONTEND_URL := os.getenv("FRONTEND_URL"):
+    logger.info(f"Frontend URL set to: {FRONTEND_URL}")
+else:
+    raise ValueError(
+        "FRONTEND_URL environment variable is not set. "
+        "Please set it in your .env file."
     )
 
 # Request Configuration

@@ -1,7 +1,5 @@
 # TODO
 
-- integrate azure
-    - use azure openai for chat/embeddings (wait for quota increase)
 - improve server security
     - allow calls to backend only from authorized platform requests (use jwt validation with user query?)
 

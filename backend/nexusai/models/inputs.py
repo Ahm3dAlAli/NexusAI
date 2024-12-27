@@ -34,5 +34,8 @@ class SearchPapersInput(BaseModel):
         examples=[[2020, 2024], [2020, None], [None, 2024], [2023, 2023]],
     )
     max_papers: int = Field(
-        default=1, ge=1, le=5, description="Maximum number of papers to return."
+        default=1,
+        ge=1,
+        le=5,
+        description="Number of papers to return. Adjust this number based on the user query. It must be between <=5.",
     )

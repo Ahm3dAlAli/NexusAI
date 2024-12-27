@@ -6,9 +6,9 @@ import pdfplumber
 import urllib3
 from langchain_community.vectorstores import FAISS
 from langchain_core.tools import tool
-from langchain_openai import OpenAIEmbeddings
+from langchain_openai import AzureOpenAIEmbeddings, OpenAIEmbeddings
 from nexusai.cache.cache_manager import CacheManager
-from nexusai.config import MAX_PAGES, MAX_RETRIES, RETRY_BASE_DELAY
+from nexusai.config import LLM_PROVIDER, MAX_PAGES, MAX_RETRIES, RETRY_BASE_DELAY
 from nexusai.utils.logger import logger
 
 # Disable warnings for insecure requests
@@ -24,7 +24,12 @@ class PDFDownloader:
         self.query = query
         PDFDownloader.query = query
         self.cache_manager = CacheManager()
-        self.embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
+        if LLM_PROVIDER == "openai":
+            self.embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
+        elif LLM_PROVIDER == "azure":
+            self.embeddings = AzureOpenAIEmbeddings(
+                model="text-embedding-3-small",
+            )
 
     def __filter_pages(self, pages: list[str]) -> list[str]:
         """Filter pages with RAG to keep only the most relevant ones."""
