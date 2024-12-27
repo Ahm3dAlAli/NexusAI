@@ -17,6 +17,7 @@ import { MarkdownLink } from '@/components/ui/markdown-link'
 import { config } from '@/config/environment'
 import { saveMessage, fetchMessages } from '@/lib/conversations'
 import { motion } from 'framer-motion'
+import { useRouter } from 'next/navigation'
 
 interface ChatProps {
   conversationId?: string
@@ -24,6 +25,7 @@ interface ChatProps {
 }
 
 export default function Chat({ conversationId, initialMessage }: ChatProps) {
+  const router = useRouter()
   const initialMessageSent = useRef(false)
   const ws = useRef<WebSocket | null>(null)
   const [messages, setMessages] = useState<AgentMessage[]>([])
@@ -51,6 +53,11 @@ export default function Chat({ conversationId, initialMessage }: ChatProps) {
     console.log(`Loading messages for conversation: ${conversationId}`)
     fetchMessages(conversationId)
       .then((sortedMessages) => {
+        if (!sortedMessages) {
+          router.push('/')
+          return
+        }
+        
         setMessages(sortedMessages)
         
         // Only send human and final messages to the server
@@ -67,9 +74,11 @@ export default function Chat({ conversationId, initialMessage }: ChatProps) {
       })
       .catch(error => {
         console.error('Error fetching sorted messages:', error)
+        // Optionally redirect on error as well
+        router.push('/')
       })
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [conversationId])
+  }, [conversationId, router])
 
   const handleInitialMessage = (previousMessages: AgentMessage[]) => {
     const payload: MessageRequest = {

@@ -19,10 +19,7 @@ export async function GET(
     })
 
     if (!conversation) {
-      return NextResponse.json(
-        { error: 'Conversation not found' },
-        { status: 404 }
-      )
+      return NextResponse.json(null, { status: 404 })
     }
 
     return NextResponse.json(conversation)
