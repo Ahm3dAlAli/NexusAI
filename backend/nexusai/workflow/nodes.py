@@ -24,23 +24,27 @@ class WorkflowNodes:
 
         # Initialize base LLMs
         if LLM_PROVIDER == "openai":
-            self.__base_llm = ChatOpenAI(
+            small_llm = ChatOpenAI(
                 model="gpt-4o-mini", temperature=0.0, max_tokens=16384
             )
+            large_llm = None
         elif LLM_PROVIDER == "azure":
-            self.__base_llm = AzureChatOpenAI(
-                azure_deployment="gpt-4o",
-                temperature=0.0,
-                max_tokens=16384,
+            small_llm = AzureChatOpenAI(
+                azure_deployment="gpt-4o-mini", temperature=0.0, max_tokens=16384
             )
+            large_llm = AzureChatOpenAI(
+                azure_deployment="gpt-4o", temperature=0.0, max_tokens=16384
+            )
+        else:
+            raise ValueError(f"Invalid LLM provider: {LLM_PROVIDER}")
 
         # Workflow LLMs
-        self.planning_llm = self.__base_llm
-        self.decision_making_llm = self.__base_llm.with_structured_output(
+        self.planning_llm = small_llm
+        self.decision_making_llm = small_llm.with_structured_output(
             DecisionMakingOutput
         )
-        self.agent_llm = self.__base_llm.bind_tools(tools)
-        self.judge_llm = self.__base_llm.with_structured_output(JudgeOutput)
+        self.agent_llm = (large_llm or small_llm).bind_tools(tools)
+        self.judge_llm = (large_llm or small_llm).with_structured_output(JudgeOutput)
 
     def __format_tools_description(self) -> str:
         """Format the description of available tools."""

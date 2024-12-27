@@ -102,7 +102,6 @@ class ResearchWorkflow:
         content = ""
         if message.content:
             content += message.content + "\n\n"
-        content += "Calling the following tools:\n\n"
         tool_calls_strs = []
         for tool_call in message.tool_calls:
             tool_calls_strs.append(

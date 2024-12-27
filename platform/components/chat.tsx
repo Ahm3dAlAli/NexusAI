@@ -53,13 +53,15 @@ export default function Chat({ conversationId, initialMessage }: ChatProps) {
       .then((sortedMessages) => {
         setMessages(sortedMessages)
         
+        // Only send human and final messages to the server
+        const filteredMessages = sortedMessages.filter(m => m.type === AgentMessageType.human || m.type === AgentMessageType.final)
         if (ws.current?.readyState === WebSocket.OPEN) {
-          const payload: MessageRequest = { history: sortedMessages }
+          const payload: MessageRequest = { history: filteredMessages }
           ws.current.send(JSON.stringify(payload))
         }
         
         if (initialMessage && !initialMessageSent.current && ws.current?.readyState === WebSocket.OPEN) {
-          handleInitialMessage(sortedMessages)
+          handleInitialMessage(filteredMessages)
           initialMessageSent.current = true
         }
       })
@@ -101,7 +103,9 @@ export default function Chat({ conversationId, initialMessage }: ChatProps) {
       setIsConnected(true)
       
       if (messages.length > 0) {
-        const payload: MessageRequest = { history: messages }
+        // Only send human and final messages to the server
+        const filteredMessages = messages.filter(m => m.type === AgentMessageType.human || m.type === AgentMessageType.final)
+        const payload: MessageRequest = { history: filteredMessages }
         ws.current?.send(JSON.stringify(payload))
       }
     }
