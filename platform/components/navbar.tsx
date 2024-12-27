@@ -49,7 +49,7 @@ const Navbar: React.FC = () => {
           size="icon"
           className="h-8 w-8 text-primary-foreground hover-light-primary"
           onClick={handleNewChat}
-          title="New chat"
+          title="New conversation"
         >
           <Plus className="h-4 w-4" />
         </Button>
@@ -81,7 +81,7 @@ const Navbar: React.FC = () => {
         <CardContent className="p-4 flex items-center gap-3">
           <Avatar className="h-10 w-10 border-2 border-primary-foreground/20">
             <AvatarFallback className="bg-primary-foreground/10 text-primary-foreground">
-              {user?.name?.charAt(0)}
+              {user?.name?.charAt(0).toUpperCase()}
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
