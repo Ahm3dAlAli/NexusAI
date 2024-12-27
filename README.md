@@ -44,7 +44,7 @@ Key components of the workflow include:
 3. **Agent Node**: Executes the research plan using a ReAct pattern, coordinating tool usage and synthesizing results.
 
 4. **Tools Node**: Provides two main tools:
-   - **Paper Search**: Unified search across multiple APIs (ArXiv, CORE, SERP) using `SearchPapersInput` schema
+   - **Paper Search**: Unified search across multiple APIs (ArXiv, CORE, Serp) using `SearchPapersInput` schema
    - **PDF Processing**: Implemented in `PDFDownloader` with RAG-based content filtering
 
 5. **Judge Node**: Quality control through `JudgeOutput`, providing feedback for iterative improvement.

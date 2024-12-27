@@ -3,28 +3,25 @@ import time
 import urllib3
 from dotenv import load_dotenv
 from nexusai.cache.cache_manager import CacheManager
-from nexusai.config import (MAX_RETRIES, RETRY_BASE_DELAY, SERP_API_BASE_URL,
-                            SERP_API_KEY)
+from nexusai.config import (BING_API_BASE_URL, BING_API_KEY, MAX_RETRIES,
+                            RETRY_BASE_DELAY)
 from nexusai.models.inputs import SearchPapersInput
 from nexusai.utils.logger import logger
 
 load_dotenv()
 
 
-class SerpAPIWrapper:
-    """Wrapper around the Google Serp API for academic search.
+class BingAPIWrapper:
+    """Wrapper around the Bing API for academic search.
 
-    It enriches the Google query by filtering for databases for academic papers and PDF results to increase the relevance of the results.
-    It doesn't use the Google Scholar API as it doesn't have the same coverage as Google Search.
-
-    It's used as the final API in the pipeline to get relevant results.
+    It enriches the Bing query by filtering for databases for academic papers and PDF results to increase the relevance of the results.
     """
 
-    name = "serp"
+    name = "bing"
 
     def __init__(self):
-        self.base_url = SERP_API_BASE_URL
-        self.api_key = SERP_API_KEY
+        self.base_url = BING_API_BASE_URL
+        self.api_key = BING_API_KEY
         self.sites = [
             "core.ac.uk",
             "doaj.org",
@@ -39,7 +36,7 @@ class SerpAPIWrapper:
         self.cache_manager = CacheManager()
 
     def __build_query(self, input: SearchPapersInput) -> str:
-        """Build the query for the Serp API."""
+        """Build the query for the Bing API."""
         query = ""
         if input.keywords:
             query += f" {input.operator.value.upper()} ".join(
@@ -49,11 +46,11 @@ class SerpAPIWrapper:
             query += f" intitle:'{input.title}'"
         if input.year_range:
             if input.year_range[0]:
-                query += f" after:{input.year_range[0]}"
+                query += f" after:{input.year_range[0]}-01-01"
             if input.year_range[1]:
-                query += f" before:{input.year_range[1] + 1}"
+                query += f" before:{input.year_range[1]}-12-31"
         query = f"site:({' OR '.join(self.sites)}) {query} filetype:pdf"
-        logger.info(f"Built Serp query: {query}")
+        logger.info(f"Built Bing query: {query}")
         return query
 
     def __get_search_results(self, query: str, max_papers: int = 1) -> list:
@@ -61,49 +58,45 @@ class SerpAPIWrapper:
         http = urllib3.PoolManager()
         for attempt in range(MAX_RETRIES):
             logger.info(
-                f"Searching Serp for '{query}' (attempt {attempt + 1}/{MAX_RETRIES})"
+                f"Searching Bing for '{query}' (attempt {attempt + 1}/{MAX_RETRIES})"
             )
             response = http.request(
                 "GET",
-                f"{self.base_url}/search",
+                f"{self.base_url}/v7.0/search",
+                headers={
+                    "Ocp-Apim-Subscription-Key": self.api_key,
+                },
                 fields={
-                    "api_key": self.api_key,
                     "q": query,
-                    "num": max_papers,
-                    "engine": "google",
+                    "count": max_papers,
                 },
             )
             if 200 <= response.status < 300:
-                results = response.json().get("organic_results", [])
+                results = response.json().get("webPages", {}).get("value", [])
                 if not results:
-                    raise Exception(f"No results found from Serp for '{query}'")
-                logger.info(f"Successfully got Serp search results for '{query}'")
+                    raise Exception(f"No results found from Bing for '{query}'")
+                logger.info(f"Successfully got Bing search results for '{query}'")
                 return results
             elif attempt < MAX_RETRIES - 1 and response.status not in [429, 500]:
                 sleep_time = RETRY_BASE_DELAY ** (attempt + 2)
                 logger.warning(
-                    f"Got {response.status} response from Serp API. "
+                    f"Got {response.status} response from Bing API. "
                     f"Sleeping for {sleep_time} seconds before retrying..."
                 )
                 time.sleep(sleep_time)
             else:
                 raise Exception(
-                    f"Got non 2xx response from Serp API: {response.status}"
+                    f"Got non 2xx response from Bing API: {response.status}"
                 )
 
     def __format_results(self, results: list) -> str:
         """Format the search results into a string."""
         docs = []
         for result in results:
-            authors_str = result.get("author", [])
-            published_date = result.get("date", "")
-
             doc_info = [
-                f"* Title: {result.get('title', '')}",
-                f"* Published Date: {published_date}",
-                f"* Authors: {authors_str}",
+                f"* Title: {result.get('name', '')}",
                 f"* Abstract: {result.get('snippet', '')}",
-                f"* Paper URLs: {result.get('link', '')}",
+                f"* Paper URLs: {result.get('url', '')}",
             ]
             docs.append("\n".join(doc_info))
 
@@ -113,7 +106,7 @@ class SerpAPIWrapper:
         """Search for papers and format results."""
         if cached_results := self.cache_manager.get_search_results(input):
             logger.info(
-                f"Found Serp search results for '{input.model_dump_json()}' in cache"
+                f"Found Bing search results for '{input.model_dump_json()}' in cache"
             )
             return cached_results
 
@@ -124,3 +117,14 @@ class SerpAPIWrapper:
         # Cache the results
         self.cache_manager.store_search_results(input, formatted_results)
         return formatted_results
+
+
+if __name__ == "__main__":
+    bing = BingAPIWrapper()
+    print(
+        bing.search(
+            SearchPapersInput(
+                title="Attention is all you need", max_papers=5, year_range=[2015, 2020]
+            )
+        )
+    )

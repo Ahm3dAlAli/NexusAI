@@ -29,6 +29,14 @@ if not OPENAI_API_KEY:
 ARXIV_API_BASE_URL = "http://export.arxiv.org/api"
 PROVIDERS = ["arxiv"]
 
+# Bing API
+BING_API_BASE_URL = "https://api.bing.microsoft.com"
+if BING_API_KEY := os.getenv("BING_API_KEY"):
+    PROVIDERS.append("bing")
+    logger.info("Found Bing API key. Bing was added to the list of providers.")
+else:
+    logger.warning("BING_API_KEY environment variable is not set. Not using Bing API.")
+
 # CORE API
 CORE_API_BASE_URL = "https://api.core.ac.uk/v3"
 if CORE_API_KEY := os.getenv("CORE_API_KEY"):
@@ -37,13 +45,13 @@ if CORE_API_KEY := os.getenv("CORE_API_KEY"):
 else:
     logger.warning("CORE_API_KEY environment variable is not set. Not using CORE API.")
 
-# Google SERP API
+# Google Serp API
 SERP_API_BASE_URL = "https://serpapi.com"
 if SERP_API_KEY := os.getenv("SERP_API_KEY"):
     PROVIDERS.append("serp")
-    logger.info("Found SERP API key. SERP was added to the list of providers.")
+    logger.info("Found Serp API key. Serp was added to the list of providers.")
 else:
-    logger.warning("SERP_API_KEY environment variable is not set. Not using SERP API.")
+    logger.warning("SERP_API_KEY environment variable is not set. Not using Serp API.")
 
 logger.info(f"Using providers: {PROVIDERS}")
 

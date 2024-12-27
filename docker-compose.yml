@@ -19,7 +19,7 @@ services:
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=mydb
+      - POSTGRES_DB=postgres
     env_file:
       - .env
     restart: unless-stopped
