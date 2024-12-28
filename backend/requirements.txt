@@ -6,6 +6,7 @@ langchain-community==0.2.16
 langchain-openai==0.1.23
 langgraph==0.2.18
 langsmith==0.1.114
+python-jose==3.3.0
 pdfplumber
 python-dotenv
 redis==5.2.1

@@ -1,9 +1,11 @@
 # TODO
 
-- improve server security
-    - allow calls to backend only from authorized platform requests (use jwt validation with user query?)
+
+- optimize docker image for platform
+    - only install types for devs
 
 - platform features
+    - buy domain: nexusai.com
     - landing page
         - send 1st message without signing up
-    - reset password
+        - after that, show signup form

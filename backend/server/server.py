@@ -5,6 +5,7 @@ from nexusai.config import FRONTEND_URL
 from nexusai.models.outputs import AgentMessage, AgentMessageType
 from nexusai.utils.logger import logger
 from server.models import MessageRequest
+from server.utils import validate_token
 from server.websocket_manager import WebSocketManager
 
 # FastAPI app
@@ -37,6 +38,15 @@ async def process_query_websocket(websocket: WebSocket):
         """Callback function to send intermediate messages to the client."""
         await manager.send_message(message.model_dump(), websocket)
 
+    # Validate token
+    token = websocket.query_params.get("token")
+    logger.info("Validating token...")
+    if not token or not validate_token(token):
+        logger.error("Missing or invalid token")
+        await websocket.close(code=4001, reason="Missing or invalid token")
+        return
+
+    # Connect and process messages
     await manager.connect(websocket)
     history = []
     try:

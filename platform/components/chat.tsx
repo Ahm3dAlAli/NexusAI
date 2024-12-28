@@ -33,19 +33,8 @@ export default function Chat({ conversationId, initialMessage }: ChatProps) {
   const [aiTyping, setAiTyping] = useState(false)
   const [isConnected, setIsConnected] = useState(false)
   const [copiedMessageIndex, setCopiedMessageIndex] = useState<number | null>(null)
-
-  useEffect(() => {
-    if (!ws.current) {
-      initializeWebSocket()
-    }
-
-    return () => {
-      console.log('Cleaning up WebSocket connection.')
-      ws.current?.close()
-      ws.current = null
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  const [messagesLoaded, setMessagesLoaded] = useState(false)
+  const [showThinking, setShowThinking] = useState(false)
 
   useEffect(() => {
     if (!conversationId) return
@@ -57,28 +46,28 @@ export default function Chat({ conversationId, initialMessage }: ChatProps) {
           router.push('/')
           return
         }
-        
         setMessages(sortedMessages)
-        
-        // Only send human and final messages to the server
-        const filteredMessages = sortedMessages.filter(m => m.type === AgentMessageType.human || m.type === AgentMessageType.final)
-        if (ws.current?.readyState === WebSocket.OPEN) {
-          const payload: MessageRequest = { history: filteredMessages }
-          ws.current.send(JSON.stringify(payload))
-        }
-        
-        if (initialMessage && !initialMessageSent.current && ws.current?.readyState === WebSocket.OPEN) {
-          handleInitialMessage(filteredMessages)
-          initialMessageSent.current = true
-        }
+        setMessagesLoaded(true)
       })
       .catch(error => {
         console.error('Error fetching sorted messages:', error)
-        // Optionally redirect on error as well
         router.push('/')
       })
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conversationId, router])
+
+  useEffect(() => {
+    if (messagesLoaded && !ws.current) {
+      initializeWebSocket()
+    }
+
+    return () => {
+      console.log('Cleaning up WebSocket connection.')
+      ws.current?.close()
+      ws.current = null
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messagesLoaded])
 
   const handleInitialMessage = (previousMessages: AgentMessage[]) => {
     const payload: MessageRequest = {
@@ -103,17 +92,29 @@ export default function Chat({ conversationId, initialMessage }: ChatProps) {
     }
   }
 
-  const initializeWebSocket = () => {
+  const initializeWebSocket = async () => {
+    // Get WS token
+    console.log('Getting WebSocket token')
+    const response = await fetch('/api/ws-token')
+    if (!response.ok) {
+      throw new Error('Failed to get WebSocket token')
+    }
+    const { token } = await response.json()
+
+    // Initialize WebSocket with token
     console.log('Initializing WebSocket')
-    ws.current = new WebSocket(config.wsUrl)
+    ws.current = new WebSocket(`${config.wsUrl}?token=${token}`)
 
     ws.current.onopen = () => {
       console.log('WebSocket connected')
       setIsConnected(true)
-      
-      if (messages.length > 0) {
-        // Only send human and final messages to the server
-        const filteredMessages = messages.filter(m => m.type === AgentMessageType.human || m.type === AgentMessageType.final)
+
+      const filteredMessages = messages.filter(m => m.type === AgentMessageType.human || m.type === AgentMessageType.final)
+      console.log(`Sending ${filteredMessages.length} previous messages to ws server`)
+      if (initialMessage && !initialMessageSent.current) {
+        handleInitialMessage(filteredMessages)
+        initialMessageSent.current = true
+      } else if (messages.length > 0) {
         const payload: MessageRequest = { history: filteredMessages }
         ws.current?.send(JSON.stringify(payload))
       }
@@ -121,6 +122,7 @@ export default function Chat({ conversationId, initialMessage }: ChatProps) {
 
     ws.current.onmessage = async (event) => {
       const message: AgentMessage = JSON.parse(event.data)
+      console.log('Received message from ws server:', message)
       setMessages(prev => [...prev, message])
       
       if (conversationId) {
@@ -132,6 +134,7 @@ export default function Chat({ conversationId, initialMessage }: ChatProps) {
         message.type === AgentMessageType.error
       ) {
         setAiTyping(false)
+        setShowThinking(false)
       }
     }
 
@@ -151,6 +154,8 @@ export default function Chat({ conversationId, initialMessage }: ChatProps) {
 
     setInput('')
     setAiTyping(true)
+    setTimeout(() => setShowThinking(true), 1000)
+
     const userMessage: AgentMessage = {
       order: 0,
       type: AgentMessageType.human,
@@ -298,7 +303,7 @@ export default function Chat({ conversationId, initialMessage }: ChatProps) {
             </motion.div>
           );
         })}
-        {aiTyping && (
+        {aiTyping && showThinking && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

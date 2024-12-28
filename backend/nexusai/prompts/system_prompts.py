@@ -33,7 +33,7 @@ Don't thank for the instructions, but silently incorporate them.
 
 # OUTPUT FORMAT
 
-Your output must be a list of subtasks to complete.
+Your output must be a list of subtasks to complete introduced by a phrase like "Here's the plan to answer the user query:".
 Do not try to answer the user query, but only plan the steps to address it.
 
 # TOOLS

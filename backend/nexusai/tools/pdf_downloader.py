@@ -8,7 +8,8 @@ from langchain_community.vectorstores import FAISS
 from langchain_core.tools import tool
 from langchain_openai import AzureOpenAIEmbeddings, OpenAIEmbeddings
 from nexusai.cache.cache_manager import CacheManager
-from nexusai.config import LLM_PROVIDER, MAX_PAGES, MAX_RETRIES, RETRY_BASE_DELAY
+from nexusai.config import (LLM_PROVIDER, MAX_PAGES, MAX_RETRIES,
+                            RETRY_BASE_DELAY)
 from nexusai.utils.logger import logger
 
 # Disable warnings for insecure requests

@@ -79,6 +79,14 @@ else:
         "Please set it in your .env file."
     )
 
+# Auth Secret
+NEXTAUTH_SECRET = os.getenv("NEXTAUTH_SECRET")
+if not NEXTAUTH_SECRET:
+    raise ValueError(
+        "NEXTAUTH_SECRET environment variable is not set. "
+        "Please set it in your .env file."
+    )
+
 # Request Configuration
 MAX_RETRIES = 5
 RETRY_BASE_DELAY = 2  # seconds
