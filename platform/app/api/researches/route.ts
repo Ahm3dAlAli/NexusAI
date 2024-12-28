@@ -9,7 +9,7 @@ export async function GET() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const conversations = await prisma.conversation.findMany({
+  const researches = await prisma.research.findMany({
     where: { userId: session.user.id },
     orderBy: {
       updatedAt: 'desc',
@@ -19,7 +19,7 @@ export async function GET() {
     },
   })
 
-  return NextResponse.json(conversations, { status: 200 })
+  return NextResponse.json(researches, { status: 200 })
 }
 
 export async function POST(req: Request) {
@@ -33,7 +33,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Title is required' }, { status: 400 })
   }
   
-  const conversation = await prisma.conversation.create({
+  const research = await prisma.research.create({
     data: {
       title,
       userId: session.user.id,
@@ -43,5 +43,5 @@ export async function POST(req: Request) {
     }
   })
 
-  return NextResponse.json(conversation, { status: 201 })
+  return NextResponse.json(research, { status: 201 })
 }

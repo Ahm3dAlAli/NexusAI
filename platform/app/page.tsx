@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input, InputWrapper } from '@/components/ui/input'
 import Chat from '@/components/chat'
-import { useConversations } from '@/context/ConversationsContext'
+import { useResearches } from '@/context/ResearchesContext'
 import { motion } from 'framer-motion'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
@@ -13,7 +13,7 @@ const Home: React.FC = () => {
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [initialMessage, setInitialMessage] = useState<string | null>(null)
-  const { createConversation, selectedConversation } = useConversations()
+  const { createResearch, selectedResearch } = useResearches()
   const [, setWindowHeight] = useState(0)
   const { data: session, status } = useSession()
   const router = useRouter()
@@ -36,15 +36,15 @@ const Home: React.FC = () => {
     if (input.trim() === '') return
     setLoading(true)
     try {
-      const conversation = await createConversation({ 
+      const research = await createResearch({ 
         title: input.trim()
       })
-      if (conversation) {
+      if (research) {
         setInitialMessage(input.trim())
         setInput('')
       }
     } catch (error) {
-      console.error('Failed to create conversation:', error)
+      console.error('Failed to create research:', error)
     } finally {
       setLoading(false)
     }
@@ -56,7 +56,7 @@ const Home: React.FC = () => {
 
   return (
     <>
-      {!selectedConversation ? (
+      {!selectedResearch ? (
         <div className="flex flex-col h-screen max-w-5xl mx-auto items-center justify-center no-scrollbar overflow-y-auto">
           <motion.div
             initial={{ opacity: 0, y: -50 }}
@@ -103,7 +103,7 @@ const Home: React.FC = () => {
       ) : (
         <div className="h-screen no-scrollbar overflow-y-auto">
           <Chat
-            conversationId={selectedConversation.id}
+            researchId={selectedResearch.id}
             initialMessage={initialMessage || undefined}
           />
         </div>

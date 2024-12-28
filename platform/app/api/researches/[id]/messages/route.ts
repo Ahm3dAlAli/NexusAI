@@ -13,20 +13,20 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const conversation = await prisma.conversation.findUnique({
+    const research = await prisma.research.findUnique({
       where: { id: params.id },
     })
 
-    if (!conversation) {
+    if (!research) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 })
     }
 
-    if (conversation.userId !== session.user.id) {
+    if (research.userId !== session.user.id) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
     const messages = await prisma.message.findMany({
-      where: { conversationId: params.id },
+      where: { researchId: params.id },
       orderBy: [
         { createdAt: 'asc' },
         { order: 'asc' },
@@ -53,15 +53,15 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const conversation = await prisma.conversation.findUnique({
+    const research = await prisma.research.findUnique({
       where: { id: params.id },
     })
 
-    if (!conversation) {
+    if (!research) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 })
     }
 
-    if (conversation.userId !== session.user.id) {
+    if (research.userId !== session.user.id) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
@@ -69,7 +69,7 @@ export async function POST(
     
     const message = await prisma.message.create({
       data: {
-        conversationId: params.id,
+        researchId: params.id,
         order,
         type,
         content,

@@ -1,5 +1,5 @@
 -- AlterTable
-ALTER TABLE "Conversation" ADD COLUMN     "userId" TEXT;
+ALTER TABLE "Research" ADD COLUMN     "userId" TEXT;
 
 -- CreateTable
 CREATE TABLE "User" (
@@ -17,4 +17,4 @@ CREATE TABLE "User" (
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- AddForeignKey
-ALTER TABLE "Conversation" ADD CONSTRAINT "Conversation_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "Research" ADD CONSTRAINT "Research_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;

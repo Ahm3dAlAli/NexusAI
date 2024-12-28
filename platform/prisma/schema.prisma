@@ -24,10 +24,10 @@ model User {
   password    String?
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
-  conversations Conversation[]
+  researches  Research[]
 }
 
-model Conversation {
+model Research {
   id          String    @id @default(uuid())
   title       String
   createdAt   DateTime  @default(now())
@@ -39,8 +39,8 @@ model Conversation {
 
 model Message {
   id             String         @id @default(uuid())
-  conversation   Conversation   @relation(fields: [conversationId], references: [id])
-  conversationId String
+  research       Research       @relation(fields: [researchId], references: [id])
+  researchId     String
   order          Int
   type           AgentMessageType
   content        String

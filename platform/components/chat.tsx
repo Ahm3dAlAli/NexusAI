@@ -15,16 +15,16 @@ import {
 } from "@/components/ui/card"
 import { MarkdownLink } from '@/components/ui/markdown-link'
 import { config } from '@/config/environment'
-import { saveMessage, fetchMessages } from '@/lib/conversations'
+import { saveMessage, fetchMessages } from '@/lib/researches'
 import { motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 
 interface ChatProps {
-  conversationId?: string
+  researchId?: string
   initialMessage?: string
 }
 
-export default function Chat({ conversationId, initialMessage }: ChatProps) {
+export default function Chat({ researchId, initialMessage }: ChatProps) {
   const router = useRouter()
   const initialMessageSent = useRef(false)
   const ws = useRef<WebSocket | null>(null)
@@ -37,10 +37,10 @@ export default function Chat({ conversationId, initialMessage }: ChatProps) {
   const [showThinking, setShowThinking] = useState(false)
 
   useEffect(() => {
-    if (!conversationId) return
+    if (!researchId) return
 
-    console.log(`Loading messages for conversation: ${conversationId}`)
-    fetchMessages(conversationId)
+    console.log(`Loading messages for research: ${researchId}`)
+    fetchMessages(researchId)
       .then((sortedMessages) => {
         if (!sortedMessages) {
           router.push('/')
@@ -54,7 +54,7 @@ export default function Chat({ conversationId, initialMessage }: ChatProps) {
         router.push('/')
       })
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [conversationId, router])
+  }, [researchId, router])
 
   useEffect(() => {
     if (messagesLoaded && !ws.current) {
@@ -84,8 +84,8 @@ export default function Chat({ conversationId, initialMessage }: ChatProps) {
 
       setAiTyping(true)
       setMessages(prev => [...prev, message])
-      if (conversationId) {
-        saveMessage(conversationId, message)
+      if (researchId) {
+        saveMessage(researchId, message)
       }
 
       ws.current?.send(JSON.stringify(payload))
@@ -125,8 +125,8 @@ export default function Chat({ conversationId, initialMessage }: ChatProps) {
       console.log('Received message from ws server:', message)
       setMessages(prev => [...prev, message])
       
-      if (conversationId) {
-        await saveMessage(conversationId, message)
+      if (researchId) {
+        await saveMessage(researchId, message)
       }
 
       if (
@@ -150,7 +150,7 @@ export default function Chat({ conversationId, initialMessage }: ChatProps) {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    if (input.trim() === '' || aiTyping || !conversationId) return
+    if (input.trim() === '' || aiTyping || !researchId) return
 
     setInput('')
     setAiTyping(true)
@@ -162,7 +162,7 @@ export default function Chat({ conversationId, initialMessage }: ChatProps) {
       content: input.trim(),
     }
     setMessages(prev => [...prev, userMessage])
-    await saveMessage(conversationId, userMessage)
+    await saveMessage(researchId, userMessage)
     const payload: MessageRequest = { query: input.trim() }
     ws.current?.send(JSON.stringify(payload))
   }
@@ -337,7 +337,7 @@ export default function Chat({ conversationId, initialMessage }: ChatProps) {
           <Input
             value={input}
             onChange={handleInputChange}
-            placeholder={conversationId ? "Type your message..." : "What do you want to research?"}
+            placeholder={researchId ? "Type your message..." : "What do you want to research?"}
             className="flex-1"
             disabled={!isConnected}
           />

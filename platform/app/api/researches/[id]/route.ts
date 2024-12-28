@@ -13,7 +13,7 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const conversation = await prisma.conversation.findUnique({
+    const research = await prisma.research.findUnique({
       where: { id: params.id },
       include: {
         messages: {
@@ -25,17 +25,17 @@ export async function GET(
       },
     })
 
-    if (!conversation) {
+    if (!research) {
       return NextResponse.json(null, { status: 404 })
     }
 
-    if (conversation.userId !== session.user.id) {
+    if (research.userId !== session.user.id) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    return NextResponse.json(conversation)
+    return NextResponse.json(research)
   } catch (error) {
-    console.error('Error fetching conversation:', error)
+    console.error('Error fetching research:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
