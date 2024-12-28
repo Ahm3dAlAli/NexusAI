@@ -8,8 +8,7 @@ from langchain_community.vectorstores import FAISS
 from langchain_core.tools import tool
 from langchain_openai import AzureOpenAIEmbeddings, OpenAIEmbeddings
 from nexusai.cache.cache_manager import CacheManager
-from nexusai.config import (LLM_PROVIDER, MAX_PAGES, MAX_RETRIES,
-                            RETRY_BASE_DELAY)
+from nexusai.config import LLM_PROVIDER, MAX_PAGES, MAX_RETRIES, RETRY_BASE_DELAY
 from nexusai.utils.logger import logger
 
 # Disable warnings for insecure requests
@@ -25,6 +24,7 @@ class PDFDownloader:
         self.query = query
         PDFDownloader.query = query
         self.cache_manager = CacheManager()
+
         if LLM_PROVIDER == "openai":
             self.embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
         elif LLM_PROVIDER == "azure":
@@ -98,7 +98,7 @@ class PDFDownloader:
             if 200 <= response.status < 300:
                 logger.info(f"Successfully downloaded PDF from {url}")
                 break
-            elif attempt < MAX_RETRIES - 1:
+            elif attempt < MAX_RETRIES - 1 and response.status not in [400, 404, 500]:
                 logger.warning(
                     f"Got {response.status} response when downloading paper. Sleeping for {RETRY_BASE_DELAY ** (attempt + 2)} seconds before retrying..."
                 )

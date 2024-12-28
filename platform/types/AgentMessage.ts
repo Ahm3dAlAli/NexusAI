@@ -5,4 +5,5 @@ export interface AgentMessage {
   type: AgentMessageType;
   content: string;
   tool_name?: string;
+  urls?: string[] | null;
 }

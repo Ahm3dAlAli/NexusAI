@@ -1,10 +1,9 @@
 'use client'
 
-import React, { useState } from 'react'
-import Link from 'next/link'
+import React, { useState, useEffect } from 'react'
 import { LogOut, Search, FileText } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { useResearches } from '@/context/ResearchesContext'
+import { useMenu } from '@/context/MenuContext'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -15,10 +14,16 @@ import { MenuHeader } from '@/components/ui/menu-header'
 type MenuView = 'main' | 'researches' | 'papers'
 
 const Navbar: React.FC = () => {
-  const { researches, loading, setSelectedResearch } = useResearches()
+  const { setSelectedResearch, selectedResearch, loadingResearches } = useMenu()
   const router = useRouter()
   const { data: session } = useSession()
   const [currentMenu, setCurrentMenu] = useState<MenuView>('main')
+
+  useEffect(() => {
+    if (selectedResearch) {
+      setCurrentMenu('researches')
+    }
+  }, [selectedResearch])
 
   if (!session?.user) return null
   const user = session.user
@@ -70,28 +75,9 @@ const Navbar: React.FC = () => {
         onBack={() => setCurrentMenu('main')}
         onNewChat={handleNewChat}
         title="Researches"
+        type="researches"
       />
-      <ul>
-        {!loading && researches.map((research) => (
-          <motion.li
-            key={research.id}
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="w-full"
-          >
-            <Button
-              variant="ghost"
-              className="w-full justify-start text-base py-4"
-              asChild
-            >
-              <Link href={`/researches/${research.id}`}>
-                <Search className="mr-3 h-5 w-5 shrink-0" />
-                <span className="truncate">{research.title}</span>
-              </Link>
-            </Button>
-          </motion.li>
-        ))}
-      </ul>
+      {loadingResearches && <p>Loading researches...</p>}
     </motion.div>
   )
 
@@ -107,32 +93,22 @@ const Navbar: React.FC = () => {
         onBack={() => setCurrentMenu('main')}
         onNewChat={handleNewChat}
         title="Papers"
+        type="papers"
       />
-      <ul>
-        {['Quantum Computing', 'AI Research', 'Climate Science'].map((paper, index) => (
-          <li key={index}>
-            <Button
-              variant="ghost"
-              className="w-full justify-start text-base py-4"
-            >
-              <FileText className="mr-3 h-5 w-5 shrink-0" />
-              <span className="truncate">{paper}</span>
-            </Button>
-          </li>
-        ))}
-      </ul>
     </motion.div>
   )
 
   return (
     <div className="w-80 bg-primary text-primary-foreground h-screen p-4 flex flex-col">
-      <AnimatePresence mode="wait">
-        {currentMenu === 'main' && renderMainMenu()}
-        {currentMenu === 'researches' && renderResearchesMenu()}
-        {currentMenu === 'papers' && renderPapersMenu()}
-      </AnimatePresence>
+      <div className="flex-1 overflow-y-auto no-scrollbar">
+        <AnimatePresence mode="wait">
+          {currentMenu === 'main' && renderMainMenu()}
+          {currentMenu === 'researches' && renderResearchesMenu()}
+          {currentMenu === 'papers' && renderPapersMenu()}
+        </AnimatePresence>
+      </div>
 
-      <Card className="mt-auto bg-primary-foreground/10 border-primary-foreground/20">
+      <Card className="mt-4 bg-primary-foreground/10 border-primary-foreground/20">
         <CardContent className="p-4 flex items-center gap-3">
           <Avatar className="h-10 w-10 border-2 border-primary-foreground/20">
             <AvatarFallback className="bg-primary-foreground/10 text-primary-foreground">

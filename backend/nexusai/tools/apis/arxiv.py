@@ -18,7 +18,7 @@ class ArxivAPIWrapper:
         self.base_url = ARXIV_API_BASE_URL
 
         # Redis cache
-        self.cache_manager = CacheManager()
+        self.cache_manager = CacheManager(self.name)
 
     def __build_query(self, input: SearchPapersInput) -> str:
         """Build the query for the arXiv API."""

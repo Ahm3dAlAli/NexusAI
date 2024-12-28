@@ -3,17 +3,42 @@
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input, InputWrapper } from '@/components/ui/input'
-import Chat from '@/components/chat'
-import { useResearches } from '@/context/ResearchesContext'
+import ResearchChat from '@/components/research-chat'
+import { useMenu } from '@/context/MenuContext'
 import { motion } from 'framer-motion'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
+import { Card } from '@/components/ui/card'
+import { Sparkles } from 'lucide-react'
+const exampleQuestions = [
+  {
+    title: "Quantum Computing",
+    questions: [
+      "Analyze new methodology used for quantum supremacy demonstrations",
+      "What are the recent developments in quantum computing?",
+    ]
+  },
+  {
+    title: "Medical Science",
+    questions: [
+      "What's the current understanding of long COVID mechanisms?",
+      "Summarize the latest findings in CRISPR gene editing technology",
+    ]
+  },
+  {
+    title: "Technology",
+    questions: [
+      "What are the latest advancements in renewable energy storage?",
+      "Current state of autonomous vehicle technology",
+    ]
+  }
+]
 
 const Home: React.FC = () => {
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [initialMessage, setInitialMessage] = useState<string | null>(null)
-  const { createResearch, selectedResearch } = useResearches()
+  const { createResearch, selectedResearch, setSelectedResearch } = useMenu()
   const [, setWindowHeight] = useState(0)
   const { data: session, status } = useSession()
   const router = useRouter()
@@ -42,12 +67,17 @@ const Home: React.FC = () => {
       if (research) {
         setInitialMessage(input.trim())
         setInput('')
+        setSelectedResearch(research)
       }
     } catch (error) {
       console.error('Failed to create research:', error)
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleExampleClick = (question: string) => {
+    setInput(question)
   }
 
   if (!session) {
@@ -99,10 +129,47 @@ const Home: React.FC = () => {
               </Button>
             </form>
           </motion.div>
+          <motion.div
+            className="w-full max-w-[800px] mt-8"
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ 
+              duration: 0.4,
+              delay: 0.4,
+              ease: "easeOut"
+            }}
+          >
+            <div className="flex items-center gap-2 mb-4 text-muted-foreground">
+              <Sparkles className="h-5 w-5" />
+              <h2 className="text-lg font-medium">Example research questions</h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {exampleQuestions.map((category, idx) => (
+                <div key={idx} className="space-y-2">
+                  <h3 className="font-medium text-base pl-1">
+                    {category.title}
+                  </h3>
+                  <div className="space-y-2">
+                    {category.questions.map((question, qIdx) => (
+                      <Card 
+                        key={qIdx} 
+                        className="p-3 hover:bg-accent/50 transition-colors cursor-pointer"
+                        onClick={() => handleExampleClick(question)}
+                      >
+                        <span className="text-sm">
+                          {question}
+                        </span>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
         </div>
       ) : (
         <div className="h-screen no-scrollbar overflow-y-auto">
-          <Chat
+          <ResearchChat
             researchId={selectedResearch.id}
             initialMessage={initialMessage || undefined}
           />

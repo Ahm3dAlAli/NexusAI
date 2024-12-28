@@ -2,7 +2,7 @@
 
 import { ReactNode } from 'react'
 import { SessionProvider } from 'next-auth/react'
-import { ResearchesProvider } from '@/context/ResearchesContext'
+import { MenuProvider } from '@/context/MenuContext'
 
 interface ProvidersProps {
   children: ReactNode
@@ -11,9 +11,9 @@ interface ProvidersProps {
 const Providers = ({ children }: ProvidersProps) => {
   return (
     <SessionProvider>
-      <ResearchesProvider>
+      <MenuProvider>
         {children}
-      </ResearchesProvider>
+      </MenuProvider>
     </SessionProvider>
   )
 }

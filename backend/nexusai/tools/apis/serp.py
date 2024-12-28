@@ -3,8 +3,12 @@ import time
 import urllib3
 from dotenv import load_dotenv
 from nexusai.cache.cache_manager import CacheManager
-from nexusai.config import (MAX_RETRIES, RETRY_BASE_DELAY, SERP_API_BASE_URL,
-                            SERP_API_KEY)
+from nexusai.config import (
+    MAX_RETRIES,
+    RETRY_BASE_DELAY,
+    SERP_API_BASE_URL,
+    SERP_API_KEY,
+)
 from nexusai.models.inputs import SearchPapersInput
 from nexusai.utils.logger import logger
 
@@ -36,7 +40,7 @@ class SerpAPIWrapper:
         ]
 
         # Redis cache
-        self.cache_manager = CacheManager()
+        self.cache_manager = CacheManager(self.name)
 
     def __build_query(self, input: SearchPapersInput) -> str:
         """Build the query for the Serp API."""

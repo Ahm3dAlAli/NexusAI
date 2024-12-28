@@ -2,15 +2,16 @@
 
 import { useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import Chat from '@/components/chat'
-import { useResearches } from '@/context/ResearchesContext'
+import ResearchChat from '@/components/research-chat'
+import { useMenu } from '@/context/MenuContext'
 import { useSession } from 'next-auth/react'
+import { Research } from '@prisma/client'
 
 const ResearchPage = () => {
   const params = useParams()
   const id = params?.id as string
   const router = useRouter()
-  const { setSelectedResearch, researches, loading } = useResearches()
+  const { setSelectedResearch, researches, loadingResearches } = useMenu()
   const { status } = useSession()
 
   useEffect(() => {
@@ -20,20 +21,20 @@ const ResearchPage = () => {
       return
     }
 
-    if (!loading && researches.length > 0) {
-      const research = researches.find(research => research.id === id)
+    if (!loadingResearches && researches.length > 0) {
+      const research = researches.find((research: Research) => research.id === id)
       if (research) {
         setSelectedResearch(research)
       } else {
         router.push('/')
       }
     }
-  }, [id, researches, setSelectedResearch, router, loading, status])
+  }, [id, researches, setSelectedResearch, router, loadingResearches, status])
 
-  if (status === "loading" || !id || loading) return null
+  if (status === "loading" || !id || loadingResearches) return null
 
   return (
-    <Chat researchId={id} />
+    <ResearchChat researchId={id} />
   )
 }
 

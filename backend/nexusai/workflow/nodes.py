@@ -8,9 +8,12 @@ from langchain_openai import AzureChatOpenAI, ChatOpenAI
 from nexusai.config import LLM_PROVIDER, MAX_FEEDBACK_REQUESTS
 from nexusai.models.agent_state import AgentState
 from nexusai.models.outputs import DecisionMakingOutput, JudgeOutput
-from nexusai.prompts.system_prompts import (agent_prompt,
-                                            decision_making_prompt,
-                                            judge_prompt, planning_prompt)
+from nexusai.prompts.system_prompts import (
+    agent_prompt,
+    decision_making_prompt,
+    judge_prompt,
+    planning_prompt,
+)
 from nexusai.utils.messages import get_agent_messages
 
 
@@ -39,10 +42,10 @@ class WorkflowNodes:
             raise ValueError(f"Invalid LLM provider: {LLM_PROVIDER}")
 
         # Workflow LLMs
-        self.planning_llm = small_llm
         self.decision_making_llm = small_llm.with_structured_output(
             DecisionMakingOutput
         )
+        self.planning_llm = large_llm or small_llm
         self.agent_llm = (large_llm or small_llm).bind_tools(tools)
         self.judge_llm = (large_llm or small_llm).with_structured_output(JudgeOutput)
 

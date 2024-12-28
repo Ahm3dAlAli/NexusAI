@@ -9,12 +9,15 @@ from nexusai.utils.logger import logger
 load_dotenv()
 
 # LLM provider
-OPENAI_API_VERSION = os.getenv("OPENAI_API_VERSION")
-AZURE_OPENAI_API_KEY = os.getenv("AZURE_OPENAI_API_KEY")
-AZURE_OPENAI_ENDPOINT = os.getenv("AZURE_OPENAI_ENDPOINT")
-if all([OPENAI_API_VERSION, AZURE_OPENAI_API_KEY, AZURE_OPENAI_ENDPOINT]):
+if all(
+    [
+        os.getenv("OPENAI_API_VERSION"),
+        os.getenv("AZURE_OPENAI_API_KEY"),
+        os.getenv("AZURE_OPENAI_ENDPOINT"),
+    ]
+):
     LLM_PROVIDER = "azure"
-elif OPENAI_API_KEY := os.getenv("OPENAI_API_KEY"):
+elif os.getenv("OPENAI_API_KEY"):
     LLM_PROVIDER = "openai"
 else:
     raise ValueError(
@@ -26,14 +29,6 @@ logger.info(f"Using LLM provider: {LLM_PROVIDER}")
 # Arxiv API
 ARXIV_API_BASE_URL = "http://export.arxiv.org/api"
 PROVIDERS = ["arxiv"]
-
-# Bing API
-BING_API_BASE_URL = "https://api.bing.microsoft.com"
-if BING_API_KEY := os.getenv("BING_API_KEY"):
-    PROVIDERS.append("bing")
-    logger.info("Found Bing API key. Bing was added to the list of providers.")
-else:
-    logger.warning("BING_API_KEY environment variable is not set. Not using Bing API.")
 
 # CORE API
 CORE_API_BASE_URL = "https://api.core.ac.uk/v3"
@@ -51,14 +46,22 @@ if SERP_API_KEY := os.getenv("SERP_API_KEY"):
 else:
     logger.warning("SERP_API_KEY environment variable is not set. Not using Serp API.")
 
+# Bing API
+BING_API_BASE_URL = "https://api.bing.microsoft.com"
+if BING_API_KEY := os.getenv("BING_API_KEY"):
+    PROVIDERS.append("bing")
+    logger.info("Found Bing API key. Bing was added to the list of providers.")
+else:
+    logger.warning("BING_API_KEY environment variable is not set. Not using Bing API.")
+
+
 logger.info(f"Using providers: {PROVIDERS}")
 
 # Traceability with langsmith
-LANGCHAIN_PROJECT = "nexusai"
-if LANGCHAIN_API_KEY := os.getenv("LANGCHAIN_API_KEY"):
+if os.getenv("LANGCHAIN_API_KEY"):
     os.environ["LANGCHAIN_TRACING_V2"] = "true"
     os.environ["LANGCHAIN_ENDPOINT"] = "https://api.smith.langchain.com"
-    os.environ["LANGCHAIN_PROJECT"] = LANGCHAIN_PROJECT
+    os.environ["LANGCHAIN_PROJECT"] = "nexusai"
     logger.info("Langsmith tracing enabled.")
 else:
     logger.warning(
@@ -68,7 +71,9 @@ else:
 # Redis
 REDIS_URL = os.getenv("REDIS_URL")
 if not REDIS_URL:
-    logger.warning("REDIS_URL environment variable is not set. Not using cache.")
+    raise ValueError(
+        "REDIS_URL environment variable is not set. " "Please set it in your .env file."
+    )
 
 # Frontend URL
 if FRONTEND_URL := os.getenv("FRONTEND_URL"):

@@ -31,6 +31,11 @@ Use them to come up with a new plan that tackles the problem from a different an
 For example, search for a paper using keywords instead of the direct titles, changing the keywords used for search, or increase the number of papers to search for to have more options.
 Don't thank for the instructions, but silently incorporate them.
 
+In the final step, add explicit instructions to reference any paper used to answer the user query.
+Use an academic citation style and add the source URL if available. For example:
+- ([Vaswani et al., 2017](https://papers.nips.cc/paper/7181-attention-is-all-you-need.pdf))
+- ([Goodfellow et al., 2013](https://arxiv.org/abs/1302.4389))
+
 # OUTPUT FORMAT
 
 Your output must be a list of subtasks to complete introduced by a phrase like "Here's the plan to answer the user query:".
@@ -70,9 +75,10 @@ For example, if the feedback asks to add citations, you must add them in your ne
 
 ## INLINE CITATIONS
 
-You must always reference any external source used to answer the user query.
-- Reference external sources as markdown links: [Amazon](https://amazon.com)
-- Reference papers by their authors and year, adding the full URL to the paper if available: [Vaswani et al., 2017](https://papers.nips.cc/paper/7181-attention-is-all-you-need.pdf)
+Reference any paper you use to answer the user query.
+Use an academic citation style and add the source URL if available. For example:
+- ([Vaswani et al., 2017](https://papers.nips.cc/paper/7181-attention-is-all-you-need.pdf))
+- ([Goodfellow et al., 2013](https://arxiv.org/abs/1302.4389))
 """
 
 # Prompt for the judging step to evaluate the quality of the final answer

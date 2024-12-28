@@ -1,19 +1,10 @@
 # TODO
 
-- renaming:
-    - AgentMessage -> WSMessage
-
 - add chat with pdfs
-    - menu
-    - identify pdfs in agent run
     - store pdfs
-    - chat interface
+    - add chat with pdfs
 
-- optimize docker image for platform
-    - only install types for devs
-
-- platform features
-    - buy domain: nexusai.com
-    - landing page
-        - send 1st message without signing up
-        - after that, show signup form
+Update readme:
+    - describe what each env variable is for. For example, not having Azure AD will disable the sign in with Microsoft button.
+    - using openai instead of azure will likely degrade the performance of the agent. it's using 4o mini instead of gpt-4o because openai quotas are restrictive for low-tier users.
+    - update description of features and architecture

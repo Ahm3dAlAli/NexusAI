@@ -15,26 +15,29 @@ import {
 } from "@/components/ui/card"
 import { MarkdownLink } from '@/components/ui/markdown-link'
 import { config } from '@/config/environment'
-import { saveMessage, fetchMessages } from '@/lib/researches'
+import { saveResearchMessage, fetchMessages } from '@/lib/researches'
 import { motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
+import { createPaper } from '@/lib/papers'
+import { useMenu } from '@/context/MenuContext'
 
 interface ChatProps {
   researchId?: string
   initialMessage?: string
 }
 
-export default function Chat({ researchId, initialMessage }: ChatProps) {
+export default function ResearchChat({ researchId, initialMessage }: ChatProps) {
   const router = useRouter()
   const initialMessageSent = useRef(false)
   const ws = useRef<WebSocket | null>(null)
   const [messages, setMessages] = useState<AgentMessage[]>([])
   const [input, setInput] = useState('')
-  const [aiTyping, setAiTyping] = useState(false)
   const [isConnected, setIsConnected] = useState(false)
   const [copiedMessageIndex, setCopiedMessageIndex] = useState<number | null>(null)
   const [messagesLoaded, setMessagesLoaded] = useState(false)
+  const [aiTyping, setAiTyping] = useState(false)
   const [showThinking, setShowThinking] = useState(false)
+  const { fetchPapers } = useMenu()
 
   useEffect(() => {
     if (!researchId) return
@@ -83,9 +86,10 @@ export default function Chat({ researchId, initialMessage }: ChatProps) {
       }
 
       setAiTyping(true)
+      setShowThinking(true)
       setMessages(prev => [...prev, message])
       if (researchId) {
-        saveMessage(researchId, message)
+        saveResearchMessage(researchId, message)
       }
 
       ws.current?.send(JSON.stringify(payload))
@@ -124,9 +128,11 @@ export default function Chat({ researchId, initialMessage }: ChatProps) {
       const message: AgentMessage = JSON.parse(event.data)
       console.log('Received message from ws server:', message)
       setMessages(prev => [...prev, message])
-      
+      setShowThinking(false)
+      setTimeout(() => setShowThinking(true), 250)
+
       if (researchId) {
-        await saveMessage(researchId, message)
+        await saveResearchMessage(researchId, message)
       }
 
       if (
@@ -135,6 +141,10 @@ export default function Chat({ researchId, initialMessage }: ChatProps) {
       ) {
         setAiTyping(false)
         setShowThinking(false)
+      }
+
+      if (message.type === AgentMessageType.final && message.urls && message.urls.length > 0) {
+        await createPapersFromUrls(message.urls)
       }
     }
 
@@ -154,7 +164,7 @@ export default function Chat({ researchId, initialMessage }: ChatProps) {
 
     setInput('')
     setAiTyping(true)
-    setTimeout(() => setShowThinking(true), 1000)
+    setShowThinking(true)
 
     const userMessage: AgentMessage = {
       order: 0,
@@ -162,7 +172,7 @@ export default function Chat({ researchId, initialMessage }: ChatProps) {
       content: input.trim(),
     }
     setMessages(prev => [...prev, userMessage])
-    await saveMessage(researchId, userMessage)
+    await saveResearchMessage(researchId, userMessage)
     const payload: MessageRequest = { query: input.trim() }
     ws.current?.send(JSON.stringify(payload))
   }
@@ -189,6 +199,24 @@ export default function Chat({ researchId, initialMessage }: ChatProps) {
       setCopiedMessageIndex(index)
       setTimeout(() => setCopiedMessageIndex(null), 1000) // Hide after 1 second
     })
+  }
+
+  const createPapersFromUrls = async (urls: string[]) => {
+    console.log(`Creating papers from ${urls.length} urls`)
+    for (const url of urls) {
+      try {
+        await createPaper({
+          title: "Research Paper",
+          authors: "Various Authors",
+          summary: "This paper was automatically added from a research chat.",
+          url: url
+        })
+      } catch (error) {
+        console.error('Error creating paper:', error)
+      }
+    }
+    console.log('Finished creating papers from urls')
+    await fetchPapers()
   }
 
   return (

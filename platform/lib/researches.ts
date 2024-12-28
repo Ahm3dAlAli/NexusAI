@@ -46,7 +46,7 @@ export async function fetchMessages(researchId: string): Promise<AgentMessage[]>
   }))
 }
 
-export async function saveMessage(researchId: string, message: AgentMessage) {
+export async function saveResearchMessage(researchId: string, message: AgentMessage) {
   const response = await fetch(`/api/researches/${researchId}/messages`, {
     method: 'POST',
     body: JSON.stringify(message),
