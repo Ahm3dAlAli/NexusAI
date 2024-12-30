@@ -49,3 +49,18 @@ class AgentMessage(BaseModel):
 
         links = re.findall(r"\[.*?\]\((.*?)\)", self.content)
         return links
+
+
+class PaperOutput(BaseModel):
+    """Output object for paper processing."""
+
+    title: str = Field(
+        description="The title of the research paper, extracted from the paper content or URL"
+    )
+    authors: str = Field(
+        description="The authors of the paper, formatted as a comma-separated string"
+    )
+    summary: str = Field(
+        description="A concise summary of the paper's key findings and contributions (2-3 paragraphs)"
+    )
+    url: str = Field(description="The original URL where the paper was found. If the paper is from arXiv make sure to replace arxiv.org/abs/ with arxiv.org/pdf/")

@@ -16,6 +16,7 @@ interface PaperChatProps {
 
 const PaperChat: React.FC<PaperChatProps> = ({ paperId }) => {
   const [paper, setPaper] = useState<Paper | null>(null);
+  const [loading, setLoading] = useState(true);
   const { data: session, status } = useSession();
   const router = useRouter();
   const [copied, setCopied] = useState<boolean>(false);
@@ -26,13 +27,22 @@ const PaperChat: React.FC<PaperChatProps> = ({ paperId }) => {
       router.push('/login');
       return;
     }
+
     const loadPaper = async () => {
+      setLoading(true);
       try {
         const fetchedPaper = await fetchPaper(paperId);
+        if (!fetchedPaper) {
+          console.error('Paper not found');
+          router.push('/');
+          return;
+        }
         setPaper(fetchedPaper);
       } catch (error) {
         console.error('Error fetching paper:', error);
         router.push('/');
+      } finally {
+        setLoading(false);
       }
     };
     loadPaper();
@@ -45,8 +55,8 @@ const PaperChat: React.FC<PaperChatProps> = ({ paperId }) => {
     });
   };
 
-  if (!paper) {
-    return <div className="flex justify-center items-center h-full">Paper not found.</div>;
+  if (!paper || loading || status === 'loading') {
+    return null;
   }
 
   return (

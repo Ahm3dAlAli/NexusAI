@@ -16,14 +16,16 @@ export async function fetchPaper(id: string): Promise<Paper> {
   return response.json();
 }
 
-export async function createPaper(data: { title: string; authors: string; summary: string; url: string }): Promise<Paper> {
+export async function createPapers(urls: string[]): Promise<number> {
   const response = await fetch('/api/papers', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
+    body: JSON.stringify({ urls })
   });
+  
   if (!response.ok) {
-    throw new Error('Failed to create paper');
+    throw new Error('Failed to create papers');
   }
-  return response.json();
+  
+  const papers: Paper[] = await response.json();
+  return papers.length;
 } 

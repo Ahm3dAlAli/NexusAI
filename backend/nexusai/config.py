@@ -19,6 +19,10 @@ if all(
     LLM_PROVIDER = "azure"
 elif os.getenv("OPENAI_API_KEY"):
     LLM_PROVIDER = "openai"
+    logger.warning(
+        "Using OpenAI instead of Azure OpenAI. "
+        "Since OpenAI's quotas for gpt-4o are more restrictive for low-tier users, the agent will use gpt-4o-mini, which may degrade performance."
+    )
 else:
     raise ValueError(
         "Neither OpenAI nor Azure OpenAI environment variables are set. "

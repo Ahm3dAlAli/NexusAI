@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useEffect } from 'react'
 import { LogOut, Search, FileText } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useMenu } from '@/context/MenuContext'
@@ -11,19 +11,22 @@ import { Card, CardContent } from '@/components/ui/card'
 import { signOut, useSession } from 'next-auth/react'
 import { MenuHeader } from '@/components/ui/menu-header'
 
-type MenuView = 'main' | 'researches' | 'papers'
-
 const Navbar: React.FC = () => {
-  const { setSelectedResearch, selectedResearch, loadingResearches } = useMenu()
+  const { 
+    setSelectedResearch, 
+    selectedResearch, 
+    loadingResearches,
+    currentMenu,
+    setCurrentMenu
+  } = useMenu()
   const router = useRouter()
   const { data: session } = useSession()
-  const [currentMenu, setCurrentMenu] = useState<MenuView>('main')
 
   useEffect(() => {
     if (selectedResearch) {
       setCurrentMenu('researches')
     }
-  }, [selectedResearch])
+  }, [selectedResearch, setCurrentMenu])
 
   if (!session?.user) return null
   const user = session.user

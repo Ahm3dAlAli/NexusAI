@@ -8,7 +8,9 @@ WORKDIR /app
 
 # Next.js build arg
 ARG NEXT_PUBLIC_WS_URL
+ARG NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_WS_URL=${NEXT_PUBLIC_WS_URL}
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 
 # Cache dependencies layer
 COPY package*.json ./

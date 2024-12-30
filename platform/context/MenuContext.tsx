@@ -14,6 +14,8 @@ interface MenuContextType {
   setSelectedResearch: (research: Research | null) => void
   createResearch: (data: { title: string }) => Promise<Research | null>
   fetchPapers: () => Promise<void>
+  currentMenu: 'main' | 'researches' | 'papers'
+  setCurrentMenu: (menu: 'main' | 'researches' | 'papers') => void
 }
 
 const MenuContext = createContext<MenuContextType | undefined>(undefined)
@@ -24,6 +26,7 @@ export const MenuProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loadingResearches, setLoadingResearches] = useState<boolean>(false)
   const [loadingPapers, setLoadingPapers] = useState<boolean>(false)
   const [selectedResearch, setSelectedResearch] = useState<Research | null>(null)
+  const [currentMenu, setCurrentMenu] = useState<'main' | 'researches' | 'papers'>('main')
 
   const loadResearches = async () => {
     setLoadingResearches(true)
@@ -61,7 +64,6 @@ export const MenuProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const response = await fetch('/api/researches', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       })
       if (response.ok) {
@@ -89,6 +91,8 @@ export const MenuProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSelectedResearch,
       createResearch,
       fetchPapers,
+      currentMenu,
+      setCurrentMenu,
     }}>
       {children}
     </MenuContext.Provider>

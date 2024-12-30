@@ -1,11 +1,14 @@
-from fastapi import FastAPI, WebSocket
+import asyncio
+
+from fastapi import FastAPI, HTTPException, Query, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 from nexusai.agent import process_query
+from nexusai.chat import process_paper
 from nexusai.config import FRONTEND_URL
-from nexusai.models.outputs import AgentMessage, AgentMessageType
+from nexusai.models.outputs import AgentMessage, AgentMessageType, PaperOutput
 from nexusai.utils.logger import logger
-from server.models import MessageRequest
-from server.utils import validate_token
+from server.models import MessageRequest, PapersRequest
+from server.utils import validate_jwt
 from server.websocket_manager import WebSocketManager
 
 # FastAPI app
@@ -24,14 +27,33 @@ app.add_middleware(
 )
 
 
-# Endpoints
 @app.get("/")
-async def read_root():
+async def http_root():
     return "🚀 NexusAI is up and running!"
 
 
+@app.post("/papers")
+async def http_create_papers(
+    request: PapersRequest, token: str = Query(None)
+) -> list[PaperOutput]:
+    """Create papers from URLs concurrently."""
+    logger.info("Validating token...")
+    if not token or not validate_jwt(token):
+        logger.error("Missing or invalid token")
+        raise HTTPException(status_code=401, detail="Missing or invalid token")
+
+    try:
+        # Process papers concurrently
+        tasks = [process_paper(url) for url in request.urls]
+        papers = await asyncio.gather(*tasks)
+        return papers
+    except Exception as e:
+        logger.error(f"Error processing papers: {e}")
+        raise HTTPException(status_code=500, detail="Error processing papers")
+
+
 @app.websocket("/ws")
-async def process_query_websocket(websocket: WebSocket):
+async def ws_process_query(websocket: WebSocket):
     """Chat with the agent through a websocket."""
 
     async def send_intermediate_message(message: AgentMessage):
@@ -41,7 +63,7 @@ async def process_query_websocket(websocket: WebSocket):
     # Validate token
     token = websocket.query_params.get("token")
     logger.info("Validating token...")
-    if not token or not validate_token(token):
+    if not token or not validate_jwt(token):
         logger.error("Missing or invalid token")
         await websocket.close(code=4001, reason="Missing or invalid token")
         return

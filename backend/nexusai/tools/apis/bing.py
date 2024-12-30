@@ -3,12 +3,8 @@ import time
 import urllib3
 from dotenv import load_dotenv
 from nexusai.cache.cache_manager import CacheManager
-from nexusai.config import (
-    BING_API_BASE_URL,
-    BING_API_KEY,
-    MAX_RETRIES,
-    RETRY_BASE_DELAY,
-)
+from nexusai.config import (BING_API_BASE_URL, BING_API_KEY, MAX_RETRIES,
+                            RETRY_BASE_DELAY)
 from nexusai.models.inputs import SearchPapersInput
 from nexusai.utils.logger import logger
 

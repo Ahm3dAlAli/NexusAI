@@ -104,7 +104,8 @@ Before you begin, make sure you have Docker installed.
 
    # Deployment URLs (default for local setup)
    FRONTEND_URL="http://localhost:3000"
-   NEXT_PUBLIC_WS_URL="ws://localhost:8000/ws"
+   NEXT_PUBLIC_WS_URL="ws://localhost:8000"
+   NEXT_PUBLIC_API_URL="http://backend:8000"
    ```
 
 ### Running with Docker

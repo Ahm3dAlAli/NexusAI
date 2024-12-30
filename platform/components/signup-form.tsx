@@ -5,6 +5,7 @@ import { signIn } from 'next-auth/react'
 import { Button } from '@/components/ui/button'
 import { Input, InputWrapper } from '@/components/ui/input'
 import { Icons } from '@/components/ui/icons'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import Link from 'next/link'
 
 export function SignupForm() {
@@ -12,6 +13,7 @@ export function SignupForm() {
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [isMicrosoftLoading, setIsMicrosoftLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -22,7 +24,6 @@ export function SignupForm() {
     try {
       const response = await fetch('/api/auth/signup', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password, name }),
       })
 
@@ -45,14 +46,25 @@ export function SignupForm() {
   }
 
   const handleMicrosoftSignup = () => {
-    setIsLoading(true)
+    setIsMicrosoftLoading(true)
     signIn('azure-ad', { callbackUrl: '/' })
       .catch(() => {
         setError('An error occurred with Microsoft sign up')
+        setIsMicrosoftLoading(false)
       })
-      .finally(() => {
-        setIsLoading(false)
-      })
+  }
+
+  if (isMicrosoftLoading) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <div className="text-center">
+          <LoadingSpinner className="w-8 h-8 mx-auto mb-4" />
+          <p className="text-sm text-muted-foreground">
+            Signing up with Microsoft...
+          </p>
+        </div>
+      </div>
+    )
   }
 
   return (

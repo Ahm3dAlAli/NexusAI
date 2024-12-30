@@ -8,12 +8,9 @@ from langchain_openai import AzureChatOpenAI, ChatOpenAI
 from nexusai.config import LLM_PROVIDER, MAX_FEEDBACK_REQUESTS
 from nexusai.models.agent_state import AgentState
 from nexusai.models.outputs import DecisionMakingOutput, JudgeOutput
-from nexusai.prompts.system_prompts import (
-    agent_prompt,
-    decision_making_prompt,
-    judge_prompt,
-    planning_prompt,
-)
+from nexusai.prompts.agent_prompts import (agent_prompt,
+                                           decision_making_prompt,
+                                           judge_prompt, planning_prompt)
 from nexusai.utils.messages import get_agent_messages
 
 

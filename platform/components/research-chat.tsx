@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input"
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { AgentMessage } from '@/types/AgentMessage'
-import { MessageRequest } from '@/types/MessageRequest'
+import { MessageRequest } from '@/types/BackendModels'
 import { AgentMessageType } from '@prisma/client'
 import { Copy } from "lucide-react"
 import {
@@ -18,8 +18,9 @@ import { config } from '@/config/environment'
 import { saveResearchMessage, fetchMessages } from '@/lib/researches'
 import { motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
-import { createPaper } from '@/lib/papers'
 import { useMenu } from '@/context/MenuContext'
+import { useNotification } from '@/context/NotificationContext'
+import { createPapers } from '@/lib/papers'
 
 interface ChatProps {
   researchId?: string
@@ -37,7 +38,8 @@ export default function ResearchChat({ researchId, initialMessage }: ChatProps) 
   const [messagesLoaded, setMessagesLoaded] = useState(false)
   const [aiTyping, setAiTyping] = useState(false)
   const [showThinking, setShowThinking] = useState(false)
-  const { fetchPapers } = useMenu()
+  const { fetchPapers, setCurrentMenu } = useMenu()
+  const { addNotification } = useNotification()
 
   useEffect(() => {
     if (!researchId) return
@@ -98,16 +100,16 @@ export default function ResearchChat({ researchId, initialMessage }: ChatProps) 
 
   const initializeWebSocket = async () => {
     // Get WS token
-    console.log('Getting WebSocket token')
-    const response = await fetch('/api/ws-token')
+    console.log('Getting jwt')
+    const response = await fetch('/api/auth/jwt')
     if (!response.ok) {
-      throw new Error('Failed to get WebSocket token')
+      throw new Error('Failed to get jwt')
     }
     const { token } = await response.json()
 
     // Initialize WebSocket with token
     console.log('Initializing WebSocket')
-    ws.current = new WebSocket(`${config.wsUrl}?token=${token}`)
+    ws.current = new WebSocket(`${config.wsUrl}/ws?token=${token}`)
 
     ws.current.onopen = () => {
       console.log('WebSocket connected')
@@ -144,7 +146,7 @@ export default function ResearchChat({ researchId, initialMessage }: ChatProps) 
       }
 
       if (message.type === AgentMessageType.final && message.urls && message.urls.length > 0) {
-        await createPapersFromUrls(message.urls)
+        handlePapersCreation(message.urls)
       }
     }
 
@@ -152,6 +154,42 @@ export default function ResearchChat({ researchId, initialMessage }: ChatProps) 
       console.log('WebSocket disconnected')
       setIsConnected(false)
     }
+  }
+
+  const handlePapersCreation = async (urls: string[]) => {
+    const uniqueUrls = Array.from(new Set(urls))
+    
+    addNotification('info', `${uniqueUrls.length} paper(s) found from your latest research. The new ones will be added to your collection.`);
+
+    try {
+      const successCount = await createPapersFromUrls(uniqueUrls);
+      
+      if (successCount === 0) {
+        addNotification('info', 'All papers from your latest research are already in your collection. No new paper was added.');
+      } else {
+        addNotification('success', `${successCount} new paper(s) added to your collection.`, {
+          label: 'See',
+          onClick: () => setCurrentMenu('papers')
+        });
+      }
+    } catch (error) {
+      console.error('Error creating papers:', error);
+      addNotification('error', 'Failed to add papers to your collection.');
+    }
+  }
+
+  const createPapersFromUrls = async (urls: string[]) => {
+    console.log(`Creating papers from ${urls.length} urls`)
+    
+    const timeout = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('Request timed out')), 90000) // 90 seconds
+    );
+
+    const successCount = await Promise.race([createPapers(urls), timeout]);
+
+    console.log('Finished creating papers from urls');
+    await fetchPapers();
+    return successCount;
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -199,24 +237,6 @@ export default function ResearchChat({ researchId, initialMessage }: ChatProps) 
       setCopiedMessageIndex(index)
       setTimeout(() => setCopiedMessageIndex(null), 1000) // Hide after 1 second
     })
-  }
-
-  const createPapersFromUrls = async (urls: string[]) => {
-    console.log(`Creating papers from ${urls.length} urls`)
-    for (const url of urls) {
-      try {
-        await createPaper({
-          title: "Research Paper",
-          authors: "Various Authors",
-          summary: "This paper was automatically added from a research chat.",
-          url: url
-        })
-      } catch (error) {
-        console.error('Error creating paper:', error)
-      }
-    }
-    console.log('Finished creating papers from urls')
-    await fetchPapers()
   }
 
   return (
