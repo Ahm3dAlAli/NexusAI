@@ -20,29 +20,37 @@ const SettingsPage: React.FC = () => {
   const [newInstruction, setNewInstruction] = useState('')
   const [collectPapers, setCollectPapers] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [isSaving, setIsSaving] = useState(false)
 
   if (!session?.user) {
     router.push('/login')
     return null
   }
 
-  const handleUsernameSave = () => {
+  const handleUsernameSave = async () => {
     if (username.trim() === '') {
       setError('Username cannot be empty.')
       return
     }
 
-    // Assuming that password is null if user logged in via Microsoft
-    const canEdit = session.user.password !== null
-    if (!canEdit) {
-      setError('Cannot change username for Microsoft accounts.')
-      setUsername(session.user.name || '')
-      setIsEditing(false)
-      return
-    }
+    setIsSaving(true)
+    try {
+      // Assuming that password is null if user logged in via Microsoft
+      const canEdit = session.user.password !== null
+      if (!canEdit) {
+        setError('Cannot change username for Microsoft accounts.')
+        setUsername(session.user.name || '')
+        setIsEditing(false)
+        return
+      }
 
-    setError(null)
-    setIsEditing(false)
+      setError(null)
+      // Add your save logic here if needed
+      await new Promise(resolve => setTimeout(resolve, 500))  // Simulate API call if needed
+      setIsEditing(false)
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   const handleAddInstruction = () => {
@@ -64,7 +72,7 @@ const SettingsPage: React.FC = () => {
           <div className="flex flex-row items-center justify-between">
             <CardTitle className="text-xl">Account</CardTitle>
             <div className="flex gap-2">
-              {isEditing ? (
+              {isEditing && (
                 <>
                   <Button
                     variant="ghost"
@@ -72,6 +80,7 @@ const SettingsPage: React.FC = () => {
                     onClick={handleUsernameSave}
                     title="Save"
                     className="h-8 w-8 hover:bg-transparent hover:text-foreground"
+                    disabled={isSaving}
                   >
                     <Check className="h-4 w-4" />
                   </Button>
@@ -85,22 +94,22 @@ const SettingsPage: React.FC = () => {
                     }}
                     title="Dismiss"
                     className="h-8 w-8 hover:bg-transparent hover:text-foreground"
+                    disabled={isSaving}
                   >
                     <X className="h-4 w-4" />
                   </Button>
                 </>
-              ) : (
-                session.user.password && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setIsEditing(true)}
-                    title="Edit"
-                    className="h-8 w-8 hover:bg-primary hover:text-primary-foreground"
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                )
+              )}
+              {!isEditing && session.user.password && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setIsEditing(true)}
+                  title="Edit"
+                  className="h-8 w-8 hover:bg-primary hover:text-primary-foreground"
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
               )}
             </div>
           </div>
