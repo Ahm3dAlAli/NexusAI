@@ -90,17 +90,28 @@ class WorkflowNodes:
 
     def planning_node(self, state: AgentState) -> dict[str, Any]:
         """Planning node that creates a research strategy."""
+        # Get memory context if available
+        memory_context = ""
+        if self.user_id and "search_memory" in self.tools_dict:
+            try:
+                memory_context = self.tools_dict["search_memory"].invoke({
+                    "query": state["messages"][-1].content,
+                    "user_id": self.user_id,
+                    "filters": {"version": "v2"}
+                })
+            except Exception as e:
+                logger.warning(f"Error retrieving memory context: {e}")
+
         system_prompt = SystemMessage(
             content=planning_prompt.format(
                 tools=self.__format_tools_description(),
                 current_date=datetime.now().strftime("%Y-%m-%d"),
+                memory_context=memory_context  # Add this line
             )
         )
         response = self.planning_llm.invoke([system_prompt] + state["messages"])
 
-        # Add the latest planning to the state for easier access
         return {"messages": [response], "current_planning": response}
-
     async def __execute_tool_call(self, tool_call: dict) -> ToolMessage:
         """Execute a single tool call asynchronously."""
         try:
@@ -134,10 +145,23 @@ class WorkflowNodes:
 
     def agent_node(self, state: AgentState) -> dict[str, Any]:
         """Node that uses the LLM with tools to process results."""
+        # Get memory context if available
+        memory_context = ""
+        if self.user_id and "search_memory" in self.tools_dict:
+            try:
+                memory_context = self.tools_dict["search_memory"].invoke({
+                    "query": state["messages"][-1].content,
+                    "user_id": self.user_id,
+                    "filters": {"version": "v2"}
+                })
+            except Exception as e:
+                logger.warning(f"Error retrieving memory context: {e}")
+
         system_prompt = SystemMessage(
             content=agent_prompt.format(
                 tools=self.__format_tools_description(),
                 current_date=datetime.now().strftime("%Y-%m-%d"),
+                memory_context=memory_context  # Add this line
             )
         )
         messages = get_agent_messages(state)
@@ -151,9 +175,22 @@ class WorkflowNodes:
         if num_feedback_requests >= MAX_FEEDBACK_REQUESTS:
             return {"is_good_answer": True}
 
+        # Get memory context if available
+        memory_context = ""
+        if self.user_id and "search_memory" in self.tools_dict:
+            try:
+                memory_context = self.tools_dict["search_memory"].invoke({
+                    "query": state["messages"][-1].content,
+                    "user_id": self.user_id,
+                    "filters": {"version": "v2"}
+                })
+            except Exception as e:
+                logger.warning(f"Error retrieving memory context: {e}")
+
         system_prompt = SystemMessage(
             content=judge_prompt.format(
-                current_date=datetime.now().strftime("%Y-%m-%d")
+                current_date=datetime.now().strftime("%Y-%m-%d"),
+                memory_context=memory_context  # Add this line
             )
         )
         response: JudgeOutput = self.judge_llm.invoke(
