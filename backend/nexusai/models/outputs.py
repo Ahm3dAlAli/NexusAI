@@ -40,7 +40,6 @@ class AgentMessage(BaseModel):
     type: AgentMessageType
     content: str
     tool_name: str | None = None
-
     @computed_field
     @property
     def urls(self) -> list[str] | None:
@@ -48,7 +47,7 @@ class AgentMessage(BaseModel):
             return None
 
         links = re.findall(r"\[.*?\]\((.*?)\)", self.content)
-        return links
+        return list(dict.fromkeys(links))
 
 
 class PaperOutput(BaseModel):
@@ -63,4 +62,6 @@ class PaperOutput(BaseModel):
     summary: str = Field(
         description="A concise summary of the paper's key findings and contributions (2-3 paragraphs)"
     )
-    url: str = Field(description="The original URL where the paper was found. If the paper is from arXiv make sure to replace arxiv.org/abs/ with arxiv.org/pdf/")
+    url: str = Field(
+        description="The original URL where the paper was found. If the paper is from arXiv make sure to replace arxiv.org/abs/ with arxiv.org/pdf/"
+    )

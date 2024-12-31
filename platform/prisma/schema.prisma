@@ -17,13 +17,6 @@ enum AgentMessageType {
   final
 }
 
-enum ProcessingStatus {
-  not_started
-  processing
-  done
-  failed
-}
-
 model User {
   id          String        @id @default(uuid())
   name        String
@@ -62,7 +55,6 @@ model Paper {
   authors          String
   summary          String
   url              String
-  processingStatus ProcessingStatus @default(not_started)
   user             User?            @relation(fields: [userId], references: [id])
   userId           String?
   createdAt        DateTime         @default(now())

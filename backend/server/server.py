@@ -46,7 +46,7 @@ async def http_create_papers(
         # Process papers concurrently
         tasks = [process_paper(url) for url in request.urls]
         papers = await asyncio.gather(*tasks)
-        return papers
+        return [paper for paper in papers if paper]
     except Exception as e:
         logger.error(f"Error processing papers: {e}")
         raise HTTPException(status_code=500, detail="Error processing papers")

@@ -1,6 +1,3 @@
--- CreateEnum
-CREATE TYPE "ProcessingStatus" AS ENUM ('not_started', 'processing', 'done', 'failed');
-
 -- CreateTable
 CREATE TABLE "Paper" (
     "id" TEXT NOT NULL,
@@ -8,7 +5,6 @@ CREATE TABLE "Paper" (
     "authors" TEXT NOT NULL,
     "summary" TEXT NOT NULL,
     "url" TEXT NOT NULL,
-    "processingStatus" "ProcessingStatus" NOT NULL DEFAULT 'not_started',
     "userId" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,

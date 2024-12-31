@@ -69,7 +69,7 @@ if os.getenv("LANGCHAIN_API_KEY"):
     logger.info("Langsmith tracing enabled.")
 else:
     logger.warning(
-        "LANGCHAIN_API_KEY environment variable is not set. Agent runs will not be traced."
+        "LANGCHAIN_API_KEY environment variable is not set. LLM calls will not be traced."
     )
 
 # Redis

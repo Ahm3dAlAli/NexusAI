@@ -1,3 +1,4 @@
+import asyncio
 from langchain_core.messages import SystemMessage
 from langchain_openai import AzureChatOpenAI, ChatOpenAI
 from langsmith import traceable
@@ -9,7 +10,7 @@ from nexusai.utils.logger import logger
 
 
 @traceable()
-async def process_paper(url: str) -> PaperOutput:
+async def process_paper(url: str) -> PaperOutput | None:
     """Process a paper URL and generate a structured response using GPT-4."""
     logger.info(f"Creating paper for URL: {url}")
 
@@ -23,8 +24,17 @@ async def process_paper(url: str) -> PaperOutput:
     else:
         raise ValueError(f"Invalid LLM provider: {LLM_PROVIDER}")
 
-    # Download PDF
-    content = await PDFDownloader.tool_function.ainvoke({"url": url})
+    # Download PDF handling failed requests
+    try:
+        downloader = PDFDownloader()
+        content = await asyncio.get_event_loop().run_in_executor(
+            None, downloader.download_pdf, url
+        )
+        if not content:
+            return
+    except Exception as e:
+        logger.error(f"Error downloading PDF: {e}")
+        return
 
     system_prompt = SystemMessage(
         content=create_paper_prompt.format(url=url, content=content)

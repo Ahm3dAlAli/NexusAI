@@ -16,7 +16,7 @@ export async function fetchPaper(id: string): Promise<Paper> {
   return response.json();
 }
 
-export async function createPapers(urls: string[]): Promise<number> {
+export async function createPapers(urls: string[]): Promise<[number, number]> {
   const response = await fetch('/api/papers', {
     method: 'POST',
     body: JSON.stringify({ urls })
@@ -26,6 +26,6 @@ export async function createPapers(urls: string[]): Promise<number> {
     throw new Error('Failed to create papers');
   }
   
-  const papers: Paper[] = await response.json();
-  return papers.length;
+  const { newPapersCount, failedPapersCount } = await response.json();
+  return [newPapersCount, failedPapersCount];
 } 

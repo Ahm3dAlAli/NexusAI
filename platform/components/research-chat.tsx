@@ -21,6 +21,7 @@ import { useRouter } from 'next/navigation'
 import { useMenu } from '@/context/MenuContext'
 import { useNotification } from '@/context/NotificationContext'
 import { createPapers } from '@/lib/papers'
+import { Icons } from '@/components/ui/icons'
 
 interface ChatProps {
   researchId?: string
@@ -162,7 +163,7 @@ export default function ResearchChat({ researchId, initialMessage }: ChatProps) 
     addNotification('info', `${uniqueUrls.length} paper(s) found from your latest research. The new ones will be added to your collection.`);
 
     try {
-      const successCount = await createPapersFromUrls(uniqueUrls);
+      const [successCount, failedCount] = await createPapersFromUrls(uniqueUrls);
       
       if (successCount === 0) {
         addNotification('info', 'All papers from your latest research are already in your collection. No new paper was added.');
@@ -171,6 +172,10 @@ export default function ResearchChat({ researchId, initialMessage }: ChatProps) 
           label: 'See',
           onClick: () => setCurrentMenu('papers')
         });
+
+        if (failedCount > 0) {
+          addNotification('warning', `${failedCount} paper(s) could not be added to your collection.`)
+        }
       }
     } catch (error) {
       console.error('Error creating papers:', error);
@@ -389,8 +394,8 @@ export default function ResearchChat({ researchId, initialMessage }: ChatProps) 
             className="flex-1"
             disabled={!isConnected}
           />
-          <Button type="submit" disabled={aiTyping || !isConnected}>
-            Send
+          <Button type="submit" disabled={aiTyping || !isConnected} size="icon">
+            <Icons.arrowRight className="h-4 w-4" />
           </Button>
         </form>
       </motion.div>

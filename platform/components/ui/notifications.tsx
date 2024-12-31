@@ -5,10 +5,10 @@ import { useNotification } from '@/context/NotificationContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const notificationStyles: Record<string, string> = {
-  info: 'bg-white border-primary text-primary',
-  success: 'bg-white border-green-500 text-green-700',
-  error: 'bg-white border-red-500 text-red-700',
-  warning: 'bg-white border-yellow-500 text-yellow-700',
+  info: 'bg-white border-primary',
+  success: 'bg-white border-green-500',
+  error: 'bg-white border-red-500',
+  warning: 'bg-white border-yellow-500',
 };
 
 const Notifications: React.FC = () => {
@@ -24,7 +24,7 @@ const Notifications: React.FC = () => {
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className={`border-l-4 p-4 rounded shadow ${notificationStyles[notification.type]} w-full mb-2`}
+              className={`border-l-4 p-4 rounded shadow ${notificationStyles[notification.type]} text-foreground w-full mb-2`}
             >
               <div className="flex justify-between items-start">
                 <div className="flex flex-col gap-1 min-w-0 flex-1">

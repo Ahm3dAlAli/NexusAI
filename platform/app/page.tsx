@@ -10,6 +10,7 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { Card } from '@/components/ui/card'
 import { Sparkles } from 'lucide-react'
+import { Icons } from '@/components/ui/icons'
 const exampleQuestions = [
   {
     title: "Quantum Computing",
@@ -124,8 +125,8 @@ const Home: React.FC = () => {
                   disabled={loading}
                 />
               </InputWrapper>
-              <Button type="submit" disabled={loading}>
-                Send
+              <Button type="submit" disabled={loading} size="icon">
+                <Icons.arrowRight className="h-4 w-4" />
               </Button>
             </form>
           </motion.div>

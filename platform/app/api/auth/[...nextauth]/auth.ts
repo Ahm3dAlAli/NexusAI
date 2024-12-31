@@ -11,7 +11,15 @@ declare module "next-auth" {
       id: string
       email: string
       name: string
+      password: string | null
     } & Omit<DefaultSession["user"], "email" | "name">
+  }
+
+  interface User {
+    id: string
+    email: string
+    name: string
+    password: string | null
   }
 }
 
@@ -44,7 +52,12 @@ export const authOptions: AuthOptions = {
           throw new Error("Invalid password")
         }
 
-        return { id: user.id, name: user.name, email: user.email }
+        return { 
+          id: user.id, 
+          name: user.name, 
+          email: user.email,
+          password: "credentials"
+        }
       }
     }),
     AzureADProvider({
@@ -79,6 +92,7 @@ export const authOptions: AuthOptions = {
             } else {
               // Existing Azure AD user, proceed with sign-in
               user.id = existingUser.id
+              user.password = null
               return true
             }
           } else {
@@ -91,6 +105,7 @@ export const authOptions: AuthOptions = {
               }
             })
             user.id = newUser.id
+            user.password = null
             console.info(`New Azure AD user created: ${profile.email}`)
             return true
           }
@@ -104,12 +119,14 @@ export const authOptions: AuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id
+        token.password = user.password
       }
       return token
     },
     async session({ session, token }) {
       if (token && session.user) {
         session.user.id = token.id as string
+        session.user.password = token.password as string | null
       }
       return session
     }

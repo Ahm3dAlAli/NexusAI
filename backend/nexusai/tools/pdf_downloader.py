@@ -8,8 +8,7 @@ from langchain_community.vectorstores import FAISS
 from langchain_core.tools import tool
 from langchain_openai import AzureOpenAIEmbeddings, OpenAIEmbeddings
 from nexusai.cache.cache_manager import CacheManager
-from nexusai.config import (LLM_PROVIDER, MAX_PAGES, MAX_RETRIES,
-                            RETRY_BASE_DELAY)
+from nexusai.config import LLM_PROVIDER, MAX_PAGES, MAX_RETRIES, RETRY_BASE_DELAY
 from nexusai.utils.logger import logger
 
 # Disable warnings for insecure requests
@@ -21,9 +20,9 @@ class PDFDownloader:
 
     query: str = ""
 
-    def __init__(self, query: str):
-        self.query = query
-        PDFDownloader.query = query
+    def __init__(self, query: str | None = None):
+        self.query = query or self.query
+        PDFDownloader.query = self.query
         self.cache_manager = CacheManager()
 
         if LLM_PROVIDER == "openai":
@@ -36,9 +35,13 @@ class PDFDownloader:
     def __filter_pages(self, pages: list[str]) -> list[str]:
         """Filter pages with RAG to keep only the most relevant ones."""
         logger.warning(f"The PDF has more than {MAX_PAGES} pages, filtering content...")
-        logger.info(f"Generating embeddings for {len(pages)} pages...")
-        assert self.query, "Query is required to filter pages"
+        if not self.query:
+            logger.info(
+                f"No query provided to filter content by relevance, returning the first {MAX_PAGES} pages"
+            )
+            return pages[:MAX_PAGES]
 
+        logger.info(f"Generating embeddings for {len(pages)} pages...")
         start_time = time.time()
         embeddings = asyncio.run(self.embeddings.aembed_documents(pages))
         db = FAISS.from_embeddings(
@@ -74,6 +77,9 @@ class PDFDownloader:
 
     def download_pdf(self, url: str) -> str:
         """Get PDF from URL or cache if available."""
+        # Make sure arxiv urls are correctly formatted
+        url = url.replace("arxiv.org/abs/", "arxiv.org/pdf/")
+
         if cached_pages := self.cache_manager.get_pdf(url):
             logger.info(f"Found PDF in cache for {url}")
             if len(cached_pages) > MAX_PAGES:
@@ -123,8 +129,6 @@ class PDFDownloader:
             The paper content.
         """
         try:
-            # Make sure arxiv urls are correctly formatted
-            url = url.replace("arxiv.org/abs/", "arxiv.org/pdf/")
             return PDFDownloader(PDFDownloader.query).download_pdf(url)
         except Exception as e:
             return f"Error downloading paper: {e}"

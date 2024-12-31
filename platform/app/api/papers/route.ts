@@ -33,16 +33,20 @@ export async function POST(req: Request) {
   }
 
   try {
+    // Filter for unique URLs first
+    const uniqueUrls = Array.from(new Set(urls));
+    
     // Find any existing papers with the same URLs for this user
     const existingPapers = await prisma.paper.findMany({
       where: {
         userId: session.user.id,
-        url: { in: urls },
-      },
+        url: { in: uniqueUrls },
+      }
     });
-    // Filter out URLs that already exist and duplicates
+    
+    // Filter out URLs that already exist
     const existingUrls = existingPapers.map(paper => paper.url);
-    const newUrls = Array.from(new Set(urls)).filter(url => !existingUrls.includes(url));
+    const newUrls = uniqueUrls.filter(url => !existingUrls.includes(url));
 
     // Only create papers for new URLs
     const token = generateWebSocketToken({ userId: session.user.id, email: session.user.email })
@@ -74,9 +78,19 @@ export async function POST(req: Request) {
         }
       })
     );
-    const createdPapers = await Promise.all(newPaperPromises);
+    const newPapers = await Promise.all(newPaperPromises);
 
-    return NextResponse.json(createdPapers, { status: 201 });
+    // Check if all paper downloads failed
+    if (newPapers.length === 0 && newUrls.length > 0) {
+      throw new Error('Failed to download papers');
+    }
+
+    return NextResponse.json(
+      {
+        newPapersCount: newPapers.length,
+        failedPapersCount: newUrls.length - newPapers.length
+      }, 
+      { status: 201 });
   } catch (error) {
     console.error('Error creating papers:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

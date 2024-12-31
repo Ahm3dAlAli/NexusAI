@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useEffect } from 'react'
-import { LogOut, Search, FileText } from 'lucide-react'
+import { LogOut, Search, FileText, Settings } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useMenu } from '@/context/MenuContext'
 import { useRouter } from 'next/navigation'
@@ -37,6 +37,10 @@ const Navbar: React.FC = () => {
     router.push('/')
   }
 
+  const handleSettingsClick = () => {
+    router.push('/settings')
+  }
+
   const renderMainMenu = () => (
     <motion.div
       initial={{ opacity: 0, x: -20 }}
@@ -61,6 +65,14 @@ const Navbar: React.FC = () => {
         >
           <FileText className="mr-3 h-5 w-5" />
           Papers
+        </Button>
+        <Button
+          variant="ghost"
+          className="w-full justify-start text-lg py-4"
+          onClick={handleSettingsClick}
+        >
+          <Settings className="mr-3 h-5 w-5" />
+          Settings
         </Button>
       </div>
     </motion.div>

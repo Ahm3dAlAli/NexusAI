@@ -5,10 +5,11 @@ import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { fetchPaper } from '@/lib/papers';
 import { Paper } from '@prisma/client';
-import { Button } from '@/components/ui/button';
-import { Copy } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { motion } from 'framer-motion';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { format } from 'date-fns';
 
 interface PaperChatProps {
   paperId: string;
@@ -19,7 +20,6 @@ const PaperChat: React.FC<PaperChatProps> = ({ paperId }) => {
   const [loading, setLoading] = useState(true);
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [copied, setCopied] = useState<boolean>(false);
 
   useEffect(() => {
     if (status === 'loading') return;
@@ -48,34 +48,56 @@ const PaperChat: React.FC<PaperChatProps> = ({ paperId }) => {
     loadPaper();
   }, [paperId, session, status, router]);
 
-  const handleCopy = (text: string) => {
-    navigator.clipboard.writeText(text).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1000);
-    });
-  };
-
   if (!paper || loading || status === 'loading') {
     return null;
   }
 
   return (
-    <div className="p-4">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold">{paper.title}</h2>
-        <Button variant="ghost" onClick={() => handleCopy(paper.url)} title="Copy URL">
-          <Copy className="h-4 w-4" />
-        </Button>
-        {copied && <span className="text-sm text-green-500">Copied!</span>}
-      </div>
-      <p className="text-md mb-2"><strong>Authors:</strong> {paper.authors}</p>
-      <p className="text-md mb-4"><strong>Summary:</strong></p>
-      <ReactMarkdown remarkPlugins={[remarkGfm]}>
-        {paper.summary}
-      </ReactMarkdown>
-      <a href={paper.url} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline mt-4 block">
-        Read Full Paper
-      </a>
+    <div className="flex flex-col h-screen max-w-5xl mx-auto">
+      <motion.div 
+        className="p-6"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-2xl font-bold leading-tight">
+              {paper.title}
+            </CardTitle>
+            <div className="pt-4 border-t">
+              <div className="space-y-2 text-sm text-muted-foreground">
+                {paper.authors && (
+                  <div className="font-medium">
+                    {paper.authors}
+                  </div>
+                )}
+                <div className="font-medium">
+                  Added: {format(new Date(paper.createdAt).toLocaleString('en-US', { timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone }), 'yyyy-MM-dd')}
+                </div>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="prose prose-sm max-w-none">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {paper.summary}
+              </ReactMarkdown>
+            </div>
+            
+            <div className="mt-6 pt-4 border-t">
+              <a 
+                href={paper.url} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="text-primary hover:underline inline-flex items-center"
+              >
+                Read Full Paper →
+              </a>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
     </div>
   );
 };
