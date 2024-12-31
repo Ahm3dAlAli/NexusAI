@@ -92,7 +92,11 @@ const Navbar: React.FC = () => {
         title="Researches"
         type="researches"
       />
-      {loadingResearches && <p>Loading researches...</p>}
+      {loadingResearches && (
+        <div className="flex items-center justify-center p-4">
+          <p className="text-primary-foreground/70">Loading researches...</p>
+        </div>
+      )}
     </motion.div>
   )
 

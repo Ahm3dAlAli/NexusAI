@@ -9,7 +9,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { format } from 'date-fns';
+import { formatDate } from '@/lib/utils';
 
 interface PaperChatProps {
   paperId: string;
@@ -73,7 +73,7 @@ const PaperChat: React.FC<PaperChatProps> = ({ paperId }) => {
                   </div>
                 )}
                 <div className="font-medium">
-                  Added: {format(new Date(paper.createdAt).toLocaleString('en-US', { timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone }), 'yyyy-MM-dd')}
+                  Added: {formatDate(paper.createdAt)}
                 </div>
               </div>
             </div>

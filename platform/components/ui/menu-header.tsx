@@ -4,6 +4,8 @@ import { Plus, ArrowLeft, Home, FileText, Search } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useMenu } from '@/context/MenuContext'
 import Link from 'next/link'
+import { Research, Paper } from '@prisma/client'
+import { formatDate } from '@/lib/utils'
 
 interface MenuHeaderProps {
   showBackButton?: boolean
@@ -11,6 +13,10 @@ interface MenuHeaderProps {
   onNewChat?: (e: React.MouseEvent) => void
   title: string
   type?: 'researches' | 'papers'
+}
+
+interface GroupedItems {
+  [key: string]: Array<Research | Paper>
 }
 
 export function MenuHeader({ 
@@ -30,48 +36,73 @@ export function MenuHeader({
     }
   }, [type, fetchPapers, hasFetchedPapers])
 
+  const groupItemsByDate = (items: Array<Research | Paper>): GroupedItems => {
+    return items.reduce((groups: GroupedItems, item) => {
+      const updatedAt = new Date(item.updatedAt)
+      const formattedDate = formatDate(updatedAt)
+      
+      if (!groups[formattedDate]) {
+        groups[formattedDate] = []
+      }
+      groups[formattedDate].push(item)
+      return groups
+    }, {})
+  }
+
   const renderList = () => {
     if (type === 'papers') {
-      return papers.map((paper) => (
-        <motion.li
-          key={paper.id}
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="w-full"
-        >
-          <Button
-            variant="ghost"
-            className="w-full justify-start text-base py-4"
-            asChild
-          >
-            <Link href={`/papers/${paper.id}`}>
-              <FileText className="mr-3 h-5 w-5 shrink-0" />
-              <span className="truncate">{paper.title}</span>
-            </Link>
-          </Button>
-        </motion.li>
+      const groupedPapers = groupItemsByDate(papers)
+      return Object.entries(groupedPapers).map(([date, items]) => (
+        <div key={date}>
+          <div className="text-sm font-bold text-primary-foreground/70 px-4 py-2">{date}</div>
+          {items.map((paper) => (
+            <motion.li
+              key={paper.id}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="w-full"
+            >
+              <Button
+                variant="ghost"
+                className="w-full justify-start text-base py-4"
+                asChild
+              >
+                <Link href={`/papers/${paper.id}`}>
+                  <FileText className="mr-3 h-5 w-5 shrink-0" />
+                  <span className="truncate">{paper.title}</span>
+                </Link>
+              </Button>
+            </motion.li>
+          ))}
+        </div>
       ))
     }
 
     if (type === 'researches') {
-      return researches.map((research) => (
-        <motion.li
-          key={research.id}
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="w-full"
-        >
-          <Button
-            variant="ghost"
-            className="w-full justify-start text-base py-4"
-            asChild
-          >
-            <Link href={`/researches/${research.id}`}>
-              <Search className="mr-3 h-5 w-5 shrink-0" />
-              <span className="truncate">{research.title}</span>
-            </Link>
-          </Button>
-        </motion.li>
+      const groupedResearches = groupItemsByDate(researches)
+      return Object.entries(groupedResearches).map(([date, items]) => (
+        <div key={date}>
+          <div className="text-sm font-bold text-primary-foreground/70 px-4 py-2">{date}</div>
+          {items.map((research: Research) => (
+            <motion.li
+              key={research.id}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="w-full"
+            >
+              <Button
+                variant="ghost"
+                className="w-full justify-start text-base py-4"
+                asChild
+              >
+                <Link href={`/researches/${research.id}`}>
+                  <Search className="mr-3 h-5 w-5 shrink-0" />
+                  <span className="truncate">{research.title}</span>
+                </Link>
+              </Button>
+            </motion.li>
+          ))}
+        </div>
       ))
     }
 
