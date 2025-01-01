@@ -113,13 +113,16 @@ class ResearchWorkflow:
         return content + "\n---\n".join(tool_calls_strs)
 
     async def process_query(
-        self, query: str, messages: list[BaseMessage], message_callback=None
+        self, query: str, messages: list[BaseMessage], message_callback=None, user_id: str | None = None
     ) -> AgentMessage:
         """Process a research query streaming the intermediate messages."""
         try:
             all_messages: list[BaseMessage] = []
             async for chunk in self.workflow.astream(
-                {"messages": messages + [query]},
+                {
+                    "messages": messages + [query],
+                    "mem0_user_id": user_id,  # Add user_id to state
+                },
                 config={"recursion_limit": RECURSION_LIMIT},
                 stream_mode="updates",
             ):

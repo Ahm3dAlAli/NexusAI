@@ -44,6 +44,7 @@ class MemoryTools:
             project_id=MEM0_PROJECT_ID
         ) if MEM0_API_KEY else None
 
+    
     def add_memory(self, messages: List[Message], user_id: str, 
                   output_format: str = "v1.1", 
                   metadata: Optional[Dict[str, Any]] = None) -> str:
@@ -53,7 +54,7 @@ class MemoryTools:
         
         try:
             message_dicts = [msg.dict() for msg in messages]
-            result = self.client.add(
+            self.client.add(
                 message_dicts, 
                 user_id=user_id,
                 output_format=output_format,
