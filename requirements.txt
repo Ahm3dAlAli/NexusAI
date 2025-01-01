@@ -12,3 +12,4 @@ redis==5.2.1
 urllib3
 uvicorn
 websockets==14.1
+mem0ai ==0.1.36

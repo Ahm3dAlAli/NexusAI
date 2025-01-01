@@ -12,3 +12,4 @@ class AgentState(TypedDict):
     num_feedback_requests: int
     is_good_answer: bool
     messages: Annotated[Sequence[BaseMessage], add_messages]
+    mem0_user_id: str | None  
