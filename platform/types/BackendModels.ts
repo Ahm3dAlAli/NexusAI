@@ -14,4 +14,5 @@ export interface PaperOutput {
 export interface MessageRequest {
     history?: AgentMessage[];
     query?: string;
+    custom_instructions?: string[];
 }

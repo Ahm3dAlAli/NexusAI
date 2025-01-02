@@ -8,12 +8,12 @@ from nexusai.workflow.nodes import WorkflowNodes
 
 @traceable()
 async def process_query(
-    query: str, history: list[AgentMessage] = [], message_callback=None
+    query: str, history: list[AgentMessage] = [], message_callback=None, custom_instructions: list[str] = []
 ) -> AgentMessage:
     """Process a query and return the result. It allows passing previous messages to ask follow-up questions."""
     # Setup workflow
     tools = setup_tools(query)
-    nodes = WorkflowNodes(tools)
+    nodes = WorkflowNodes(tools, custom_instructions)
     workflow = ResearchWorkflow(nodes)
 
     # Process the query using the agent's workflow

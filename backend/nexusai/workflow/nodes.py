@@ -20,10 +20,11 @@ from nexusai.utils.messages import get_agent_messages
 class WorkflowNodes:
     """Implementation of the workflow nodes for the research agent."""
 
-    def __init__(self, tools: list[BaseTool]):
+    def __init__(self, tools: list[BaseTool], custom_instructions: list[str] = []):
         """Initialize workflow nodes with tools."""
         self.tools = tools
         self.tools_dict = {tool.name: tool for tool in tools}
+        self.custom_instructions = custom_instructions
 
         # Initialize base LLMs
         if LLM_PROVIDER == "openai":
@@ -58,11 +59,20 @@ class WorkflowNodes:
             ]
         )
 
+    def __format_custom_instructions(self) -> str:
+        """Format custom instructions as markdown list."""
+        if not self.custom_instructions:
+            return ""
+        
+        instructions = "\n".join([f"- {instruction}" for instruction in self.custom_instructions])
+        return f"# CUSTOM INSTRUCTIONS\n\nThe following additional instructions come directly from the user. Make sure to follow them:\n{instructions}\n\n"
+
     def decision_making_node(self, state: AgentState) -> dict[str, Any]:
         """Entry point node that decides whether research is needed."""
         system_prompt = SystemMessage(
             content=decision_making_prompt.format(
                 current_date=datetime.now().strftime("%Y-%m-%d"),
+                custom_instructions=self.__format_custom_instructions()
             )
         )
         response: DecisionMakingOutput = self.decision_making_llm.invoke(
@@ -80,6 +90,7 @@ class WorkflowNodes:
             content=planning_prompt.format(
                 tools=self.__format_tools_description(),
                 current_date=datetime.now().strftime("%Y-%m-%d"),
+                custom_instructions=self.__format_custom_instructions()
             )
         )
         response = self.planning_llm.invoke([system_prompt] + state["messages"])
@@ -124,6 +135,7 @@ class WorkflowNodes:
             content=agent_prompt.format(
                 tools=self.__format_tools_description(),
                 current_date=datetime.now().strftime("%Y-%m-%d"),
+                custom_instructions=self.__format_custom_instructions()
             )
         )
         messages = get_agent_messages(state)
@@ -139,7 +151,8 @@ class WorkflowNodes:
 
         system_prompt = SystemMessage(
             content=judge_prompt.format(
-                current_date=datetime.now().strftime("%Y-%m-%d")
+                current_date=datetime.now().strftime("%Y-%m-%d"),
+                custom_instructions=self.__format_custom_instructions()
             )
         )
         response: JudgeOutput = self.judge_llm.invoke(

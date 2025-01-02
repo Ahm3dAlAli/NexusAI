@@ -9,3 +9,4 @@ class PapersRequest(BaseModel):
 class MessageRequest(BaseModel):
     history: list[AgentMessage] | None = None
     query: str | None = None
+    custom_instructions: list[str] = []

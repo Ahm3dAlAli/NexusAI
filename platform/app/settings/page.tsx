@@ -190,7 +190,7 @@ const SettingsPage: React.FC = () => {
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground">
-            When enabled, papers referenced during your research will be automatically saved to your collection. 
+            When enabled, papers referenced by NexusAI in its final responses will be automatically saved to your collection. 
             This allows you to build a personal library of relevant papers and access them later.
           </p>
         </CardContent>

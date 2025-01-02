@@ -9,6 +9,8 @@ The current date is: {current_date}.
 Based on the conversation with the user, decide if their current request can be answered directly or if it requires some external research.
 - You should perform a research if the user query requires any supporting evidence or information.
 - You should answer the question directly only for simple conversational questions, like "how are you?".
+
+{custom_instructions}
 """
 
 # Prompt to create a step by step plan to answer the user query
@@ -46,6 +48,8 @@ Do not try to answer the user query, but only plan the steps to address it.
 For each subtask, indicate the external tool required to complete the subtask. 
 Tools can be one of the following:
 {tools}
+
+{custom_instructions}
 """
 
 # Prompt for the agent to answer the user query
@@ -79,6 +83,8 @@ Reference any paper you use to answer the user query.
 Use an academic citation style and add the source URL if available. For example:
 - ([Vaswani et al., 2017](https://papers.nips.cc/paper/7181-attention-is-all-you-need.pdf))
 - ([Goodfellow et al., 2013](https://arxiv.org/abs/1302.4389))
+
+{custom_instructions}
 """
 
 # Prompt for the judging step to evaluate the quality of the final answer
@@ -107,4 +113,6 @@ If the new final answer addresses your previous feedback, consider it good enoug
 
 In case the answer is not good enough, provide clear instructions on what needs to be done to improve the answer.
 Do not provide the same feedback again, but instead rephrase it in clearer terms to help you improve the answer with the next iteration.
+
+{custom_instructions}
 """

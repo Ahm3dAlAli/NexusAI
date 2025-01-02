@@ -97,7 +97,8 @@ export default function ResearchChat({ researchId, initialMessage }: ChatProps) 
   const handleInitialMessage = (previousMessages: AgentMessage[]) => {
     const payload: MessageRequest = {
       history: previousMessages,
-      query: initialMessage
+      query: initialMessage,
+      custom_instructions: user.current?.customInstructions || undefined
     }
 
     if (initialMessage) {
@@ -241,7 +242,10 @@ export default function ResearchChat({ researchId, initialMessage }: ChatProps) 
     }
     setMessages(prev => [...prev, userMessage])
     await saveResearchMessage(researchId, userMessage)
-    const payload: MessageRequest = { query: input.trim() }
+    const payload: MessageRequest = { 
+      query: input.trim(),
+      custom_instructions: user.current?.customInstructions || undefined
+    }
     ws.current?.send(JSON.stringify(payload))
   }
 
