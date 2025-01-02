@@ -8,7 +8,7 @@ from langchain_community.vectorstores import FAISS
 from langchain_core.tools import tool
 from langchain_openai import AzureOpenAIEmbeddings, OpenAIEmbeddings
 from nexusai.cache.cache_manager import CacheManager
-from nexusai.config import LLM_PROVIDER, MAX_PAGES, MAX_RETRIES, RETRY_BASE_DELAY
+from nexusai.config import LLM_PROVIDER, MAX_PAGES, MAX_RETRIES, RETRY_BASE_DELAY, REQUEST_TIMEOUT
 from nexusai.utils.logger import logger
 
 # Disable warnings for insecure requests
@@ -18,11 +18,11 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 class PDFDownloader:
     """Download a PDF from a URL and return the text."""
 
-    query: str = ""
+    query: str | None = None
 
-    def __init__(self, query: str | None = None):
-        self.query = query or self.query
-        PDFDownloader.query = self.query
+    def __init__(self, query: str | None):
+        self.query = query
+        PDFDownloader.query = query
         self.cache_manager = CacheManager()
 
         if LLM_PROVIDER == "openai":
@@ -88,6 +88,7 @@ class PDFDownloader:
 
         http = urllib3.PoolManager(
             cert_reqs="CERT_NONE",
+            timeout=urllib3.Timeout(connect=10, read=REQUEST_TIMEOUT)
         )
         # Mock browser headers to avoid 403 error
         headers = {
@@ -101,19 +102,20 @@ class PDFDownloader:
             logger.info(
                 f"Downloading PDF from {url} (attempt {attempt + 1}/{MAX_RETRIES})"
             )
-            response = http.request("GET", url, headers=headers)
-            if 200 <= response.status < 300:
-                logger.info(f"Successfully downloaded PDF from {url}")
-                break
-            elif attempt < MAX_RETRIES - 1 and response.status not in [400, 404, 500]:
-                logger.warning(
-                    f"Got {response.status} response when downloading paper. Sleeping for {RETRY_BASE_DELAY ** (attempt + 2)} seconds before retrying..."
-                )
-                time.sleep(RETRY_BASE_DELAY ** (attempt + 2))
-            else:
-                raise Exception(
-                    f"Got non 2xx when downloading paper: {response.status}"
-                )
+            try:
+                response = http.request("GET", url, headers=headers)
+                if 200 <= response.status < 300:
+                    logger.info(f"Successfully downloaded PDF from {url}")
+                    break
+                elif attempt < MAX_RETRIES - 1 and response.status not in [400, 404, 500]:
+                    logger.warning(
+                        f"Got {response.status} response when downloading paper. Sleeping for {RETRY_BASE_DELAY ** (attempt + 2)} seconds before retrying..."
+                    )
+                    time.sleep(RETRY_BASE_DELAY ** (attempt + 2))
+                else:
+                    raise Exception(f"Got non 2xx when downloading paper: {response.status}")
+            except urllib3.exceptions.TimeoutError:
+                raise Exception("Request timed out. Please try again later.")
 
         return self.__convert_bytes_to_text(url, response.data)
 

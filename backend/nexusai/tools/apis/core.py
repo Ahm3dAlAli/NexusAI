@@ -7,6 +7,7 @@ from nexusai.config import (
     CORE_API_KEY,
     MAX_RETRIES,
     RETRY_BASE_DELAY,
+    REQUEST_TIMEOUT,
 )
 from nexusai.models.inputs import SearchPapersInput
 from nexusai.utils.logger import logger
@@ -43,34 +44,35 @@ class CoreAPIWrapper:
 
     def __get_search_results(self, query: str, max_papers: int = 1) -> list:
         """Execute search query with retry mechanism."""
-        http = urllib3.PoolManager()
+        http = urllib3.PoolManager(timeout=urllib3.Timeout(connect=10, read=REQUEST_TIMEOUT))
         for attempt in range(MAX_RETRIES):
             logger.info(
                 f"Searching for '{query}' (attempt {attempt + 1}/{MAX_RETRIES})"
             )
-            response = http.request(
-                "GET",
-                f"{self.base_url}/search/outputs",
-                headers={"Authorization": f"Bearer {self.api_key}"},
-                fields={"q": query, "limit": max_papers},
-            )
-            if 200 <= response.status < 300:
-                results = response.json().get("results")
-                if not results:
-                    raise Exception(f"No results found from CORE for '{query}'")
-                logger.info(f"Successfully got CORE search results for '{query}'")
-                return results
-            elif attempt < MAX_RETRIES - 1 and response.status not in [429, 500]:
-                sleep_time = RETRY_BASE_DELAY ** (attempt + 2)
-                logger.warning(
-                    f"Got {response.status} response from CORE API. "
-                    f"Sleeping for {sleep_time} seconds before retrying..."
+            try:
+                response = http.request(
+                    "GET",
+                    f"{self.base_url}/search/outputs",
+                    headers={"Authorization": f"Bearer {self.api_key}"},
+                    fields={"q": query, "limit": max_papers},
                 )
-                time.sleep(sleep_time)
-            else:
-                raise Exception(
-                    f"Got non 2xx response from CORE API: {response.status}"
-                )
+                if 200 <= response.status < 300:
+                    results = response.json().get("results")
+                    if not results:
+                        raise Exception(f"No results found from CORE for '{query}'")
+                    logger.info(f"Successfully got CORE search results for '{query}'")
+                    return results
+                elif attempt < MAX_RETRIES - 1 and response.status not in [429, 500]:
+                    sleep_time = RETRY_BASE_DELAY ** (attempt + 2)
+                    logger.warning(
+                        f"Got {response.status} response from CORE API. "
+                        f"Sleeping for {sleep_time} seconds before retrying..."
+                    )
+                    time.sleep(sleep_time)
+                else:
+                    raise Exception(f"Got non 2xx response from CORE API: {response.status}")
+            except urllib3.exceptions.TimeoutError:
+                raise Exception("Request timed out. Please try again later.")
 
     def __format_results(self, results: list) -> str:
         """Format the results into a string."""

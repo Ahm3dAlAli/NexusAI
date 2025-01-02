@@ -100,7 +100,7 @@ const Home: React.FC = () => {
             className="text-center"
           >
             <h1 className="text-4xl font-bold mb-2">
-              🤖 NexusAI 📚
+            📚 NexusAI 🤖
             </h1>
             <p className="text-xl text-muted-foreground mb-4">
               Research scientific literature in minutes, not hours

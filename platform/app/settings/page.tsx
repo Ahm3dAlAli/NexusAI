@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Icons } from '@/components/ui/icons'
@@ -9,18 +9,32 @@ import { Switch } from '@/components/ui/switch'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { X, Pencil, Check } from 'lucide-react'
+import { updateUser, fetchUser } from '@/lib/user'
+import useSWR from 'swr'
+
+const fetcher = () => fetchUser()
 
 const SettingsPage: React.FC = () => {
   const { data: session } = useSession()
   const router = useRouter()
 
-  const [username, setUsername] = useState(session?.user?.name || '')
+  const { data, mutate } = useSWR('/api/users/me', fetcher)
+
+  const [username, setUsername] = useState('')
   const [isEditing, setIsEditing] = useState(false)
   const [instructions, setInstructions] = useState<string[]>([])
   const [newInstruction, setNewInstruction] = useState('')
-  const [collectPapers, setCollectPapers] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [collectPapers, setCollectPapers] = useState<boolean | undefined>(undefined)
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
+
+  useEffect(() => {
+    if (data) {
+      setUsername(data.name || '')
+      setInstructions(data.customInstructions || [])
+      setCollectPapers(data.collectPapers ?? true)
+    }
+  }, [data])
 
   if (!session?.user) {
     router.push('/login')
@@ -29,40 +43,59 @@ const SettingsPage: React.FC = () => {
 
   const handleUsernameSave = async () => {
     if (username.trim() === '') {
-      setError('Username cannot be empty.')
+      setErrorMsg('Username cannot be empty.')
       return
     }
 
     setIsSaving(true)
     try {
-      // Assuming that password is null if user logged in via Microsoft
-      const canEdit = session.user.password !== null
-      if (!canEdit) {
-        setError('Cannot change username for Microsoft accounts.')
-        setUsername(session.user.name || '')
-        setIsEditing(false)
-        return
-      }
-
-      setError(null)
-      // Add your save logic here if needed
-      await new Promise(resolve => setTimeout(resolve, 500))  // Simulate API call if needed
+      await updateUser({ name: username })
       setIsEditing(false)
+      setErrorMsg(null)
+      mutate()
+    } catch (err) {
+      setErrorMsg((err as Error).message || 'Failed to update user.')
     } finally {
       setIsSaving(false)
     }
   }
 
-  const handleAddInstruction = () => {
-    if (newInstruction.trim() === '') return
-    setInstructions([...instructions, newInstruction.trim()])
-    setNewInstruction('')
+  const handleCollectPapersToggle = async (value: boolean) => {
+    setCollectPapers(value)
+    try {
+      await updateUser({ collectPapers: value })
+      setErrorMsg(null)
+      mutate()
+    } catch (err) {
+      setErrorMsg((err as Error).message || 'Failed to update collect papers settings.')
+    }
   }
 
-  const handleRemoveInstruction = (index: number) => {
-    const updated = [...instructions]
-    updated.splice(index, 1)
-    setInstructions(updated)
+  const handleAddInstruction = async () => {
+    if (newInstruction.trim() === '') return
+    try {
+      const updatedInstructions = [...instructions, newInstruction.trim()]
+      await updateUser({ customInstructions: updatedInstructions })
+      setInstructions(updatedInstructions)
+      setNewInstruction('')
+      setErrorMsg(null)
+      mutate() // Refresh data
+    } catch (err) {
+      setErrorMsg((err as Error).message || 'Failed to update custom instructions.')
+    }
+  }
+
+  const handleRemoveInstruction = async (index: number) => {
+    try {
+      const updatedInstructions = [...instructions]
+      updatedInstructions.splice(index, 1)
+      await updateUser({ customInstructions: updatedInstructions })
+      setInstructions(updatedInstructions)
+      setErrorMsg(null)
+      mutate()
+    } catch (err) {
+      setErrorMsg((err as Error).message || 'Failed to update custom instructions.')
+    }
   }
 
   return (
@@ -89,8 +122,8 @@ const SettingsPage: React.FC = () => {
                     size="icon"
                     onClick={() => {
                       setIsEditing(false)
-                      setUsername(session.user.name || '')
-                      setError(null)
+                      setUsername(data?.name || '')
+                      setErrorMsg(null)
                     }}
                     title="Dismiss"
                     className="h-8 w-8 hover:bg-transparent hover:text-foreground"
@@ -117,8 +150,8 @@ const SettingsPage: React.FC = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {error && (
-              <div className="text-red-500 text-sm">{error}</div>
+            {errorMsg && (
+              <div className="text-red-500 text-sm">{errorMsg}</div>
             )}
             <div className="flex items-center">
               <span className="font-medium w-24">Username</span>
@@ -138,6 +171,28 @@ const SettingsPage: React.FC = () => {
               />
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <div className="flex flex-row items-center justify-between">
+            <CardTitle className="text-xl">Papers Collection</CardTitle>
+            {collectPapers !== undefined && (
+              <Switch
+                checked={collectPapers}
+                onCheckedChange={handleCollectPapersToggle}
+                aria-label="Toggle paper collection"
+              />
+            )}
+          </div>
+          <div className="pt-4 border-t" />
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground">
+            When enabled, papers referenced during your research will be automatically saved to your collection. 
+            This allows you to build a personal library of relevant papers and access them later.
+          </p>
         </CardContent>
       </Card>
 
@@ -191,25 +246,6 @@ const SettingsPage: React.FC = () => {
               <p className="text-sm text-muted-foreground">No instructions added.</p>
             )}
           </div>
-        </CardContent>
-      </Card>
-
-      <Card className={!collectPapers ? "opacity-45" : ""}>
-        <CardHeader>
-          <div className="flex flex-row items-center justify-between">
-            <CardTitle className="text-xl">Papers Collection</CardTitle>
-            <Switch
-              checked={collectPapers}
-              onCheckedChange={setCollectPapers}
-              aria-label="Toggle paper collection"
-            />
-          </div>
-          <div className="pt-4 border-t" />
-        </CardHeader>
-        <CardContent>
-          <p className="font-medium text-muted-foreground">
-            When enabled, new papers found during research will be automatically added to your collection.
-          </p>
         </CardContent>
       </Card>
     </div>

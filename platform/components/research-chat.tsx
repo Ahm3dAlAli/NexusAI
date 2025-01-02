@@ -22,6 +22,7 @@ import { useMenu } from '@/context/MenuContext'
 import { useNotification } from '@/context/NotificationContext'
 import { createPapers } from '@/lib/papers'
 import { Icons } from '@/components/ui/icons'
+import { fetchUser } from '@/lib/user'
 
 interface ChatProps {
   researchId?: string
@@ -30,6 +31,8 @@ interface ChatProps {
 
 export default function ResearchChat({ researchId, initialMessage }: ChatProps) {
   const router = useRouter()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const user = useRef<any>(null)
   const initialMessageSent = useRef(false)
   const ws = useRef<WebSocket | null>(null)
   const [messages, setMessages] = useState<AgentMessage[]>([])
@@ -41,6 +44,22 @@ export default function ResearchChat({ researchId, initialMessage }: ChatProps) 
   const [showThinking, setShowThinking] = useState(false)
   const { fetchPapers, setCurrentMenu } = useMenu()
   const { addNotification } = useNotification()
+
+  useEffect(() => {
+    if (!researchId) return
+
+    const fetchUserData = async () => {
+      try {
+        const userData = await fetchUser()
+        user.current = userData
+      } catch (error) {
+        console.error('Error fetching user data:', error)
+        router.push('/')
+      }
+    }
+
+    fetchUserData()
+  }, [researchId, router])
 
   useEffect(() => {
     if (!researchId) return
@@ -147,7 +166,9 @@ export default function ResearchChat({ researchId, initialMessage }: ChatProps) 
       }
 
       if (message.type === AgentMessageType.final && message.urls && message.urls.length > 0) {
-        handlePapersCreation(message.urls)
+        if (user.current?.collectPapers) {
+          handlePapersCreation(message.urls)
+        }
       }
     }
 
@@ -158,20 +179,24 @@ export default function ResearchChat({ researchId, initialMessage }: ChatProps) 
   }
 
   const handlePapersCreation = async (urls: string[]) => {
-    const uniqueUrls = Array.from(new Set(urls))
-    
-    addNotification('info', `${uniqueUrls.length} paper(s) found from your latest research. The new ones will be added to your collection.`);
+    let uniqueUrls = Array.from(new Set(urls))    
+    addNotification('info', `${uniqueUrls.length} paper(s) found from your latest research. The new ones will be added to your collection.`)
+
+    if (uniqueUrls.length > 8) {
+      addNotification('warning', 'Maximum 8 papers can be processed at once. The rest will be discarded.')
+      uniqueUrls = uniqueUrls.slice(0, 8)
+    }
 
     try {
       const [successCount, failedCount] = await createPapersFromUrls(uniqueUrls);
       
       if (successCount === 0) {
-        addNotification('info', 'All papers from your latest research are already in your collection. No new paper was added.');
+        addNotification('info', 'All papers from your latest research are already in your collection. No new paper was added.')
       } else {
         addNotification('success', `${successCount} new paper(s) added to your collection.`, {
           label: 'See',
           onClick: () => setCurrentMenu('papers')
-        });
+        })
 
         if (failedCount > 0) {
           addNotification('warning', `${failedCount} paper(s) could not be added to your collection.`)
@@ -187,7 +212,7 @@ export default function ResearchChat({ researchId, initialMessage }: ChatProps) 
     console.log(`Creating papers from ${urls.length} urls`)
     
     const timeout = new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error('Request timed out')), 90000) // 90 seconds
+      setTimeout(() => reject(new Error('Request timed out')), 305000) // 300 seconds + 5 seconds margin for api response
     );
 
     const successCount = await Promise.race([createPapers(urls), timeout]);

@@ -8,6 +8,7 @@ from nexusai.config import (
     BING_API_KEY,
     MAX_RETRIES,
     RETRY_BASE_DELAY,
+    REQUEST_TIMEOUT,
 )
 from nexusai.models.inputs import SearchPapersInput
 from nexusai.utils.logger import logger
@@ -59,39 +60,40 @@ class BingAPIWrapper:
 
     def __get_search_results(self, query: str, max_papers: int = 1) -> list:
         """Execute search query with retry mechanism."""
-        http = urllib3.PoolManager()
+        http = urllib3.PoolManager(timeout=urllib3.Timeout(connect=10, read=REQUEST_TIMEOUT))
         for attempt in range(MAX_RETRIES):
             logger.info(
                 f"Searching Bing for '{query}' (attempt {attempt + 1}/{MAX_RETRIES})"
             )
-            response = http.request(
-                "GET",
-                f"{self.base_url}/v7.0/search",
-                headers={
-                    "Ocp-Apim-Subscription-Key": self.api_key,
-                },
-                fields={
-                    "q": query,
-                    "count": max_papers,
-                },
-            )
-            if 200 <= response.status < 300:
-                results = response.json().get("webPages", {}).get("value", [])
-                if not results:
-                    raise Exception(f"No results found from Bing for '{query}'")
-                logger.info(f"Successfully got Bing search results for '{query}'")
-                return results
-            elif attempt < MAX_RETRIES - 1 and response.status not in [429, 500]:
-                sleep_time = RETRY_BASE_DELAY ** (attempt + 2)
-                logger.warning(
-                    f"Got {response.status} response from Bing API. "
-                    f"Sleeping for {sleep_time} seconds before retrying..."
+            try:
+                response = http.request(
+                    "GET",
+                    f"{self.base_url}/v7.0/search",
+                    headers={
+                        "Ocp-Apim-Subscription-Key": self.api_key,
+                    },
+                    fields={
+                        "q": query,
+                        "count": max_papers,
+                    },
                 )
-                time.sleep(sleep_time)
-            else:
-                raise Exception(
-                    f"Got non 2xx response from Bing API: {response.status}"
-                )
+                if 200 <= response.status < 300:
+                    results = response.json().get("webPages", {}).get("value", [])
+                    if not results:
+                        raise Exception(f"No results found from Bing for '{query}'")
+                    logger.info(f"Successfully got Bing search results for '{query}'")
+                    return results
+                elif attempt < MAX_RETRIES - 1 and response.status not in [429, 500]:
+                    sleep_time = RETRY_BASE_DELAY ** (attempt + 2)
+                    logger.warning(
+                        f"Got {response.status} response from Bing API. "
+                        f"Sleeping for {sleep_time} seconds before retrying..."
+                    )
+                    time.sleep(sleep_time)
+                else:
+                    raise Exception(f"Got non 2xx response from Bing API: {response.status}")
+            except urllib3.exceptions.TimeoutError:
+                raise Exception("Request timed out. Please try again later.")
 
     def __format_results(self, results: list) -> str:
         """Format the search results into a string."""

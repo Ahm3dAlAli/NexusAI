@@ -26,7 +26,7 @@ async def process_paper(url: str) -> PaperOutput | None:
 
     # Download PDF handling failed requests
     try:
-        downloader = PDFDownloader()
+        downloader = PDFDownloader(query=None)
         content = await asyncio.get_event_loop().run_in_executor(
             None, downloader.download_pdf, url
         )

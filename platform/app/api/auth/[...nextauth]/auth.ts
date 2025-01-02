@@ -3,22 +3,14 @@ import CredentialsProvider from "next-auth/providers/credentials"
 import AzureADProvider from "next-auth/providers/azure-ad"
 import { prisma } from "@/lib/prisma"
 import { compare } from "bcrypt"
-import { DefaultSession } from "next-auth"
+import { User as PrismaUser } from "@prisma/client"
 
 declare module "next-auth" {
   interface Session {
-    user: {
-      id: string
-      email: string
-      name: string
-      password: string | null
-    } & Omit<DefaultSession["user"], "email" | "name">
+    user: PrismaUser
   }
 
-  interface User {
-    id: string
-    email: string
-    name: string
+  interface User extends PrismaUser {
     password: string | null
   }
 }
@@ -52,18 +44,13 @@ export const authOptions: AuthOptions = {
           throw new Error("Invalid password")
         }
 
-        return { 
-          id: user.id, 
-          name: user.name, 
-          email: user.email,
-          password: "credentials"
-        }
+        return user
       }
     }),
     AzureADProvider({
       clientId: process.env.AZURE_AD_CLIENT_ID!,
       clientSecret: process.env.AZURE_AD_CLIENT_SECRET!,
-      tenantId: process.env.AZURE_AD_TENANT_ID!,
+      tenantId: "common",
       authorization: {
         params: {
           scope: "openid profile email"
@@ -86,22 +73,19 @@ export const authOptions: AuthOptions = {
 
           if (existingUser) {
             if (existingUser.password) {
-              // Prevent account creation if email exists with credentials
               console.warn(`Sign-in with Azure AD attempted for existing email: ${profile.email} which has a credentials-based account.`)
               return false
             } else {
-              // Existing Azure AD user, proceed with sign-in
               user.id = existingUser.id
               user.password = null
               return true
             }
           } else {
-            // No existing user, create new Azure AD user
             const newUser = await prisma.user.create({
               data: {
                 name: profile.name || profile.email,
                 email: profile.email,
-                password: null // Azure AD users don't need a password
+                password: null
               }
             })
             user.id = newUser.id
@@ -118,15 +102,13 @@ export const authOptions: AuthOptions = {
     },
     async jwt({ token, user }) {
       if (user) {
-        token.id = user.id
-        token.password = user.password
+        token.user = user
       }
       return token
     },
     async session({ session, token }) {
-      if (token && session.user) {
-        session.user.id = token.id as string
-        session.user.password = token.password as string | null
+      if (token.user) {
+        session.user = token.user as PrismaUser
       }
       return session
     }

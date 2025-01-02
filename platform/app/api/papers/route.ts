@@ -32,6 +32,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'URLs array is required' }, { status: 400 });
   }
 
+  if (urls.length > 8) {
+    return NextResponse.json({ error: 'Maximum 8 papers can be processed at once' }, { status: 400 });
+  }
+
   try {
     // Filter for unique URLs first
     const uniqueUrls = Array.from(new Set(urls));
@@ -52,6 +56,9 @@ export async function POST(req: Request) {
     const token = generateWebSocketToken({ userId: session.user.id, email: session.user.email })
     const payload = { urls: newUrls } satisfies PapersRequest;
     
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 300000); // 300 seconds
+
     const response = await fetch(
       `${config.apiUrl}/papers?token=${token}`,
       {
@@ -60,8 +67,11 @@ export async function POST(req: Request) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(payload),
+        signal: controller.signal,
       }
     );
+
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -92,6 +102,9 @@ export async function POST(req: Request) {
       }, 
       { status: 201 });
   } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      return NextResponse.json({ error: 'Request timeout' }, { status: 504 });
+    }
     console.error('Error creating papers:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }

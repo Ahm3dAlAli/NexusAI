@@ -4,7 +4,7 @@ from datetime import datetime
 import feedparser
 import urllib3
 from nexusai.cache.cache_manager import CacheManager
-from nexusai.config import ARXIV_API_BASE_URL, MAX_RETRIES, RETRY_BASE_DELAY
+from nexusai.config import ARXIV_API_BASE_URL, MAX_RETRIES, RETRY_BASE_DELAY, REQUEST_TIMEOUT
 from nexusai.models.inputs import SearchPapersInput
 from nexusai.utils.logger import logger
 
@@ -44,40 +44,40 @@ class ArxivAPIWrapper:
 
     def __get_search_results(self, query: str, max_papers: int = 1) -> list:
         """Execute search query with retry mechanism."""
-        http = urllib3.PoolManager()
+        http = urllib3.PoolManager(timeout=urllib3.Timeout(connect=10, read=REQUEST_TIMEOUT))
         for attempt in range(MAX_RETRIES):
             logger.info(
                 f"Searching Arxiv for '{query}' (attempt {attempt + 1}/{MAX_RETRIES})"
             )
-            response = http.request(
-                "GET",
-                f"{self.base_url}/query",
-                fields={
-                    "search_query": query,
-                    "max_results": max_papers,
-                    "sortBy": "relevance",
-                    "sortOrder": "descending",
-                },
-            )
-            if 200 <= response.status < 300:
-                feed = feedparser.parse(response.data)
-                results = feed.entries
-                print(results)
-                if not results:
-                    raise Exception(f"No results found from Arxiv for '{query}'")
-                logger.info(f"Successfully got Arxiv search results for '{query}'")
-                return results
-            elif attempt < MAX_RETRIES - 1 and response.status not in [429, 500]:
-                sleep_time = RETRY_BASE_DELAY ** (attempt + 2)
-                logger.warning(
-                    f"Got {response.status} response from arXiv API. "
-                    f"Sleeping for {sleep_time} seconds before retrying..."
+            try:
+                response = http.request(
+                    "GET",
+                    f"{self.base_url}/query",
+                    fields={
+                        "search_query": query,
+                        "max_results": max_papers,
+                        "sortBy": "relevance",
+                        "sortOrder": "descending",
+                    },
                 )
-                time.sleep(sleep_time)
-            else:
-                raise Exception(
-                    f"Got non 2xx response from arXiv API: {response.status}"
-                )
+                if 200 <= response.status < 300:
+                    feed = feedparser.parse(response.data)
+                    results = feed.entries
+                    if not results:
+                        raise Exception(f"No results found from Arxiv for '{query}'")
+                    logger.info(f"Successfully got Arxiv search results for '{query}'")
+                    return results
+                elif attempt < MAX_RETRIES - 1 and response.status not in [429, 500]:
+                    sleep_time = RETRY_BASE_DELAY ** (attempt + 2)
+                    logger.warning(
+                        f"Got {response.status} response from arXiv API. "
+                        f"Sleeping for {sleep_time} seconds before retrying..."
+                    )
+                    time.sleep(sleep_time)
+                else:
+                    raise Exception(f"Got non 2xx response from arXiv API: {response.status}")
+            except urllib3.exceptions.TimeoutError:
+                raise Exception("Request timed out. Please try again later.")
 
     def __format_results(self, results: list) -> str:
         """Format the search results into a string."""

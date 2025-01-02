@@ -99,6 +99,7 @@ if not NEXTAUTH_SECRET:
 # Request Configuration
 MAX_RETRIES = 5
 RETRY_BASE_DELAY = 2  # seconds
+REQUEST_TIMEOUT = 30  # seconds
 
 # State Management Configuration
 MAX_FEEDBACK_REQUESTS = 2

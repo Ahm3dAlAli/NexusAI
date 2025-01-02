@@ -79,7 +79,7 @@ const PaperChat: React.FC<PaperChatProps> = ({ paperId }) => {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="prose prose-sm max-w-none">
+            <div className="prose prose-sm max-w-none [&>p]:mb-4">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
                 {paper.summary}
               </ReactMarkdown>

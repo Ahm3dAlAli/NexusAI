@@ -18,14 +18,16 @@ enum AgentMessageType {
 }
 
 model User {
-  id          String        @id @default(uuid())
-  name        String
-  email       String        @unique
-  password    String?
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  researches  Research[]
-  papers      Paper[]
+  id                String        @id @default(uuid())
+  name              String
+  email             String        @unique
+  password          String?
+  collectPapers     Boolean       @default(true)
+  customInstructions String[]      @default([])
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  researches        Research[]
+  papers            Paper[]
 }
 
 model Research {

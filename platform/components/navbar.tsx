@@ -10,6 +10,8 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Card, CardContent } from '@/components/ui/card'
 import { signOut, useSession } from 'next-auth/react'
 import { MenuHeader } from '@/components/ui/menu-header'
+import useSWR from 'swr'
+import { fetchUser } from '@/lib/user'
 
 const Navbar: React.FC = () => {
   const { 
@@ -21,6 +23,7 @@ const Navbar: React.FC = () => {
   } = useMenu()
   const router = useRouter()
   const { data: session } = useSession()
+  const { data: userData } = useSWR('/api/users/me', fetchUser)
 
   useEffect(() => {
     if (selectedResearch) {
@@ -29,7 +32,6 @@ const Navbar: React.FC = () => {
   }, [selectedResearch, setCurrentMenu])
 
   if (!session?.user) return null
-  const user = session.user
 
   const handleNewChat = (e: React.MouseEvent) => {
     e.preventDefault()
@@ -117,6 +119,9 @@ const Navbar: React.FC = () => {
     </motion.div>
   )
 
+  const displayName = userData?.name || session?.user?.name || ''
+  const initial = displayName.charAt(0).toUpperCase()
+
   return (
     <div className="w-80 bg-primary text-primary-foreground h-screen p-4 flex flex-col">
       <div className="flex-1 overflow-y-auto no-scrollbar">
@@ -131,12 +136,16 @@ const Navbar: React.FC = () => {
         <CardContent className="p-4 flex items-center gap-3">
           <Avatar className="h-10 w-10 border-2 border-primary-foreground/20">
             <AvatarFallback className="bg-primary-foreground/10 text-primary-foreground">
-              {user.name?.charAt(0).toUpperCase()}
+              {initial}
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate text-primary-foreground">{user.name}</p>
-            <p className="text-xs text-primary-foreground/70 truncate">{user.email}</p>
+            <p className="text-sm font-medium truncate text-primary-foreground">
+              {userData?.name || session?.user?.name}
+            </p>
+            <p className="text-xs text-primary-foreground/70 truncate">
+              {userData?.email || session?.user?.email}
+            </p>
           </div>
           <Button
             variant="ghost"
