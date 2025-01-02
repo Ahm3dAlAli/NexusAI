@@ -11,11 +11,12 @@ import { useRouter } from 'next/navigation'
 import { X, Pencil, Check } from 'lucide-react'
 import { updateUser, fetchUser } from '@/lib/user'
 import useSWR from 'swr'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 
 const fetcher = () => fetchUser()
 
 const SettingsPage: React.FC = () => {
-  const { data: session } = useSession()
+  const { data: session, status } = useSession()
   const router = useRouter()
 
   const { data, mutate } = useSWR('/api/users/me', fetcher)
@@ -36,8 +37,20 @@ const SettingsPage: React.FC = () => {
     }
   }, [data])
 
+  useEffect(() => {
+    if (status === "loading") return
+    if (!session) router.push('/login')
+  }, [session, status, router])
+
+  if (status === "loading") {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <LoadingSpinner className="w-8 h-8" />
+      </div>
+    )
+  }
+
   if (!session?.user) {
-    router.push('/login')
     return null
   }
 
