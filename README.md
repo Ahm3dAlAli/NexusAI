@@ -152,7 +152,7 @@ Before you begin, make sure you have Docker installed.
 
    > [!IMPORTANT]
    > - Using OpenAI instead of Azure OpenAI will result in reduced performance as the system will use more restrictive models due to OpenAI's quota limitations for low-tier users.
-   > - While arXiv search is always available, it is recommended to provide API keys for additional paper databases (Bing, CORE, SERP) for enhanced search capabilities.
+   > - While arXiv search is always available, it is recommended to provide API keys for additional paper databases (Bing, CORE, Serp) for enhanced search capabilities.
    > - Microsoft login will not work if Azure AD credentials are not provided, but email-password authentication will still work.
 
 ### Running with Docker
