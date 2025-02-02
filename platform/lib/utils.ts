@@ -1,3 +1,4 @@
+import { ModelProviderType } from "@prisma/client"
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 
@@ -22,4 +23,21 @@ export function formatDate(date: Date | string): string {
     month: 'long',
     day: 'numeric',
   })
+}
+
+export function providerEnumToName(provider: ModelProviderType): string {
+  if (provider === ModelProviderType.openai) {
+    return 'OpenAI'
+  }
+  if (provider === ModelProviderType.azureOpenai) {
+    return 'Azure OpenAI'
+  }
+  return provider
+}
+
+export function providerNameToEnum(provider: string): ModelProviderType {
+  if (provider === 'OpenAI') {
+    return ModelProviderType.openai
+  }
+  return ModelProviderType.azureOpenai
 }

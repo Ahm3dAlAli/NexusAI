@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../auth/[...nextauth]/auth';
-import { config } from '@/config/environment'
+import { publicConfig } from '@/config/environment'
 import { PapersRequest, PaperOutput } from '@/types/BackendModels';
 import { generateWebSocketToken } from '@/lib/jwt'
 
@@ -60,7 +60,7 @@ export async function POST(req: Request) {
     const timeoutId = setTimeout(() => controller.abort(), 300000); // 300 seconds
 
     const response = await fetch(
-      `${config.apiUrl}/papers?token=${token}`,
+      `${publicConfig.apiUrl}/papers?token=${token}`,
       {
         method: 'POST',
         headers: {

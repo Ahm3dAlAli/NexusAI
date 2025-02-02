@@ -17,6 +17,12 @@ enum AgentMessageType {
   final
 }
 
+enum ModelProviderType {
+  default
+  azureOpenai
+  openai
+}
+
 model User {
   id                String        @id @default(uuid())
   name              String
@@ -28,6 +34,7 @@ model User {
   updatedAt         DateTime      @updatedAt
   researches        Research[]
   papers            Paper[]
+  modelProviders    ModelProvider[]
 }
 
 model Research {
@@ -61,4 +68,17 @@ model Paper {
   userId           String?
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
+}
+
+model ModelProvider {
+  id           String         @id @default(uuid())
+  name         ModelProviderType
+  user         User           @relation(fields: [userId], references: [id])
+  userId       String
+  secretName   String        
+  selected     Boolean        @default(false)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@unique([name, userId])
 }

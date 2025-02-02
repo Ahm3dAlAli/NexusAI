@@ -1,4 +1,4 @@
-import { LucideProps, Loader2, Copy, LogOut, Plus, Settings, ArrowRight } from "lucide-react"
+import { LucideProps, Loader2, Copy, LogOut, Plus, Settings, ArrowRight, Eye, EyeOff, PenIcon, X, Check, Trash2, Info } from "lucide-react"
 
 export type IconProps = LucideProps
 
@@ -9,6 +9,13 @@ export const Icons = {
   plus: Plus,
   settings: Settings,
   arrowRight: ArrowRight,
+  eye: Eye,
+  eyeOff: EyeOff,
+  edit: PenIcon,
+  x: X,
+  check: Check,
+  trash: Trash2,
+  info: Info,
   microsoft: (props: IconProps) => (
     <svg
       xmlns="http://www.w3.org/2000/svg"

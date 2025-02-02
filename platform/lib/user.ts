@@ -5,12 +5,18 @@ export interface User {
   collectPapers: boolean
   customInstructions: string[]
   password: string | null
+  modelProviders: {
+    id: string;
+    name: string;
+    selected: boolean;
+  }[]
 }
 
 export interface UpdateUserPayload {
   name?: string
   collectPapers?: boolean
   customInstructions?: string[]
+  selectedProviderId?: string | null
 }
 
 export async function fetchUser(): Promise<User> {

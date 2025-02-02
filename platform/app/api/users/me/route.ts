@@ -16,9 +16,16 @@ export async function GET() {
         id: true,
         name: true,
         email: true,
+        password: true,
         collectPapers: true,
         customInstructions: true,
-        password: true,
+        modelProviders: {
+          select: {
+            id: true,
+            name: true,
+            selected: true,
+          }
+        },
       },
     })
 
@@ -45,7 +52,27 @@ export async function PUT(req: Request) {
     const filteredUpdates = Object.fromEntries(
       Object.entries(updates).filter(([key]) => allowedUpdates.includes(key))
     )
-    
+
+    // Handle provider selection update if present
+    if ('selectedProviderId' in updates) {
+      // First, unselect all providers
+      await prisma.modelProvider.updateMany({
+        where: { userId: session.user.id },
+        data: { selected: false },
+      })
+
+      // Then select the specified provider if not default
+      if (updates.selectedProviderId && updates.selectedProviderId !== 'default') {
+        await prisma.modelProvider.update({
+          where: { 
+            id: updates.selectedProviderId,
+            userId: session.user.id,
+          },
+          data: { selected: true },
+        })
+      }
+    }
+
     const user = await prisma.user.update({
       where: { id: session.user.id },
       data: filteredUpdates,
@@ -53,9 +80,16 @@ export async function PUT(req: Request) {
         id: true,
         name: true,
         email: true,
+        password: true,
         collectPapers: true,
         customInstructions: true,
-        password: true,
+        modelProviders: {
+          select: {
+            id: true,
+            name: true,
+            selected: true,
+          }
+        },
       },
     })
 

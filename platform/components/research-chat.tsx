@@ -14,7 +14,7 @@ import {
   CardContent,
 } from "@/components/ui/card"
 import { MarkdownLink } from '@/components/ui/markdown-link'
-import { config } from '@/config/environment'
+import { publicConfig } from '@/config/environment'
 import { saveResearchMessage, fetchMessages } from '@/lib/researches'
 import { motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
@@ -130,7 +130,7 @@ export default function ResearchChat({ researchId, initialMessage }: ChatProps) 
 
     // Initialize WebSocket with token
     console.log('Initializing WebSocket')
-    ws.current = new WebSocket(`${config.wsUrl}/ws?token=${token}`)
+    ws.current = new WebSocket(`${publicConfig.wsUrl}/ws?token=${token}`)
 
     ws.current.onopen = () => {
       console.log('WebSocket connected')

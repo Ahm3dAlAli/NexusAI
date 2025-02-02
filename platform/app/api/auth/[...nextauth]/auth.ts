@@ -4,14 +4,27 @@ import AzureADProvider from "next-auth/providers/azure-ad"
 import { prisma } from "@/lib/prisma"
 import { compare } from "bcrypt"
 import { User as PrismaUser } from "@prisma/client"
+import { secretClient } from "@/lib/secrets"
+import { SessionModelProvider } from "@/lib/modelProviders"
+
+declare module "next-auth/jwt" {
+  interface JWT {
+    user?: PrismaUser & {
+      sessionProviders: SessionModelProvider[] | null
+    }
+  }
+}
 
 declare module "next-auth" {
   interface Session {
-    user: PrismaUser
+    user: PrismaUser & {
+      sessionProviders: SessionModelProvider[] | null
+    }
   }
 
   interface User extends PrismaUser {
     password: string | null
+    sessionProviders?: SessionModelProvider[] | null
   }
 }
 
@@ -100,15 +113,49 @@ export const authOptions: AuthOptions = {
       }
       return true
     },
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
-        token.user = user
+        // Initial sign in
+        const providers = await prisma.modelProvider.findMany({
+          where: { userId: user.id },
+        });
+
+        // Fetch all secrets in parallel if there are providers
+        let providersWithSecrets = null;
+        if (providers.length > 0) {
+          const fetchedProviders = await Promise.all(
+            providers.map(async (modelProvider) => {
+              try {
+                const details = await secretClient.getSecret(modelProvider.secretName);
+                return { modelProvider, details };
+              } catch (error) {
+                console.error(`Error fetching secret for provider ${modelProvider.name}:`, error);
+                return null;
+              }
+            })
+          );
+          providersWithSecrets = fetchedProviders.filter(provider => provider !== null);
+        }
+
+        token.user = {
+          ...user,
+          sessionProviders: providersWithSecrets
+        } as PrismaUser & { sessionProviders: SessionModelProvider[] | null };
+      } else if (trigger === "update" && session?.sessionProviders) {
+        // Handle session updates
+        token.user = {
+          ...token.user,
+          sessionProviders: session.sessionProviders
+        } as PrismaUser & { sessionProviders: SessionModelProvider[] | null };
       }
-      return token
+      return token;
     },
     async session({ session, token }) {
       if (token.user) {
-        session.user = token.user as PrismaUser
+        session.user = {
+          ...token.user,
+          sessionProviders: token.user.sessionProviders
+        } as PrismaUser & { sessionProviders: SessionModelProvider[] | null };
       }
       return session
     }
@@ -120,7 +167,7 @@ export const authOptions: AuthOptions = {
   },
   session: {
     strategy: "jwt",
-    maxAge: 7 * 24 * 60 * 60,
-    updateAge: 24 * 60 * 60,
+    maxAge: 30 * 24 * 60 * 60,
+    updateAge: 7 * 24 * 60 * 60,
   }
 }
