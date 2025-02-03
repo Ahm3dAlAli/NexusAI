@@ -84,77 +84,6 @@ NexusAI/
 
 To immediately start using NexusAI, you can use our online demo [here](https://nexusai-platform.redisland-af07373c.westus2.azurecontainerapps.io). Alternatively, you can run the application locally by following the instructions below.
 
-### Prerequisites
-
-Before you begin, make sure you have Docker installed.
-
-### Installation
-
-1. **Clone the Repository**
-   ```bash
-   git clone https://github.com/vincenzofanizza/NexusAI.git
-   cd NexusAI
-   ```
-
-2. **Set Up Environment Variables**
-   
-   Create a `.env` file by copying the provided template:
-   ```bash
-   cp .env.sample .env
-   ```
-
-   Configure your environment variables:
-
-   #### Required Variables:
-   ```env
-   # Option 1: Azure OpenAI (Recommended for optimal performance)
-   # Requires Azure OpenAI instance with these deployments:
-   # - gpt-4o
-   # - gpt-4o-mini
-   # - text-embedding-3-small
-   AZURE_OPENAI_API_KEY=your_azure_key
-   AZURE_OPENAI_ENDPOINT=your_azure_endpoint
-   OPENAI_API_VERSION=your_openai_api_version
-
-   # Option 2: OpenAI (Note: May have reduced performance due to quota limitations)
-   OPENAI_API_KEY=your_openai_api_key
-
-   # Database URL (default for Docker setup)
-   DATABASE_URL="postgresql://postgres:postgres@postgres:5432/postgres?schema=public"
-
-   # Redis cache URL (default for Docker setup)
-   REDIS_URL="redis://redis:6379"
-
-   # Authentication
-   NEXTAUTH_SECRET=your_random_string
-
-   # Application URLs (default for Docker setup)
-   FRONTEND_URL="http://localhost:3000"
-   NEXT_PUBLIC_WS_URL="ws://localhost:8000"
-   NEXT_PUBLIC_API_URL="http://backend:8000"
-   NEXTAUTH_URL="http://localhost:3000"
-   ```
-
-   #### Optional Variables:
-   ```env
-   # Scientific papers databases (enhances search capabilities)
-   CORE_API_KEY=your_core_api_key
-   SERP_API_KEY=your_serp_api_key
-   BING_API_KEY=your_bing_api_key
-
-   # Agent tracing and monitoring through Langsmith
-   LANGCHAIN_API_KEY=your_langchain_api_key
-
-   # Microsoft Authentication
-   AZURE_AD_CLIENT_ID=your_azure_ad_client_id
-   AZURE_AD_CLIENT_SECRET=your_azure_ad_client_secret
-   ```
-
-   > [!IMPORTANT]
-   > - Using OpenAI instead of Azure OpenAI will result in reduced performance as the system will use more restrictive models due to OpenAI's quota limitations for low-tier users.
-   > - While arXiv search is always available, it is recommended to provide API keys for additional paper databases (Bing, CORE, Serp) for enhanced search capabilities.
-   > - Microsoft login will not work if Azure AD credentials are not provided, but email-password authentication will still work.
-
 ### Running with Docker
 
 Start the application by running:
@@ -172,8 +101,6 @@ This command starts four services:
 - Redis (caching) - Port 6379
 - Backend (FastAPI) - Port 8000
 - Platform (Next.js) - Port 3000
-
-Navigate to the frontend interface at [http://localhost:3000](http://localhost:3000) and start automating your research!
 
 ## License
 
