@@ -11,8 +11,8 @@ import { providerEnumToName } from '@/lib/utils'
 
 // Define the types
 interface ProviderDetails {
-  apiKey?: string
-  apiEndpoint?: string
+  key?: string
+  endpoint?: string
 }
 
 interface ModelProviderInput {
@@ -47,25 +47,25 @@ export function ProviderForm({
     
     // Validation
     if (providerDetails.name === ModelProviderType.openai) {
-      if (!providerDetails.details.apiKey?.trim()) {
+      if (!providerDetails.details.key?.trim()) {
         setError('API Key is required')
         return
       }
     }
 
-    if (providerDetails.name === ModelProviderType.azureOpenai) {
-      if (!providerDetails.details.apiKey?.trim()) {
+    if (providerDetails.name === ModelProviderType.azureopenai) {
+      if (!providerDetails.details.key?.trim()) {
         setError('API Key is required')
         return
       }
-      if (!providerDetails.details.apiEndpoint?.trim()) {
+      if (!providerDetails.details.endpoint?.trim()) {
         setError('API Endpoint is required')
         return
       }
 
       // Validate endpoint URL format
       try {
-        new URL(providerDetails.details.apiEndpoint)
+        new URL(providerDetails.details.endpoint)
       } catch {
         setError('Invalid API Endpoint URL format')
         return
@@ -133,8 +133,8 @@ export function ProviderForm({
               <Input
                 id="openai-api-key"
                 type={showApiKey ? "text" : "password"}
-                value={providerDetails.details.apiKey || ''}
-                onChange={(e) => updateProviderDetails({ apiKey: e.target.value })}
+                value={providerDetails.details.key || ''}
+                onChange={(e) => updateProviderDetails({ key: e.target.value })}
                 placeholder="Enter your API key"
                 disabled={isLoading}
                 className="flex-1"
@@ -154,7 +154,7 @@ export function ProviderForm({
         </div>
       )}
 
-      {provider.name === ModelProviderType.azureOpenai && (
+      {provider.name === ModelProviderType.azureopenai && (
         <>
           <div className="space-y-2">
             <LabelWithInfo
@@ -165,8 +165,8 @@ export function ProviderForm({
             <InputWrapper>
               <Input
                 id="azure-endpoint"
-                value={providerDetails.details.apiEndpoint || ''}
-                onChange={(e) => updateProviderDetails({ apiEndpoint: e.target.value })}
+                value={providerDetails.details.endpoint || ''}
+                onChange={(e) => updateProviderDetails({ endpoint: e.target.value })}
                 placeholder="https://your-resource.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview"
                 disabled={isLoading}
                 className="flex-1"
@@ -185,8 +185,8 @@ export function ProviderForm({
                 <Input
                   id="azure-api-key"
                   type={showApiKey ? "text" : "password"}
-                  value={providerDetails.details.apiKey || ''}
-                  onChange={(e) => updateProviderDetails({ apiKey: e.target.value })}
+                  value={providerDetails.details.key || ''}
+                  onChange={(e) => updateProviderDetails({ key: e.target.value })}
                   placeholder="Enter your API key"
                   disabled={isLoading}
                   className="flex-1"

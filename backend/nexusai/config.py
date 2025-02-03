@@ -3,6 +3,7 @@
 import os
 
 from dotenv import load_dotenv
+from nexusai.models.inputs import ModelProviderType
 from nexusai.utils.logger import logger
 
 # Load environment variables from .env file
@@ -16,9 +17,9 @@ if all(
         os.getenv("AZURE_OPENAI_ENDPOINT"),
     ]
 ):
-    LLM_PROVIDER = "azure"
+    LLM_PROVIDER = ModelProviderType.azureopenai
 elif os.getenv("OPENAI_API_KEY"):
-    LLM_PROVIDER = "openai"
+    LLM_PROVIDER = ModelProviderType.openai
     logger.warning(
         "Using OpenAI instead of Azure OpenAI. "
         "Since OpenAI's quotas for gpt-4o are more restrictive for low-tier users, the agent will use gpt-4o-mini, which may degrade performance."

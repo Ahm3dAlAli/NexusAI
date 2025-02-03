@@ -29,7 +29,7 @@ export function providerEnumToName(provider: ModelProviderType): string {
   if (provider === ModelProviderType.openai) {
     return 'OpenAI'
   }
-  if (provider === ModelProviderType.azureOpenai) {
+  if (provider === ModelProviderType.azureopenai) {
     return 'Azure OpenAI'
   }
   return provider
@@ -39,5 +39,5 @@ export function providerNameToEnum(provider: string): ModelProviderType {
   if (provider === 'OpenAI') {
     return ModelProviderType.openai
   }
-  return ModelProviderType.azureOpenai
+  return ModelProviderType.azureopenai
 }

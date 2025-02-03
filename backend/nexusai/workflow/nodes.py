@@ -7,6 +7,7 @@ from langchain_core.tools import BaseTool
 from langchain_openai import AzureChatOpenAI, ChatOpenAI
 from nexusai.config import LLM_PROVIDER, MAX_FEEDBACK_REQUESTS
 from nexusai.models.agent_state import AgentState
+from nexusai.models.inputs import ModelProviderType, ProviderDetails
 from nexusai.models.outputs import DecisionMakingOutput, JudgeOutput
 from nexusai.prompts.agent_prompts import (
     agent_prompt,
@@ -14,25 +15,41 @@ from nexusai.prompts.agent_prompts import (
     judge_prompt,
     planning_prompt,
 )
+from nexusai.utils.azure import extract_details_from_target_uri
 from nexusai.utils.messages import get_agent_messages
-
+from nexusai.utils.logger import logger
 
 class WorkflowNodes:
     """Implementation of the workflow nodes for the research agent."""
 
-    def __init__(self, tools: list[BaseTool], custom_instructions: list[str] = []):
+    def __init__(self, tools: list[BaseTool], custom_instructions: list[str] = [], model_provider: ModelProviderType = ModelProviderType.default, provider_details: ProviderDetails | None = None):
         """Initialize workflow nodes with tools."""
         self.tools = tools
         self.tools_dict = {tool.name: tool for tool in tools}
         self.custom_instructions = custom_instructions
 
         # Initialize base LLMs
-        if LLM_PROVIDER == "openai":
+        if model_provider == ModelProviderType.default:
+            small_llm, large_llm = self.__create_default_llms()
+        else:
+            small_llm, large_llm = self.__create_provider_llms(model_provider, provider_details)
+
+        # Workflow LLMs
+        self.decision_making_llm = small_llm.with_structured_output(
+            DecisionMakingOutput
+        )
+        self.planning_llm = large_llm or small_llm
+        self.agent_llm = (large_llm or small_llm).bind_tools(tools)
+        self.judge_llm = (large_llm or small_llm).with_structured_output(JudgeOutput)
+
+    def __create_default_llms(self) -> tuple:
+        logger.info(f"Using default LLM settings with provider {LLM_PROVIDER}")
+        if LLM_PROVIDER == ModelProviderType.openai:
             small_llm = ChatOpenAI(
                 model="gpt-4o-mini", temperature=0.0, max_tokens=16384
             )
             large_llm = None
-        elif LLM_PROVIDER == "azure":
+        elif LLM_PROVIDER == ModelProviderType.azureopenai:
             small_llm = AzureChatOpenAI(
                 azure_deployment="gpt-4o-mini", temperature=0.0, max_tokens=16384
             )
@@ -42,13 +59,31 @@ class WorkflowNodes:
         else:
             raise ValueError(f"Invalid LLM provider: {LLM_PROVIDER}")
 
-        # Workflow LLMs
-        self.decision_making_llm = small_llm.with_structured_output(
-            DecisionMakingOutput
-        )
-        self.planning_llm = large_llm or small_llm
-        self.agent_llm = (large_llm or small_llm).bind_tools(tools)
-        self.judge_llm = (large_llm or small_llm).with_structured_output(JudgeOutput)
+        return small_llm, large_llm
+
+    def __create_provider_llms(self, model_provider: ModelProviderType, provider_details: ProviderDetails | None) -> tuple:
+        logger.info(f"Using custom LLM settings with provider {model_provider}")
+        if model_provider == ModelProviderType.openai:
+            small_llm = ChatOpenAI(
+                model="gpt-4o-mini", api_key=provider_details.key, temperature=0.0, max_tokens=16384
+            )
+            large_llm = ChatOpenAI(
+                model="gpt-4o", api_key=provider_details.key, temperature=0.0, max_tokens=16384
+            )
+        elif model_provider == ModelProviderType.azureopenai:
+            params = extract_details_from_target_uri(provider_details.endpoint)
+            small_llm = AzureChatOpenAI(
+                azure_endpoint=params["endpoint"],
+                azure_deployment=params["deployment_name"],
+                api_version=params["api_version"],
+                api_key=provider_details.key,
+                temperature=0.0
+            )
+            large_llm = None
+        else:
+            raise ValueError(f"Invalid LLM provider: {model_provider}")
+
+        return small_llm, large_llm
 
     def __format_tools_description(self) -> str:
         """Format the description of available tools."""

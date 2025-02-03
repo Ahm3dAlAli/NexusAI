@@ -1,8 +1,8 @@
 import { ModelProviderType } from "@prisma/client";
 
 export interface ProviderDetails {
-    apiKey?: string;
-    apiEndpoint?: string;
+    key?: string;
+    endpoint?: string;
   }
   
 export interface SessionModelProvider {

@@ -1,5 +1,5 @@
 -- CreateEnum
-CREATE TYPE "ModelProviderType" AS ENUM ('default', 'azureOpenai', 'openai');
+CREATE TYPE "ModelProviderType" AS ENUM ('default', 'azureopenai', 'openai');
 
 -- CreateTable
 CREATE TABLE "ModelProvider" (

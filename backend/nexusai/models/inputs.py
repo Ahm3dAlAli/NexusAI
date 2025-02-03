@@ -3,6 +3,17 @@ from enum import StrEnum, auto
 from pydantic import BaseModel, Field
 
 
+class ModelProviderType(StrEnum):
+    default = auto()
+    azureopenai = auto()
+    openai = auto()
+
+
+class ProviderDetails(BaseModel):
+    key: str | None = None
+    endpoint: str | None = None
+
+
 class SearchOperator(StrEnum):
     AND = auto()
     OR = auto()

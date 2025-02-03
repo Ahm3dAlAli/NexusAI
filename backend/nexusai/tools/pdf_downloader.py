@@ -9,6 +9,7 @@ from langchain_core.tools import tool
 from langchain_openai import AzureOpenAIEmbeddings, OpenAIEmbeddings
 from nexusai.cache.cache_manager import CacheManager
 from nexusai.config import LLM_PROVIDER, MAX_PAGES, MAX_RETRIES, RETRY_BASE_DELAY, REQUEST_TIMEOUT
+from nexusai.models.inputs import ModelProviderType
 from nexusai.utils.logger import logger
 
 # Disable warnings for insecure requests
@@ -25,12 +26,14 @@ class PDFDownloader:
         PDFDownloader.query = query
         self.cache_manager = CacheManager()
 
-        if LLM_PROVIDER == "openai":
+        if LLM_PROVIDER == ModelProviderType.openai:
             self.embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
-        elif LLM_PROVIDER == "azure":
+        elif LLM_PROVIDER == ModelProviderType.azureopenai:
             self.embeddings = AzureOpenAIEmbeddings(
                 model="text-embedding-3-small",
             )
+        else:
+            raise ValueError(f"Unsupported LLM provider: {LLM_PROVIDER}")
 
     def __filter_pages(self, pages: list[str]) -> list[str]:
         """Filter pages with RAG to keep only the most relevant ones."""

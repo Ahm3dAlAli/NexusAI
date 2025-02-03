@@ -7,7 +7,7 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { AgentMessage } from '@/types/AgentMessage'
 import { MessageRequest } from '@/types/BackendModels'
-import { AgentMessageType } from '@prisma/client'
+import { AgentMessageType, ModelProviderType } from '@prisma/client'
 import { Copy } from "lucide-react"
 import {
   Card,
@@ -23,6 +23,7 @@ import { useNotification } from '@/context/NotificationContext'
 import { createPapers } from '@/lib/papers'
 import { Icons } from '@/components/ui/icons'
 import { fetchUser } from '@/lib/user'
+import { useSession } from 'next-auth/react'
 
 interface ChatProps {
   researchId?: string
@@ -44,6 +45,7 @@ export default function ResearchChat({ researchId, initialMessage }: ChatProps) 
   const [showThinking, setShowThinking] = useState(false)
   const { fetchPapers, setCurrentMenu } = useMenu()
   const { addNotification } = useNotification()
+  const session = useSession()
 
   useEffect(() => {
     if (!researchId) return
@@ -98,7 +100,9 @@ export default function ResearchChat({ researchId, initialMessage }: ChatProps) 
     const payload: MessageRequest = {
       history: previousMessages,
       query: initialMessage,
-      custom_instructions: user.current?.customInstructions || undefined
+      custom_instructions: user.current?.customInstructions || undefined,
+      model_provider: session?.data?.user?.sessionProviders?.find(p => p.modelProvider.selected)?.modelProvider.name || ModelProviderType.default,
+      provider_details: session?.data?.user?.sessionProviders?.find(p => p.modelProvider.selected)?.details || null
     }
 
     if (initialMessage) {
@@ -242,9 +246,11 @@ export default function ResearchChat({ researchId, initialMessage }: ChatProps) 
     }
     setMessages(prev => [...prev, userMessage])
     await saveResearchMessage(researchId, userMessage)
-    const payload: MessageRequest = { 
+    const payload: MessageRequest = {
       query: input.trim(),
-      custom_instructions: user.current?.customInstructions || undefined
+      custom_instructions: user.current?.customInstructions || undefined,
+      model_provider: session?.data?.user?.sessionProviders?.find(p => p.modelProvider.selected)?.modelProvider.name || ModelProviderType.default,
+      provider_details: session?.data?.user?.sessionProviders?.find(p => p.modelProvider.selected)?.details || null
     }
     ws.current?.send(JSON.stringify(payload))
   }

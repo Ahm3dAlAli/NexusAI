@@ -19,7 +19,7 @@ enum AgentMessageType {
 
 enum ModelProviderType {
   default
-  azureOpenai
+  azureopenai
   openai
 }
 
