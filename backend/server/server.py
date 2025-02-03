@@ -98,7 +98,7 @@ async def ws_process_query(websocket: WebSocket):
                     message_callback=send_intermediate_message,
                     custom_instructions=request.custom_instructions,
                     model_provider=request.model_provider,
-                    provider_details=request.provider_details
+                    provider_details=request.provider_details,
                 )
                 history.append(
                     AgentMessage(

@@ -6,10 +6,15 @@ from nexusai.utils.messages import build_messages
 from nexusai.workflow.graph import ResearchWorkflow
 from nexusai.workflow.nodes import WorkflowNodes
 
+
 @traceable()
 async def process_query(
-    query: str, history: list[AgentMessage] = [], message_callback=None, custom_instructions: list[str] = [], 
-    model_provider: ModelProviderType = ModelProviderType.default, provider_details: ProviderDetails | None = None
+    query: str,
+    history: list[AgentMessage] = [],
+    message_callback=None,
+    custom_instructions: list[str] = [],
+    model_provider: ModelProviderType = ModelProviderType.default,
+    provider_details: ProviderDetails | None = None,
 ) -> AgentMessage:
     """Process a query and return the result. It allows passing previous messages to ask follow-up questions."""
     # Setup workflow

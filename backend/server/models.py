@@ -2,6 +2,7 @@ from nexusai.models.inputs import ModelProviderType, ProviderDetails
 from nexusai.utils.messages import AgentMessage
 from pydantic import BaseModel, Field
 
+
 class PapersRequest(BaseModel):
     urls: list[str] = Field(..., max_length=8)
 

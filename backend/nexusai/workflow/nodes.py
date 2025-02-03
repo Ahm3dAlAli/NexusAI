@@ -16,13 +16,20 @@ from nexusai.prompts.agent_prompts import (
     planning_prompt,
 )
 from nexusai.utils.azure import extract_details_from_target_uri
-from nexusai.utils.messages import get_agent_messages
 from nexusai.utils.logger import logger
+from nexusai.utils.messages import get_agent_messages
+
 
 class WorkflowNodes:
     """Implementation of the workflow nodes for the research agent."""
 
-    def __init__(self, tools: list[BaseTool], custom_instructions: list[str] = [], model_provider: ModelProviderType = ModelProviderType.default, provider_details: ProviderDetails | None = None):
+    def __init__(
+        self,
+        tools: list[BaseTool],
+        custom_instructions: list[str] = [],
+        model_provider: ModelProviderType = ModelProviderType.default,
+        provider_details: ProviderDetails | None = None,
+    ):
         """Initialize workflow nodes with tools."""
         self.tools = tools
         self.tools_dict = {tool.name: tool for tool in tools}
@@ -32,7 +39,9 @@ class WorkflowNodes:
         if model_provider == ModelProviderType.default:
             small_llm, large_llm = self.__create_default_llms()
         else:
-            small_llm, large_llm = self.__create_provider_llms(model_provider, provider_details)
+            small_llm, large_llm = self.__create_provider_llms(
+                model_provider, provider_details
+            )
 
         # Workflow LLMs
         self.decision_making_llm = small_llm.with_structured_output(
@@ -61,14 +70,24 @@ class WorkflowNodes:
 
         return small_llm, large_llm
 
-    def __create_provider_llms(self, model_provider: ModelProviderType, provider_details: ProviderDetails | None) -> tuple:
+    def __create_provider_llms(
+        self,
+        model_provider: ModelProviderType,
+        provider_details: ProviderDetails | None,
+    ) -> tuple:
         logger.info(f"Using custom LLM settings with provider {model_provider}")
         if model_provider == ModelProviderType.openai:
             small_llm = ChatOpenAI(
-                model="gpt-4o-mini", api_key=provider_details.key, temperature=0.0, max_tokens=16384
+                model="gpt-4o-mini",
+                api_key=provider_details.key,
+                temperature=0.0,
+                max_tokens=16384,
             )
             large_llm = ChatOpenAI(
-                model="gpt-4o", api_key=provider_details.key, temperature=0.0, max_tokens=16384
+                model="gpt-4o",
+                api_key=provider_details.key,
+                temperature=0.0,
+                max_tokens=16384,
             )
         elif model_provider == ModelProviderType.azureopenai:
             params = extract_details_from_target_uri(provider_details.endpoint)
@@ -77,7 +96,7 @@ class WorkflowNodes:
                 azure_deployment=params["deployment_name"],
                 api_version=params["api_version"],
                 api_key=provider_details.key,
-                temperature=0.0
+                temperature=0.0,
             )
             large_llm = None
         else:
@@ -98,8 +117,10 @@ class WorkflowNodes:
         """Format custom instructions as markdown list."""
         if not self.custom_instructions:
             return ""
-        
-        instructions = "\n".join([f"- {instruction}" for instruction in self.custom_instructions])
+
+        instructions = "\n".join(
+            [f"- {instruction}" for instruction in self.custom_instructions]
+        )
         return f"# CUSTOM INSTRUCTIONS\n\nThe following additional instructions come directly from the user. Make sure to follow them:\n{instructions}\n\n"
 
     def decision_making_node(self, state: AgentState) -> dict[str, Any]:
@@ -107,7 +128,7 @@ class WorkflowNodes:
         system_prompt = SystemMessage(
             content=decision_making_prompt.format(
                 current_date=datetime.now().strftime("%Y-%m-%d"),
-                custom_instructions=self.__format_custom_instructions()
+                custom_instructions=self.__format_custom_instructions(),
             )
         )
         response: DecisionMakingOutput = self.decision_making_llm.invoke(
@@ -125,7 +146,7 @@ class WorkflowNodes:
             content=planning_prompt.format(
                 tools=self.__format_tools_description(),
                 current_date=datetime.now().strftime("%Y-%m-%d"),
-                custom_instructions=self.__format_custom_instructions()
+                custom_instructions=self.__format_custom_instructions(),
             )
         )
         response = self.planning_llm.invoke([system_prompt] + state["messages"])
@@ -170,7 +191,7 @@ class WorkflowNodes:
             content=agent_prompt.format(
                 tools=self.__format_tools_description(),
                 current_date=datetime.now().strftime("%Y-%m-%d"),
-                custom_instructions=self.__format_custom_instructions()
+                custom_instructions=self.__format_custom_instructions(),
             )
         )
         messages = get_agent_messages(state)
@@ -187,7 +208,7 @@ class WorkflowNodes:
         system_prompt = SystemMessage(
             content=judge_prompt.format(
                 current_date=datetime.now().strftime("%Y-%m-%d"),
-                custom_instructions=self.__format_custom_instructions()
+                custom_instructions=self.__format_custom_instructions(),
             )
         )
         response: JudgeOutput = self.judge_llm.invoke(

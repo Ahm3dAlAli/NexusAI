@@ -40,6 +40,7 @@ class AgentMessage(BaseModel):
     type: AgentMessageType
     content: str
     tool_name: str | None = None
+
     @computed_field
     @property
     def urls(self) -> list[str] | None:

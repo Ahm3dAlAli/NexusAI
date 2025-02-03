@@ -1,4 +1,5 @@
 import asyncio
+
 from langchain_core.messages import SystemMessage
 from langchain_openai import AzureChatOpenAI, ChatOpenAI
 from langsmith import traceable
@@ -8,6 +9,7 @@ from nexusai.models.outputs import PaperOutput
 from nexusai.prompts.chat_prompts import create_paper_prompt
 from nexusai.tools.pdf_downloader import PDFDownloader
 from nexusai.utils.logger import logger
+
 
 @traceable()
 async def process_paper(url: str) -> PaperOutput | None:

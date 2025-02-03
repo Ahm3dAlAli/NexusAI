@@ -7,8 +7,8 @@ from nexusai.config import (
     BING_API_BASE_URL,
     BING_API_KEY,
     MAX_RETRIES,
-    RETRY_BASE_DELAY,
     REQUEST_TIMEOUT,
+    RETRY_BASE_DELAY,
 )
 from nexusai.models.inputs import SearchPapersInput
 from nexusai.utils.logger import logger
@@ -60,7 +60,9 @@ class BingAPIWrapper:
 
     def __get_search_results(self, query: str, max_papers: int = 1) -> list:
         """Execute search query with retry mechanism."""
-        http = urllib3.PoolManager(timeout=urllib3.Timeout(connect=10, read=REQUEST_TIMEOUT))
+        http = urllib3.PoolManager(
+            timeout=urllib3.Timeout(connect=10, read=REQUEST_TIMEOUT)
+        )
         for attempt in range(MAX_RETRIES):
             logger.info(
                 f"Searching Bing for '{query}' (attempt {attempt + 1}/{MAX_RETRIES})"
@@ -91,7 +93,9 @@ class BingAPIWrapper:
                     )
                     time.sleep(sleep_time)
                 else:
-                    raise Exception(f"Got non 2xx response from Bing API: {response.status}")
+                    raise Exception(
+                        f"Got non 2xx response from Bing API: {response.status}"
+                    )
             except urllib3.exceptions.TimeoutError:
                 raise Exception("Request timed out. Please try again later.")
 

@@ -4,7 +4,12 @@ from datetime import datetime
 import feedparser
 import urllib3
 from nexusai.cache.cache_manager import CacheManager
-from nexusai.config import ARXIV_API_BASE_URL, MAX_RETRIES, RETRY_BASE_DELAY, REQUEST_TIMEOUT
+from nexusai.config import (
+    ARXIV_API_BASE_URL,
+    MAX_RETRIES,
+    REQUEST_TIMEOUT,
+    RETRY_BASE_DELAY,
+)
 from nexusai.models.inputs import SearchPapersInput
 from nexusai.utils.logger import logger
 
@@ -44,7 +49,9 @@ class ArxivAPIWrapper:
 
     def __get_search_results(self, query: str, max_papers: int = 1) -> list:
         """Execute search query with retry mechanism."""
-        http = urllib3.PoolManager(timeout=urllib3.Timeout(connect=10, read=REQUEST_TIMEOUT))
+        http = urllib3.PoolManager(
+            timeout=urllib3.Timeout(connect=10, read=REQUEST_TIMEOUT)
+        )
         for attempt in range(MAX_RETRIES):
             logger.info(
                 f"Searching Arxiv for '{query}' (attempt {attempt + 1}/{MAX_RETRIES})"
@@ -75,7 +82,9 @@ class ArxivAPIWrapper:
                     )
                     time.sleep(sleep_time)
                 else:
-                    raise Exception(f"Got non 2xx response from arXiv API: {response.status}")
+                    raise Exception(
+                        f"Got non 2xx response from arXiv API: {response.status}"
+                    )
             except urllib3.exceptions.TimeoutError:
                 raise Exception("Request timed out. Please try again later.")
 
