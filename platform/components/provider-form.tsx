@@ -109,8 +109,15 @@ export function ProviderForm({
     </div>
   )
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      handleSubmit(new Event('submit') as unknown as React.FormEvent<HTMLFormElement>)
+    }
+  }
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} onKeyDown={handleKeyDown} className="space-y-4">
       <p className="text-sm text-muted-foreground mb-8">
         Provide the following parameters to integrate {providerEnumToName(provider.name)} with NexusAI.
       </p>
