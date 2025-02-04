@@ -10,6 +10,7 @@ from nexusai.config import (
     RETRY_BASE_DELAY,
 )
 from nexusai.models.inputs import SearchPapersInput
+from nexusai.utils.arxiv import url_to_pdf_url
 from nexusai.utils.logger import logger
 
 
@@ -94,7 +95,7 @@ class CoreAPIWrapper:
                 f"* Published Date: {published_date}",
                 f"* Authors: {authors_str}",
                 f"* Abstract: {result.get('abstract', '')}",
-                f"* Paper URLs: {urls}",
+                f"* Paper URLs: {[url_to_pdf_url(url) for url in urls]}",
             ]
             docs.append("\n".join(doc_info))
 

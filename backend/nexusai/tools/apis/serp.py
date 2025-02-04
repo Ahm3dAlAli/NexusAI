@@ -11,6 +11,7 @@ from nexusai.config import (
     SERP_API_KEY,
 )
 from nexusai.models.inputs import SearchPapersInput
+from nexusai.utils.arxiv import url_to_pdf_url
 from nexusai.utils.logger import logger
 
 load_dotenv()
@@ -113,7 +114,7 @@ class SerpAPIWrapper:
                 f"* Published Date: {published_date}",
                 f"* Authors: {authors_str}",
                 f"* Abstract: {result.get('snippet', '')}",
-                f"* Paper URLs: {result.get('link', '')}",
+                f"* Paper URLs: {url_to_pdf_url(result.get('link', ''))}",
             ]
             docs.append("\n".join(doc_info))
 

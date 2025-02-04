@@ -11,6 +11,7 @@ from nexusai.config import (
     RETRY_BASE_DELAY,
 )
 from nexusai.models.inputs import SearchPapersInput
+from nexusai.utils.arxiv import url_to_pdf_url
 from nexusai.utils.logger import logger
 
 load_dotenv()
@@ -106,7 +107,7 @@ class BingAPIWrapper:
             doc_info = [
                 f"* Title: {result.get('name', '')}",
                 f"* Abstract: {result.get('snippet', '')}",
-                f"* Paper URLs: {result.get('url', '')}",
+                f"* Paper URLs: {url_to_pdf_url(result.get('url', ''))}",
             ]
             docs.append("\n".join(doc_info))
 

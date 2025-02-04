@@ -5,6 +5,7 @@ Please analyze the paper and provide the following information in a structured f
 - Title: Extract the exact title of the paper
 - Authors: List all authors, separated by commas
 - Summary: Provide a 2-3 paragraph summary of the key findings and contributions
+- URL: The same URL as provided above
 
 Please ensure your response is factual and based on the paper's content.
 

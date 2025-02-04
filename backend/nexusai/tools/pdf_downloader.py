@@ -16,6 +16,7 @@ from nexusai.config import (
     RETRY_BASE_DELAY,
 )
 from nexusai.models.inputs import ModelProviderType
+from nexusai.utils.arxiv import url_to_pdf_url
 from nexusai.utils.logger import logger
 
 # Disable warnings for insecure requests
@@ -87,7 +88,7 @@ class PDFDownloader:
     def download_pdf(self, url: str) -> str:
         """Get PDF from URL or cache if available."""
         # Make sure arxiv urls are correctly formatted
-        url = url.replace("arxiv.org/abs/", "arxiv.org/pdf/")
+        url = url_to_pdf_url(url)
 
         if cached_pages := self.cache_manager.get_pdf(url):
             logger.info(f"Found PDF in cache for {url}")

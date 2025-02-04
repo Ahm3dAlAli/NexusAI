@@ -1,7 +1,7 @@
 # NexusAI
 
 <div align="center">
-<img src="frontend/app/favicon.ico" alt="NexusAI Logo" width="100">
+<img src="platform/app/favicon.ico" alt="NexusAI Logo" width="100">
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 

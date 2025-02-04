@@ -11,6 +11,7 @@ from nexusai.config import (
     RETRY_BASE_DELAY,
 )
 from nexusai.models.inputs import SearchPapersInput
+from nexusai.utils.arxiv import url_to_pdf_url
 from nexusai.utils.logger import logger
 
 
@@ -106,7 +107,7 @@ class ArxivAPIWrapper:
                 f"* Published Date: {published_date}",
                 f"* Authors: {authors_str}",
                 f"* Abstract: {result.summary}",
-                f"* Paper URLs: {result.link}",
+                f"* Paper URLs: {url_to_pdf_url(result.link) if result.link else ''}",
             ]
             docs.append("\n".join(doc_info))
 
