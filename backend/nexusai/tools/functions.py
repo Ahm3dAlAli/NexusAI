@@ -1,33 +1,29 @@
 from langchain_core.tools import BaseTool, tool
-from nexusai.config import PROVIDERS
 from nexusai.models.inputs import SearchPapersInput
-from nexusai.tools.apis import providers_list
+from nexusai.tools.apis import ExaAPIWrapper
 from nexusai.tools.pdf_downloader import PDFDownloader
 from nexusai.utils.logger import logger
 
 
 @tool("search-papers", args_schema=SearchPapersInput)
 def search_papers(**kwargs) -> str:
-    """Search engine for scientific papers.
+    """Search engine for scientific papers and articles. Use this tool to search for scientific papers and articles online.
 
-    This search is limited to English papers. Therefore, keywords, title, and any other search terms must be in English.
-    If you are asked to search for papers with non-English terms, translate them to English first.
+    This tool has access to most of the web, and should be able to find relevant content or include results with a link to download a specific paper.
+    However, keep in mind that this tool is not perfect, it might return irrelevant results or not work on a first try, or simply doesn't have access to the URL of a specific resource, for example if it's behind a paywall.
+    Before assuming relevant results cannot be found, try calling the tool several times with different queries or search types.
+    If you have called the tool several times, with different search approaches, and were unable to find relevant results, inform the user and move forward.
 
-    Returns:
-        A list of the relevant papers found with the corresponding relevant information.
+    Your query must be in English. You're only allowed to use non-English terms if you are looking for specific items, like a paper with a non-English title.
+    The coverage for non-English papers might be limited.
     """
-    apis = [provider() for provider in providers_list if provider.name in PROVIDERS]
-
-    input = SearchPapersInput(**kwargs)
-    for api in apis:
-        try:
-            results = api.search(input)
-            if results:
-                return results
-        except Exception as e:
-            logger.warning(
-                f"Error performing paper search with {api.__class__.__name__}: {e}"
-            )
+    try:
+        input = SearchPapersInput(**kwargs)
+        results = ExaAPIWrapper().search(input)
+        if results:
+            return results
+    except Exception as e:
+        logger.warning(f"Error performing paper search with Exa: {e}")
     return "No results found."
 
 

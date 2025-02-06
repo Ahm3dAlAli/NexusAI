@@ -3,50 +3,42 @@ from enum import StrEnum, auto
 from pydantic import BaseModel, Field
 
 
-class ModelProviderType(StrEnum):
-    default = auto()
-    azureopenai = auto()
-    openai = auto()
-
-
-class ProviderDetails(BaseModel):
-    key: str | None = None
-    endpoint: str | None = None
-
-
-class SearchOperator(StrEnum):
-    AND = auto()
-    OR = auto()
+class SearchType(StrEnum):
+    narrow = auto()
+    broad = auto()
 
 
 class SearchPapersInput(BaseModel):
     """Input schema for paper search."""
 
-    keywords: list[str] | None = Field(
+    query: str = Field(
+        ...,
+        description=(
+            "A descriptive, natural language query that will be used to search for papers and articles. "
+            "It doesn't need to be keyword-optimized. Since results are ranked based on semantic similarity, it should be as semantically similar as possible to the results you are looking for. "
+            "Using double-quotes (\") will make the search prioritize exact matches. Use them when looking for specific papers, authors, or titles."
+        ),
+    )
+    search_type: SearchType = Field(
+        default=SearchType.narrow,
+        description=(
+            "Type of scientific research to perform:\n"
+            "* 'narrow': Use this option if your plan requires you to download and analyze the papers you find. "
+            "* 'broad': Use this option when your plan does not require downloading papers or as a fallback when the 'narrow' option does not return enough results."
+        ),
+    )
+    summarization_prompt: str | None = Field(
         default=None,
-        description="List of keywords to search for. Do not use it if you want to search by title. Instead, use the title field.",
-        examples=[
-            ["Transformer architecture", "Machine Learning"],
-            ["Marine Biology"],
-            ["Mathematics"],
-        ],
+        description=(
+            "A prompt that will be used by an LLM to summarize the content of each result of the search. "
+            "If not provided, the first 1000 characters of each result will be returned. "
+            "Use this option if you want to extract specific insights from the results. Be as detailed and clear as possible about the type of information you want to extract to guide the LLM effectively."
+            "If you need high-level information without the need to go into details, avoid using this option as it will make the tool slower and more expensive."
+        ),
     )
-    operator: SearchOperator = Field(
-        default=SearchOperator.AND, description="Operator to combine the keywords."
-    )
-    title: str | None = Field(
-        default=None,
-        description="Title of the papers to search for.",
-        examples=["Attention is all you need"],
-    )
-    year_range: list[int | None] | None = Field(
-        default=None,
-        description="Year range to search for papers. The first element is the start year (inclusive) and the second element is the end year (inclusive).",
-        examples=[[2020, 2024], [2020, None], [None, 2024], [2023, 2023]],
-    )
-    max_papers: int = Field(
+    max_results: int = Field(
         default=1,
         ge=1,
         le=5,
-        description="Number of papers to return. Adjust this number based on the user query. It must be between <=5.",
+        description="Number of results to return. Adjust this number based on the user query. It must be <=5.",
     )

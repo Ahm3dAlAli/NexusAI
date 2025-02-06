@@ -3,7 +3,7 @@
 import os
 
 from dotenv import load_dotenv
-from nexusai.models.inputs import ModelProviderType
+from nexusai.models.llm import ModelProviderType
 from nexusai.utils.logger import logger
 
 # Load environment variables from .env file
@@ -31,34 +31,17 @@ else:
     )
 logger.info(f"Using LLM provider: {LLM_PROVIDER}")
 
-# Arxiv API
-ARXIV_API_BASE_URL = "http://export.arxiv.org/api"
-PROVIDERS = ["arxiv"]
-
-# CORE API
-CORE_API_BASE_URL = "https://api.core.ac.uk/v3"
-if CORE_API_KEY := os.getenv("CORE_API_KEY"):
-    PROVIDERS.append("core")
-    logger.info("Found CORE API key. CORE was added to the list of providers.")
+# Exa API Configuration
+EXA_API_KEY = os.getenv("EXA_API_KEY")
+if EXA_API_KEY:
+    PROVIDERS = ["exa"]
+    logger.info(
+        "Found Exa API key. Exa will be the only provider used for paper searches."
+    )
 else:
-    logger.warning("CORE_API_KEY environment variable is not set. Not using CORE API.")
-
-# Google Serp API
-SERP_API_BASE_URL = "https://serpapi.com"
-if SERP_API_KEY := os.getenv("SERP_API_KEY"):
-    PROVIDERS.append("serp")
-    logger.info("Found Serp API key. Serp was added to the list of providers.")
-else:
-    logger.warning("SERP_API_KEY environment variable is not set. Not using Serp API.")
-
-# Bing API
-BING_API_BASE_URL = "https://api.bing.microsoft.com"
-if BING_API_KEY := os.getenv("BING_API_KEY"):
-    PROVIDERS.append("bing")
-    logger.info("Found Bing API key. Bing was added to the list of providers.")
-else:
-    logger.warning("BING_API_KEY environment variable is not set. Not using Bing API.")
-
+    raise ValueError(
+        "EXA_API_KEY environment variable is not set. Please set it in your .env file."
+    )
 
 logger.info(f"Using providers: {PROVIDERS}")
 
@@ -77,7 +60,7 @@ else:
 REDIS_URL = os.getenv("REDIS_URL")
 if not REDIS_URL:
     raise ValueError(
-        "REDIS_URL environment variable is not set. " "Please set it in your .env file."
+        "REDIS_URL environment variable is not set. Please set it in your .env file."
     )
 
 # Frontend URL
@@ -85,20 +68,18 @@ if FRONTEND_URL := os.getenv("FRONTEND_URL"):
     logger.info(f"Frontend URL set to: {FRONTEND_URL}")
 else:
     raise ValueError(
-        "FRONTEND_URL environment variable is not set. "
-        "Please set it in your .env file."
+        "FRONTEND_URL environment variable is not set. Please set it in your .env file."
     )
 
 # Auth Secret
 NEXTAUTH_SECRET = os.getenv("NEXTAUTH_SECRET")
 if not NEXTAUTH_SECRET:
     raise ValueError(
-        "NEXTAUTH_SECRET environment variable is not set. "
-        "Please set it in your .env file."
+        "NEXTAUTH_SECRET environment variable is not set. Please set it in your .env file."
     )
 
 # Request Configuration
-MAX_RETRIES = 5
+MAX_RETRIES = 3
 RETRY_BASE_DELAY = 2  # seconds
 REQUEST_TIMEOUT = 30  # seconds
 

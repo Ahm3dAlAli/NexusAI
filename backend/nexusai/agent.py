@@ -1,5 +1,5 @@
 from langsmith import traceable
-from nexusai.models.inputs import ModelProviderType, ProviderDetails
+from nexusai.models.llm import ModelProviderType, ProviderDetails
 from nexusai.models.outputs import AgentMessage
 from nexusai.tools.functions import setup_tools
 from nexusai.utils.messages import build_messages

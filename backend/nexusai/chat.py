@@ -4,7 +4,7 @@ from langchain_core.messages import SystemMessage
 from langchain_openai import AzureChatOpenAI, ChatOpenAI
 from langsmith import traceable
 from nexusai.config import LLM_PROVIDER
-from nexusai.models.inputs import ModelProviderType
+from nexusai.models.llm import ModelProviderType
 from nexusai.models.outputs import PaperOutput
 from nexusai.prompts.chat_prompts import create_paper_prompt
 from nexusai.tools.pdf_downloader import PDFDownloader

@@ -54,9 +54,9 @@ class CacheManager:
         return json.loads(data) if data else None
 
     def store_search_results(
-        self, input: SearchPapersInput, results: str, expire_seconds: int = 86400 * 7
+        self, input: SearchPapersInput, results: str, expire_seconds: int = 86400
     ) -> None:
-        """Store search results in cache with 7-day default expiration."""
+        """Store search results in cache with 1-day default expiration."""
         logger.info(
             f"Storing search results in cache for provider '{self.provider}' and input '{input.model_dump_json()}'"
         )

@@ -15,7 +15,7 @@ from nexusai.config import (
     REQUEST_TIMEOUT,
     RETRY_BASE_DELAY,
 )
-from nexusai.models.inputs import ModelProviderType
+from nexusai.models.llm import ModelProviderType
 from nexusai.utils.arxiv import url_to_pdf_url
 from nexusai.utils.logger import logger
 
@@ -119,6 +119,7 @@ class PDFDownloader:
                     break
                 elif attempt < MAX_RETRIES - 1 and response.status not in [
                     400,
+                    403,
                     404,
                     500,
                 ]:
@@ -128,7 +129,7 @@ class PDFDownloader:
                     time.sleep(RETRY_BASE_DELAY ** (attempt + 2))
                 else:
                     raise Exception(
-                        f"Got non 2xx when downloading paper: {response.status}"
+                        f"Got error response when downloading paper: {response.status}. The URL might be invalid or not available for download."
                     )
             except urllib3.exceptions.TimeoutError:
                 raise Exception("Request timed out. Please try again later.")
@@ -138,13 +139,18 @@ class PDFDownloader:
     @tool("download-paper")
     @staticmethod
     def tool_function(url: str) -> str:
-        """Download a specific scientific paper from a given URL.
+        """Download the full text of a paper from a given URL.
+
+        Call this tool when you want to access the content of a paper to extract relevant insights.
+        For example, the user is asking to analyze a specific paper, or the plan you must follow includes a step where you need to download a paper.
+
+        The tool may occasionally return an error, for example if the provided URL does not lead to a PDF.
+        If you get an error, acknowledge it and move forward.
+
+        Do not underestimate the importance of this tool. If the user or the plan ask you to download a paper, you must use this tool to follow the plan. Otherwise, the quality of your answer will not be enough.
 
         Example:
         {"url": "https://sample.pdf"}
-
-        Returns:
-            The paper content.
         """
         try:
             return PDFDownloader(PDFDownloader.query).download_pdf(url)

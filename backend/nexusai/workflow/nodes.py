@@ -7,7 +7,7 @@ from langchain_core.tools import BaseTool
 from langchain_openai import AzureChatOpenAI, ChatOpenAI
 from nexusai.config import LLM_PROVIDER, MAX_FEEDBACK_REQUESTS
 from nexusai.models.agent_state import AgentState
-from nexusai.models.inputs import ModelProviderType, ProviderDetails
+from nexusai.models.llm import ModelProviderType, ProviderDetails
 from nexusai.models.outputs import DecisionMakingOutput, JudgeOutput
 from nexusai.prompts.agent_prompts import (
     agent_prompt,
