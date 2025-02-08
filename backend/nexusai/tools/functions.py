@@ -1,7 +1,7 @@
 from langchain_core.tools import BaseTool, tool
 from nexusai.models.inputs import SearchPapersInput, SearchType
 from nexusai.tools.apis import *
-from nexusai.tools.pdf_downloader import PDFDownloader
+from nexusai.tools.paper_downloader import PaperDownloader
 from nexusai.utils.logger import logger
 
 
@@ -42,5 +42,5 @@ def setup_tools(query: str) -> list[BaseTool]:
     """Setup and return the list of available tools."""
     return [
         search_papers,
-        PDFDownloader(query).tool_function,
+        PaperDownloader(query).tool_function,
     ]

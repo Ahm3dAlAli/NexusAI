@@ -17,7 +17,7 @@ from nexusai.config import (
     RETRY_BASE_DELAY,
 )
 from nexusai.models.llm import ModelProviderType
-from nexusai.utils.arxiv import url_to_pdf_url
+from nexusai.utils.arxiv import arxiv_abs_to_pdf_url
 from nexusai.utils.logger import logger
 
 # Disable warnings for insecure requests
@@ -155,7 +155,7 @@ class PaperDownloader:
 
     def download(self, url: str) -> str:
         """Download the full text of a paper from a given URL. Try to download from PDF first, if not possible, download from URL."""
-        url = url_to_pdf_url(url)
+        url = arxiv_abs_to_pdf_url(url)
         try:
             return self.download_pdf(url)
         except Exception as e:
@@ -170,7 +170,7 @@ class PaperDownloader:
         Call this tool when you want to access the content of a paper to extract relevant insights.
         For example, the user is asking to analyze a specific paper, or the plan you must follow includes a step where you need to download a paper.
 
-        The tool may occasionally return an error, for example if the provided URL does not lead to a PDF.
+        The tool may occasionally return an error, for example if the provided URL is not available for download.
         If you get an error, acknowledge it and move forward.
 
         Do not underestimate the importance of this tool. If the user or the plan ask you to download a paper, you must use this tool to follow the plan. Otherwise, the quality of your answer will not be enough.

@@ -83,5 +83,5 @@ REQUEST_TIMEOUT = 30  # seconds
 MAX_FEEDBACK_REQUESTS = 2
 RECURSION_LIMIT = 50
 
-# PDF Downloader Configuration
+# Paper Downloader Configuration
 MAX_PAGES = 10

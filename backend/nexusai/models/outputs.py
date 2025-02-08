@@ -1,7 +1,7 @@
 import re
 from enum import StrEnum, auto
 
-from nexusai.utils.arxiv import url_to_pdf_url
+from nexusai.utils.arxiv import arxiv_abs_to_pdf_url
 from pydantic import BaseModel, Field, computed_field
 
 
@@ -52,7 +52,7 @@ class AgentMessage(BaseModel):
         links = list(dict.fromkeys(links))
 
         # Make sure arxiv urls are correctly formatted
-        links = [url_to_pdf_url(link) for link in links]
+        links = [arxiv_abs_to_pdf_url(link) for link in links]
         return links
 
 

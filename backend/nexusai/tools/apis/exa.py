@@ -7,6 +7,7 @@ from nexusai.cache.cache_manager import CacheManager
 from nexusai.config import EXA_API_KEY, MAX_RETRIES, RETRY_BASE_DELAY
 from nexusai.models.inputs import SearchPapersInput, SearchType
 from nexusai.utils.logger import logger
+from nexusai.utils.arxiv import arxiv_abs_to_pdf_url
 
 
 class ExaAPIWrapper:
@@ -27,7 +28,7 @@ class ExaAPIWrapper:
         for i, url in enumerate(set(urls)):
             if i > 10:
                 break
-            formatted_urls.append(f"[Link {i+1}]({url})")
+            formatted_urls.append(f"[Link {i+1}]({arxiv_abs_to_pdf_url(url)})")
         return ", ".join(formatted_urls)
 
     def __build_kwargs(self, input: SearchPapersInput) -> dict:
@@ -98,7 +99,7 @@ class ExaAPIWrapper:
             author = res.author or "Unknown Author"
             published_date = res.published_date or "Unknown Date"
             summary, text = res.summary or "", res.text or "No Text"
-            url = res.url or "No URL"
+            url = arxiv_abs_to_pdf_url(res.url) if res.url else "No URL"
             extra_links = res.extras.get("links", [])
             related_urls = (
                 self.__format_urls(extra_links) if extra_links else "No Related URLs"

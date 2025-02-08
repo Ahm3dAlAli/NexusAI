@@ -11,6 +11,7 @@ from nexusai.config import (
 )
 from nexusai.models.inputs import SearchPapersInput
 from nexusai.utils.logger import logger
+from nexusai.utils.arxiv import arxiv_abs_to_pdf_url
 
 
 class SerperAPIWrapper:
@@ -98,7 +99,7 @@ class SerperAPIWrapper:
         docs = []
         for res in results:
             title = res.get("title", "No Title")
-            link = res.get("link", "No URL")
+            link = arxiv_abs_to_pdf_url(res["link"]) if res.get("link") else "No URL"
             snippet = res.get("snippet", "No Snippet")
             date = res.get("date", "Unknown Date")
             doc_info = [

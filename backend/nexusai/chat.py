@@ -7,7 +7,7 @@ from nexusai.config import LLM_PROVIDER
 from nexusai.models.llm import ModelProviderType
 from nexusai.models.outputs import PaperOutput
 from nexusai.prompts.chat_prompts import create_paper_prompt
-from nexusai.tools.pdf_downloader import PDFDownloader
+from nexusai.tools.paper_downloader import PaperDownloader
 from nexusai.utils.logger import logger
 
 
@@ -26,16 +26,16 @@ async def process_paper(url: str) -> PaperOutput | None:
     else:
         raise ValueError(f"Invalid LLM provider: {LLM_PROVIDER}")
 
-    # Download PDF handling failed requests
+    # Download paper handling failed requests
     try:
-        downloader = PDFDownloader(query=None)
+        downloader = PaperDownloader(query=None)
         content = await asyncio.get_event_loop().run_in_executor(
-            None, downloader.download_pdf, url
+            None, downloader.download, url
         )
         if not content:
             return
     except Exception as e:
-        logger.error(f"Error downloading PDF: {e}")
+        logger.error(f"Error downloading paper: {e}")
         return
 
     system_prompt = SystemMessage(
