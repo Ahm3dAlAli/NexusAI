@@ -31,19 +31,15 @@ else:
     )
 logger.info(f"Using LLM provider: {LLM_PROVIDER}")
 
-# Exa API Configuration
+# Scientific databases
 EXA_API_KEY = os.getenv("EXA_API_KEY")
-if EXA_API_KEY:
-    PROVIDERS = ["exa"]
-    logger.info(
-        "Found Exa API key. Exa will be the only provider used for paper searches."
-    )
+SERPER_API_KEY = os.getenv("SERPER_API_KEY")
+if EXA_API_KEY and SERPER_API_KEY:
+    logger.info("Found Exa and Serper API keys.")
 else:
     raise ValueError(
-        "EXA_API_KEY environment variable is not set. Please set it in your .env file."
+        "EXA_API_KEY or SERPER_API_KEY environment variable is not set. Please set it in your .env file."
     )
-
-logger.info(f"Using providers: {PROVIDERS}")
 
 # Traceability with langsmith
 if os.getenv("LANGCHAIN_API_KEY"):

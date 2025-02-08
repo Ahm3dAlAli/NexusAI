@@ -2,6 +2,7 @@ import json
 import time
 
 from exa_py import Exa
+from exa_py.api import Result, SearchResponse
 from nexusai.cache.cache_manager import CacheManager
 from nexusai.config import EXA_API_KEY, MAX_RETRIES, RETRY_BASE_DELAY
 from nexusai.models.inputs import SearchPapersInput, SearchType
@@ -44,26 +45,38 @@ class ExaAPIWrapper:
 
         return kwargs
 
+    def __build_query(self, input: SearchPapersInput) -> str:
+        base_query = input.query
+        start_year, end_year = input.date_range[0], input.date_range[1]
+        if start_year and end_year:
+            base_query += f" {start_year}-{end_year}"
+        elif start_year:
+            base_query += f" {start_year}"
+        elif end_year:
+            base_query += f" {end_year}"
+        return base_query.strip()
+
     def __get_search_results(self, input: SearchPapersInput) -> dict:
         """Execute the Exa search call with a retry mechanism."""
         kwargs = self.__build_kwargs(input)
+        built_query = self.__build_query(input)
 
         for attempt in range(MAX_RETRIES):
             logger.info(
-                f"Searching Exa for '{input.query}' (attempt {attempt + 1}/{MAX_RETRIES})"
+                f"Searching Exa for '{built_query}' (attempt {attempt + 1}/{MAX_RETRIES})"
             )
             try:
-                response = self.client.search_and_contents(
-                    query=input.query, num_results=input.max_results, **kwargs
+                response: SearchResponse = self.client.search_and_contents(
+                    query=built_query, num_results=input.max_results, **kwargs
                 )
                 # Verify the response structure from Exa
                 if response.results:
                     logger.info(
-                        f"Successfully got Exa search results for '{input.query}'"
+                        f"Successfully got Exa search results for '{built_query}'"
                     )
                     return response
                 else:
-                    raise Exception(f"No results found from Exa for '{input.query}'")
+                    raise Exception(f"No results found from Exa for '{built_query}'")
             except Exception as e:
                 if attempt < MAX_RETRIES - 1:
                     sleep_time = RETRY_BASE_DELAY ** (attempt + 1)
@@ -76,9 +89,9 @@ class ExaAPIWrapper:
                         f"Exa API call failed after {MAX_RETRIES} attempts: {e}"
                     )
 
-    def __format_results(self, response: dict) -> str:
+    def __format_results(self, response: SearchResponse) -> str:
         """Format the Exa response into a string."""
-        results = response.results
+        results: list[Result] = response.results
         docs = []
         for res in results:
             title = res.title or "No Title"
@@ -87,12 +100,18 @@ class ExaAPIWrapper:
             summary, text = res.summary or "", res.text or "No Text"
             url = res.url or "No URL"
             extra_links = res.extras.get("links", [])
-            related_urls = self.__format_urls(extra_links) if extra_links else "No Related URLs"
+            related_urls = (
+                self.__format_urls(extra_links) if extra_links else "No Related URLs"
+            )
             doc_info = [
                 f"* Title: {title}",
                 f"* Author: {author}",
                 f"* Published Date: {published_date}",
-                f"* Summary: {json.dumps(summary)}" if summary else f"* Text: {json.dumps(text)}",
+                (
+                    f"* Summary: {json.dumps(summary)}"
+                    if summary
+                    else f"* Text: {json.dumps(text)}"
+                ),
                 f"* URL: {url}",
                 f"* Related URLs: {related_urls}",
             ]
@@ -117,8 +136,3 @@ class ExaAPIWrapper:
         if not input.summarization_prompt:
             self.cache_manager.store_search_results(input, formatted_results)
         return formatted_results
-
-
-if __name__ == "__main__":
-    input = SearchPapersInput(query="machine learning", max_results=3)
-    print(ExaAPIWrapper().search(input))

@@ -1,6 +1,6 @@
 from langchain_core.tools import BaseTool, tool
-from nexusai.models.inputs import SearchPapersInput
-from nexusai.tools.apis import ExaAPIWrapper
+from nexusai.models.inputs import SearchPapersInput, SearchType
+from nexusai.tools.apis import *
 from nexusai.tools.pdf_downloader import PDFDownloader
 from nexusai.utils.logger import logger
 
@@ -19,12 +19,23 @@ def search_papers(**kwargs) -> str:
     """
     try:
         input = SearchPapersInput(**kwargs)
-        results = ExaAPIWrapper().search(input)
-        if results:
-            return results
+
+        # SerperAPI works better when searching for a specific title or a date range
+        if input.search_type == SearchType.title or any(input.date_range):
+            providers = [SerperAPIWrapper(), ExaAPIWrapper()]
+        else:
+            providers = [ExaAPIWrapper(), SerperAPIWrapper()]
+
+        for provider in providers:
+            try:
+                return provider.search(input)
+            except Exception as e:
+                logger.warning(
+                    f"Error performing paper search with {provider.__class__.__name__}: {e}"
+                )
     except Exception as e:
-        logger.warning(f"Error performing paper search with Exa: {e}")
-    return "No results found."
+        logger.error(f"Error performing paper search: {e}")
+        return "No results found."
 
 
 def setup_tools(query: str) -> list[BaseTool]:

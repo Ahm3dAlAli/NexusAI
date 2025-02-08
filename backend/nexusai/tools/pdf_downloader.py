@@ -124,9 +124,9 @@ class PDFDownloader:
                     500,
                 ]:
                     logger.warning(
-                        f"Got {response.status} response when downloading paper. Sleeping for {RETRY_BASE_DELAY ** (attempt + 2)} seconds before retrying..."
+                        f"Got {response.status} response when downloading paper. Sleeping for {RETRY_BASE_DELAY ** (attempt + 1)} seconds before retrying..."
                     )
-                    time.sleep(RETRY_BASE_DELAY ** (attempt + 2))
+                    time.sleep(RETRY_BASE_DELAY ** (attempt + 1))
                 else:
                     raise Exception(
                         f"Got error response when downloading paper: {response.status}. The URL might be invalid or not available for download."
