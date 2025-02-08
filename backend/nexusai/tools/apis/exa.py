@@ -12,7 +12,7 @@ from nexusai.utils.logger import logger
 class ExaAPIWrapper:
     """Wrapper around the Exa API.
 
-    This wrapper uses the Exa Python client to perform a paper search.
+    This wrapper uses the Exa Python client to perform a paper search and download URL content.
     """
 
     name = "exa"
@@ -120,6 +120,8 @@ class ExaAPIWrapper:
 
     def search(self, input: SearchPapersInput) -> str:
         """Search for papers using the Exa API and format results."""
+        logger.info(f"Searching Exa for '{input.model_dump_json()}'...")
+
         # Check if we already have cached results:
         if not input.summarization_prompt and (
             cached_results := self.cache_manager.get_search_results(input)
@@ -136,3 +138,36 @@ class ExaAPIWrapper:
         if not input.summarization_prompt:
             self.cache_manager.store_search_results(input, formatted_results)
         return formatted_results
+
+    def download_url(self, url: str) -> str:
+        """Download content from a URL using the Exa API and return it as a string."""
+        logger.info(f"Downloading content from URL '{url}'...")
+
+        if cached_text := self.cache_manager.get_url_content(url):
+            logger.info(f"Found cached content for URL '{url}'")
+            return cached_text
+
+        for attempt in range(MAX_RETRIES):
+            logger.info(
+                f"Downloading content from URL '{url}' (attempt {attempt + 1}/{MAX_RETRIES})"
+            )
+            try:
+                response: SearchResponse = self.client.get_contents([url], text=True)
+                if response.results:
+                    downloaded_text = response.results[0].text
+                    logger.info(f"Successfully downloaded content from URL '{url}'")
+                    self.cache_manager.store_url_content(url, downloaded_text)
+                    return downloaded_text
+                else:
+                    raise Exception("No text content found in the response")
+            except Exception as e:
+                if attempt < MAX_RETRIES - 1:
+                    sleep_time = RETRY_BASE_DELAY ** (attempt + 1)
+                    logger.warning(
+                        f"Failed to download content from URL '{url}' with error: {e}. Retrying in {sleep_time} seconds..."
+                    )
+                    time.sleep(sleep_time)
+                else:
+                    raise Exception(
+                        f"Exa API download failed for URL '{url}' after {MAX_RETRIES} attempts: {e}"
+                    )

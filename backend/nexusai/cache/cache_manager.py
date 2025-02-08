@@ -13,7 +13,7 @@ class CacheManager:
     It uses Redis to minimize latency and cost of the APIs.
     """
 
-    def __init__(self, provider: str = "search"):
+    def __init__(self, provider: str = ""):
         self.provider = provider
         if not REDIS_URL:
             raise ValueError("Redis is not enabled.")
@@ -33,7 +33,9 @@ class CacheManager:
 
     def __generate_key(self, key_type: str, value: str) -> str:
         """Generate a unique cache key based on type and value."""
-        return f"{key_type}:{hashlib.sha256(value.encode()).hexdigest()}"
+        return (
+            f"{key_type}:{self.provider}:{hashlib.sha256(value.encode()).hexdigest()}"
+        )
 
     def get_pdf(self, url: str) -> list[str] | None:
         """Get PDF from cache."""
@@ -62,3 +64,15 @@ class CacheManager:
         )
         key = self.__generate_key(self.provider, input.model_dump_json())
         self.redis.set(key, json.dumps(results), ex=expire_seconds)
+
+    def get_url_content(self, url: str) -> str | None:
+        """Get URL content from cache."""
+        key = self.__generate_key("url", url)
+        data = self.redis.get(key)
+        return json.loads(data) if data else None
+
+    def store_url_content(self, url: str, content: str) -> None:
+        """Store URL content in cache."""
+        logger.info(f"Storing URL content in cache for {url}")
+        key = self.__generate_key("url", url)
+        self.redis.set(key, json.dumps(content))

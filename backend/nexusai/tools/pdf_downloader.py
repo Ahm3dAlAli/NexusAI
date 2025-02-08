@@ -1,4 +1,3 @@
-import asyncio
 import io
 import time
 
@@ -7,7 +6,9 @@ import urllib3
 from langchain_community.vectorstores import FAISS
 from langchain_core.tools import tool
 from langchain_openai import AzureOpenAIEmbeddings, OpenAIEmbeddings
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from nexusai.cache.cache_manager import CacheManager
+from nexusai.tools.apis.exa import ExaAPIWrapper
 from nexusai.config import (
     LLM_PROVIDER,
     MAX_PAGES,
@@ -23,14 +24,15 @@ from nexusai.utils.logger import logger
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
-class PDFDownloader:
-    """Download a PDF from a URL and return the text."""
+class PaperDownloader:
+    """Download a paper from a URL and return the text."""
 
     query: str | None = None
+    chars_per_page: int = 5000  # NOTE: Assuming 5000 is the average page length
 
     def __init__(self, query: str | None):
         self.query = query
-        PDFDownloader.query = query
+        PaperDownloader.query = query
         self.cache_manager = CacheManager()
 
         if LLM_PROVIDER == ModelProviderType.openai:
@@ -44,7 +46,9 @@ class PDFDownloader:
 
     def __filter_pages(self, pages: list[str]) -> list[str]:
         """Filter pages with RAG to keep only the most relevant ones."""
-        logger.warning(f"The PDF has more than {MAX_PAGES} pages, filtering content...")
+        logger.warning(
+            f"The paper has more than {MAX_PAGES} pages, filtering content..."
+        )
         if not self.query:
             logger.info(
                 f"No query provided to filter content by relevance, returning the first {MAX_PAGES} pages"
@@ -52,17 +56,13 @@ class PDFDownloader:
             return pages[:MAX_PAGES]
 
         logger.info(f"Generating embeddings for {len(pages)} pages...")
-        start_time = time.time()
-        embeddings = asyncio.run(self.embeddings.aembed_documents(pages))
-        db = FAISS.from_embeddings(
-            zip(pages, embeddings),
+        db = FAISS.from_texts(
+            pages,
             self.embeddings,
             metadatas=[{"page_number": i} for i in range(len(pages))],
         )
         logger.info("Searching for most relevant pages...")
         docs = db.similarity_search(self.query, k=MAX_PAGES)
-        end_time = time.time()
-        logger.info(f"Filtering pages took {end_time - start_time:.2f} seconds")
         return [
             doc.page_content
             for doc in sorted(docs, key=lambda x: x.metadata["page_number"])
@@ -85,10 +85,22 @@ class PDFDownloader:
 
         return "\n\n".join(pages)
 
+    def __filter_text(self, text: str) -> str:
+        max_chars = self.chars_per_page * MAX_PAGES
+        if len(text) > max_chars:
+            logger.warning(
+                f"The text is longer than {max_chars} characters, splitting into pages..."
+            )
+            text_splitter = RecursiveCharacterTextSplitter(
+                chunk_size=self.chars_per_page, chunk_overlap=0
+            )
+            pages = text_splitter.split_text(text)
+            return self.__filter_pages(pages)
+        return text
+
     def download_pdf(self, url: str) -> str:
         """Get PDF from URL or cache if available."""
-        # Make sure arxiv urls are correctly formatted
-        url = url_to_pdf_url(url)
+        logger.info(f"Downloading PDF from {url}...")
 
         if cached_pages := self.cache_manager.get_pdf(url):
             logger.info(f"Found PDF in cache for {url}")
@@ -136,6 +148,20 @@ class PDFDownloader:
 
         return self.__convert_bytes_to_text(url, response.data)
 
+    def download_url_content(self, url: str) -> str:
+        """Download the full text of a paper from a given URL."""
+        full_text = ExaAPIWrapper().download_url(url)
+        return self.__filter_text(full_text)
+
+    def download(self, url: str) -> str:
+        """Download the full text of a paper from a given URL. Try to download from PDF first, if not possible, download from URL."""
+        url = url_to_pdf_url(url)
+        try:
+            return self.download_pdf(url)
+        except Exception as e:
+            logger.warning(f"Error downloading PDF from {url}: {e}")
+            return self.download_url_content(url)
+
     @tool("download-paper")
     @staticmethod
     def tool_function(url: str) -> str:
@@ -153,6 +179,6 @@ class PDFDownloader:
         {"url": "https://sample.pdf"}
         """
         try:
-            return PDFDownloader(PDFDownloader.query).download_pdf(url)
+            return PaperDownloader(PaperDownloader.query).download(url)
         except Exception as e:
             return f"Error downloading paper: {e}"

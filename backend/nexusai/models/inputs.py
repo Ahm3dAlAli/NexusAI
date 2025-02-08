@@ -53,6 +53,6 @@ class SearchPapersInput(BaseModel):
     max_results: int = Field(
         default=1,
         ge=1,
-        le=5,
-        description="Number of results to return. Adjust this number based on the user query. It must be <=5.",
+        le=10,
+        description="Number of results to return. Adjust this number based on the user query. It must be <=10.",
     )
