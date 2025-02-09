@@ -8,6 +8,8 @@ from nexusai.models.agent_state import AgentState
 from nexusai.models.outputs import AgentMessage, AgentMessageType
 from nexusai.utils.logger import logger
 from nexusai.workflow.nodes import WorkflowNodes
+from openai import RateLimitError
+from openai import APIError
 
 
 class ResearchWorkflow:
@@ -114,8 +116,8 @@ class ResearchWorkflow:
         self, query: str, messages: list[BaseMessage], message_callback=None
     ) -> AgentMessage:
         """Process a research query streaming the intermediate messages."""
+        all_messages: list[BaseMessage] = []
         try:
-            all_messages: list[BaseMessage] = []
             async for chunk in self.workflow.astream(
                 {"messages": messages + [query]},
                 config={"recursion_limit": RECURSION_LIMIT},
@@ -172,6 +174,18 @@ class ResearchWorkflow:
                 order=len(all_messages) + 1,
                 type=AgentMessageType.final,
                 content=final_message.content,
+            )
+        except APIError as e:
+            error_msg = (
+                "There was an error with the LLM API. Make sure your credentials are correct and have not exceeded your quotas. "
+                "If you are using the default model provider, please reach out to us.\n\n"
+                "Error details:\n" + str(e)
+            )
+            logger.error(f"LLM API error: {e}")
+            return AgentMessage(
+                order=len(all_messages) + 1,
+                type=AgentMessageType.error,
+                content=error_msg,
             )
         except Exception as e:
             logger.error(f"Error processing query: {e}")
