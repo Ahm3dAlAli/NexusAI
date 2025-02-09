@@ -7,7 +7,7 @@ from nexusai.cache.cache_manager import CacheManager
 from nexusai.config import EXA_API_KEY, MAX_RETRIES, RETRY_BASE_DELAY
 from nexusai.models.inputs import SearchPapersInput, SearchType
 from nexusai.utils.logger import logger
-from nexusai.utils.arxiv import arxiv_abs_to_pdf_url
+from nexusai.utils.strings import arxiv_abs_to_pdf_url
 
 
 class ExaAPIWrapper:

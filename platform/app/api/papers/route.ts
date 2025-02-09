@@ -32,8 +32,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'URLs array is required' }, { status: 400 });
   }
 
-  if (urls.length > 8) {
-    return NextResponse.json({ error: 'Maximum 8 papers can be processed at once' }, { status: 400 });
+  if (urls.length > 10) {
+    return NextResponse.json({ error: 'Maximum 10 papers can be processed at once' }, { status: 400 });
   }
 
   try {
@@ -53,11 +53,11 @@ export async function POST(req: Request) {
     const newUrls = uniqueUrls.filter(url => !existingUrls.includes(url));
 
     // Only create papers for new URLs
-    const token = generateWebSocketToken({ userId: session.user.id, email: session.user.email })
+    const token = generateWebSocketToken({ userId: session.user.id, email: session.user.email });
     const payload = { urls: newUrls } satisfies PapersRequest;
     
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 300000); // 300 seconds
+    const timeoutId = setTimeout(() => controller.abort(), 600000); // 10 minutes
 
     const response = await fetch(
       `${publicConfig.apiUrl}/papers?token=${token}`,
@@ -80,7 +80,7 @@ export async function POST(req: Request) {
     }
 
     const papers: PaperOutput[] = await response.json();
-    const newPaperPromises = papers.map(paper => 
+    const newPaperPromises = papers.map(paper =>
       prisma.paper.create({
         data: {
           ...paper,
@@ -97,10 +97,10 @@ export async function POST(req: Request) {
 
     return NextResponse.json(
       {
-        newPapersCount: newPapers.length,
-        failedPapersCount: newUrls.length - newPapers.length
-      }, 
-      { status: 201 });
+        newPapersCount: newPapers.length
+      },
+      { status: 201 }
+    );
   } catch (error) {
     if (error instanceof Error && error.name === 'AbortError') {
       return NextResponse.json({ error: 'Request timeout' }, { status: 504 });

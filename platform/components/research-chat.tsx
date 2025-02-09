@@ -5,6 +5,9 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import remarkMath from 'remark-math'
+import rehypeKatex from 'rehype-katex'
+import 'katex/dist/katex.min.css'
 import { AgentMessage } from '@/types/AgentMessage'
 import { MessageRequest } from '@/types/BackendModels'
 import { AgentMessageType, ModelProviderType } from '@prisma/client'
@@ -184,28 +187,27 @@ export default function ResearchChat({ researchId, initialMessage }: ChatProps) 
   }
 
   const handlePapersCreation = async (urls: string[]) => {
-    let uniqueUrls = Array.from(new Set(urls))    
-    addNotification('info', `${uniqueUrls.length} paper(s) found from your latest research. The new ones will be added to your collection.`)
+    let uniqueUrls = Array.from(new Set(urls));
 
-    if (uniqueUrls.length > 8) {
-      addNotification('warning', 'Maximum 8 papers can be processed at once. The rest will be discarded.')
-      uniqueUrls = uniqueUrls.slice(0, 8)
+    // Show a generic notification without mentioning a count
+    addNotification('info', `Your research found new papers. They will be added to your collection.`);
+
+    // Limit to maximum 10 papers without a warning notification
+    if (uniqueUrls.length > 10) {
+      uniqueUrls = uniqueUrls.slice(0, 10);
     }
 
     try {
-      const [successCount, failedCount] = await createPapersFromUrls(uniqueUrls);
+      const successCount = await createPapersFromUrls(uniqueUrls);
       
       if (successCount === 0) {
-        addNotification('info', 'All papers from your latest research are already in your collection. No new paper was added.')
+        // If no paper is created, show an error notification
+        addNotification('warning', 'No new papers were added to your collection.');
       } else {
         addNotification('success', `${successCount} new paper(s) added to your collection.`, {
           label: 'See',
           onClick: () => setCurrentMenu('papers')
-        })
-
-        if (failedCount > 0) {
-          addNotification('warning', `${failedCount} paper(s) could not be added to your collection.`)
-        }
+        });
       }
     } catch (error) {
       console.error('Error creating papers:', error);
@@ -214,10 +216,10 @@ export default function ResearchChat({ researchId, initialMessage }: ChatProps) 
   }
 
   const createPapersFromUrls = async (urls: string[]) => {
-    console.log(`Creating papers from ${urls.length} urls`)
-    
+    console.log(`Creating papers from ${urls.length} urls`);
+
     const timeout = new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error('Request timed out')), 305000) // 300 seconds + 5 seconds margin for api response
+      setTimeout(() => reject(new Error('Request timed out')), 600000) // 10 minutes
     );
 
     const successCount = await Promise.race([createPapers(urls), timeout]);
@@ -290,7 +292,7 @@ export default function ResearchChat({ researchId, initialMessage }: ChatProps) 
           ease: "easeOut"
         }}
       >
-        <h1 className="text-4xl font-bold mb-2">🤖 NexusAI 📚</h1>
+        <h1 className="text-4xl font-bold mb-2">📚 NexusAI 🤖</h1>
         <p className="text-xl text-muted-foreground">
           Research scientific literature in minutes, not hours
         </p>
@@ -327,12 +329,15 @@ export default function ResearchChat({ researchId, initialMessage }: ChatProps) 
                   <Copy className="h-4 w-4" />
                 </Button>
                 {copiedMessageIndex === index && (
-                  <span className="absolute right-0 top-6 text-sm">Copied!</span>
+                  <span className="absolute right-0 top-10 text-sm transform translate-x-1">
+                    Copied!
+                  </span>
                 )}
                 <div className="message-content">
                   <h2>✅ Task Completed</h2>
                   <ReactMarkdown 
-                    remarkPlugins={[remarkGfm]}
+                    remarkPlugins={[remarkGfm, remarkMath]}
+                    rehypePlugins={[rehypeKatex]}
                     components={{ a: MarkdownLink }}
                   >
                     {m.content}
@@ -369,7 +374,8 @@ export default function ResearchChat({ researchId, initialMessage }: ChatProps) 
                       )}
                       <div className="message-content">
                         <ReactMarkdown 
-                          remarkPlugins={[remarkGfm]}
+                          remarkPlugins={[remarkGfm, remarkMath]}
+                          rehypePlugins={[rehypeKatex]}
                           components={{ a: MarkdownLink }}
                         >
                           {m.content}
@@ -379,7 +385,8 @@ export default function ResearchChat({ researchId, initialMessage }: ChatProps) 
                   ) : (
                     <div className="message-content">
                       <ReactMarkdown 
-                        remarkPlugins={[remarkGfm]}
+                        remarkPlugins={[remarkGfm, remarkMath]}
+                        rehypePlugins={[rehypeKatex]}
                         components={{ a: MarkdownLink }}
                       >
                         {m.content}

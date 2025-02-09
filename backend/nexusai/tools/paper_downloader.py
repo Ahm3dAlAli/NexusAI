@@ -17,7 +17,7 @@ from nexusai.config import (
     RETRY_BASE_DELAY,
 )
 from nexusai.models.llm import ModelProviderType
-from nexusai.utils.arxiv import arxiv_abs_to_pdf_url
+from nexusai.utils.strings import arxiv_abs_to_pdf_url
 from nexusai.utils.logger import logger
 
 # Disable warnings for insecure requests

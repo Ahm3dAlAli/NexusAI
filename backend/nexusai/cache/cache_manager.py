@@ -71,8 +71,8 @@ class CacheManager:
         data = self.redis.get(key)
         return json.loads(data) if data else None
 
-    def store_url_content(self, url: str, content: str) -> None:
-        """Store URL content in cache."""
+    def store_url_content(self, url: str, content: str, expire_seconds: int = 86400 * 7) -> None:
+        """Store URL content in cache with 7-day default expiration."""
         logger.info(f"Storing URL content in cache for {url}")
         key = self.__generate_key("url", url)
-        self.redis.set(key, json.dumps(content))
+        self.redis.set(key, json.dumps(content), ex=expire_seconds)

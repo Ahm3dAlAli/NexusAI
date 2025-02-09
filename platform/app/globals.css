@@ -85,6 +85,35 @@ body {
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
   }
+  /* Blockquotes */
+  .message-content blockquote {
+    @apply border-l-4 border-gray-300 pl-4 italic my-4 text-muted-foreground;
+  }
+
+  /* Horizontal Rules */
+  .message-content hr {
+    @apply my-8 border-t border-gray-300;
+  }
+
+  /* Images */
+  .message-content img {
+    @apply block max-w-full rounded-md my-4;
+  }
+
+  /* Emphasis and Strong */
+  .message-content strong {
+    @apply font-bold;
+  }
+  .message-content em {
+    @apply italic;
+  }
+
+  /* Equations / Math styling */
+  .message-content .math,
+  .message-content .katex,
+  .message-content .katex-display {
+    @apply text-xl text-center my-4;
+  }
 }
 
 @layer base {

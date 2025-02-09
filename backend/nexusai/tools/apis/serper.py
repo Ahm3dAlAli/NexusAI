@@ -11,7 +11,7 @@ from nexusai.config import (
 )
 from nexusai.models.inputs import SearchPapersInput
 from nexusai.utils.logger import logger
-from nexusai.utils.arxiv import arxiv_abs_to_pdf_url
+from nexusai.utils.strings import arxiv_abs_to_pdf_url
 
 
 class SerperAPIWrapper:

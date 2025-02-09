@@ -7,6 +7,9 @@ import { fetchPaper } from '@/lib/papers';
 import { Paper } from '@prisma/client';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import 'katex/dist/katex.min.css';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatDate } from '@/lib/utils';
@@ -80,7 +83,10 @@ const PaperChat: React.FC<PaperChatProps> = ({ paperId }) => {
           </CardHeader>
           <CardContent>
             <div className="prose prose-sm max-w-none [&>p]:mb-4">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm, remarkMath]}
+                rehypePlugins={[rehypeKatex]}
+              >
                 {paper.summary}
               </ReactMarkdown>
             </div>
@@ -92,7 +98,7 @@ const PaperChat: React.FC<PaperChatProps> = ({ paperId }) => {
                 rel="noopener noreferrer" 
                 className="text-primary hover:underline inline-flex items-center"
               >
-                Read Full Paper →
+                Read Online →
               </a>
             </div>
           </CardContent>

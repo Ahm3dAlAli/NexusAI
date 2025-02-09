@@ -1,7 +1,6 @@
-import re
 from enum import StrEnum, auto
 
-from nexusai.utils.arxiv import arxiv_abs_to_pdf_url
+from nexusai.utils.strings import arxiv_abs_to_pdf_url, extract_urls
 from pydantic import BaseModel, Field, computed_field
 
 
@@ -48,8 +47,7 @@ class AgentMessage(BaseModel):
         if self.type != AgentMessageType.final:
             return None
 
-        links: list[str] = re.findall(r"\[.*?\]\((.*?)\)", self.content)
-        links = list(dict.fromkeys(links))
+        links = extract_urls(self.content)
 
         # Make sure arxiv urls are correctly formatted
         links = [arxiv_abs_to_pdf_url(link) for link in links]
