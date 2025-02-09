@@ -189,22 +189,23 @@ export default function ResearchChat({ researchId, initialMessage }: ChatProps) 
   const handlePapersCreation = async (urls: string[]) => {
     let uniqueUrls = Array.from(new Set(urls));
 
-    // Show a generic notification without mentioning a count
+    // Show a generic notification
     addNotification('info', `Your research found new papers. They will be added to your collection.`);
 
-    // Limit to maximum 10 papers without a warning notification
+    // Limit to maximum 10 papers
     if (uniqueUrls.length > 10) {
       uniqueUrls = uniqueUrls.slice(0, 10);
     }
 
     try {
-      const successCount = await createPapersFromUrls(uniqueUrls);
+      const { newPapersCount, expectedPapersCount } = await createPapersFromUrls(uniqueUrls);
       
-      if (successCount === 0) {
-        // If no paper is created, show an error notification
+      if (expectedPapersCount === 0) {
+        addNotification('info', 'All the papers are already part of your collection. No new papers were added.');
+      } else if (newPapersCount === 0) {
         addNotification('warning', 'No new papers were added to your collection.');
       } else {
-        addNotification('success', `${successCount} new paper(s) added to your collection.`, {
+        addNotification('success', `${newPapersCount} new paper(s) added to your collection.`, {
           label: 'See',
           onClick: () => setCurrentMenu('papers')
         });
@@ -222,11 +223,11 @@ export default function ResearchChat({ researchId, initialMessage }: ChatProps) 
       setTimeout(() => reject(new Error('Request timed out')), 600000) // 10 minutes
     );
 
-    const successCount = await Promise.race([createPapers(urls), timeout]);
+    const result = await Promise.race([createPapers(urls), timeout]) as { newPapersCount: number, expectedPapersCount: number };
 
     console.log('Finished creating papers from urls');
     await fetchPapers();
-    return successCount;
+    return result;
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {

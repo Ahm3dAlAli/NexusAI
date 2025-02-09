@@ -52,6 +52,11 @@ export async function POST(req: Request) {
     const existingUrls = existingPapers.map(paper => paper.url);
     const newUrls = uniqueUrls.filter(url => !existingUrls.includes(url));
 
+    // Return early if there are no new URLs to process
+    if (newUrls.length === 0) {
+      return NextResponse.json({ newPapersCount: 0, expectedPapersCount: 0 }, { status: 200 });
+    }
+
     // Only create papers for new URLs
     const token = generateWebSocketToken({ userId: session.user.id, email: session.user.email });
     const payload = { urls: newUrls } satisfies PapersRequest;
@@ -95,9 +100,11 @@ export async function POST(req: Request) {
       throw new Error('Failed to download papers');
     }
 
+    // Return both the number of papers created and the expected count of new papers
     return NextResponse.json(
       {
-        newPapersCount: newPapers.length
+        newPapersCount: newPapers.length,
+        expectedPapersCount: newUrls.length
       },
       { status: 201 }
     );
