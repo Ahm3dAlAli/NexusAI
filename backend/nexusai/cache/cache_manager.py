@@ -51,7 +51,7 @@ class CacheManager:
 
     def get_search_results(self, input: SearchPapersInput) -> str | None:
         """Get search results from cache."""
-        key = self.__generate_key(self.provider, input.model_dump_json())
+        key = self.__generate_key("search", input.model_dump_json())
         data = self.redis.get(key)
         return json.loads(data) if data else None
 
@@ -62,7 +62,7 @@ class CacheManager:
         logger.info(
             f"Storing search results in cache for provider '{self.provider}' and input '{input.model_dump_json()}'"
         )
-        key = self.__generate_key(self.provider, input.model_dump_json())
+        key = self.__generate_key("search", input.model_dump_json())
         self.redis.set(key, json.dumps(results), ex=expire_seconds)
 
     def get_url_content(self, url: str) -> str | None:
