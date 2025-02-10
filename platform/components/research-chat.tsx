@@ -337,9 +337,17 @@ export default function ResearchChat({ researchId, initialMessage }: ChatProps) 
                 <div className="message-content">
                   <h2>✅ Task Completed</h2>
                   <ReactMarkdown 
-                    remarkPlugins={[remarkGfm, remarkMath]}
+                    remarkPlugins={[
+                      remarkGfm,
+                      [remarkMath, { singleDollarTextMath: false }]
+                    ]}
                     rehypePlugins={[rehypeKatex]}
-                    components={{ a: MarkdownLink }}
+                    components={{ 
+                      a: MarkdownLink,
+                      p: ({ children }) => {
+                        return <p>{children}</p>
+                      }
+                    }}
                   >
                     {m.content}
                   </ReactMarkdown>
@@ -375,9 +383,17 @@ export default function ResearchChat({ researchId, initialMessage }: ChatProps) 
                       )}
                       <div className="message-content">
                         <ReactMarkdown 
-                          remarkPlugins={[remarkGfm, remarkMath]}
+                          remarkPlugins={[
+                            remarkGfm,
+                            [remarkMath, { singleDollarTextMath: false }]
+                          ]}
                           rehypePlugins={[rehypeKatex]}
-                          components={{ a: MarkdownLink }}
+                          components={{ 
+                            a: MarkdownLink,
+                            p: ({ children }) => {
+                              return <p>{children}</p>
+                            }
+                          }}
                         >
                           {m.content}
                         </ReactMarkdown>
@@ -386,9 +402,17 @@ export default function ResearchChat({ researchId, initialMessage }: ChatProps) 
                   ) : (
                     <div className="message-content">
                       <ReactMarkdown 
-                        remarkPlugins={[remarkGfm, remarkMath]}
+                        remarkPlugins={[
+                          remarkGfm,
+                          [remarkMath, { singleDollarTextMath: false }]
+                        ]}
                         rehypePlugins={[rehypeKatex]}
-                        components={{ a: MarkdownLink }}
+                        components={{ 
+                          a: MarkdownLink,
+                          p: ({ children }) => {
+                            return <p>{children}</p>
+                          }
+                        }}
                       >
                         {m.content}
                       </ReactMarkdown>

@@ -13,6 +13,7 @@ import 'katex/dist/katex.min.css';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatDate } from '@/lib/utils';
+import { MarkdownLink } from '@/components/ui/markdown-link';
 
 interface PaperChatProps {
   paperId: string;
@@ -84,8 +85,17 @@ const PaperChat: React.FC<PaperChatProps> = ({ paperId }) => {
           <CardContent>
             <div className="prose prose-sm max-w-none [&>p]:mb-4">
               <ReactMarkdown
-                remarkPlugins={[remarkGfm, remarkMath]}
+                remarkPlugins={[
+                  remarkGfm,
+                  [remarkMath, { singleDollarTextMath: false }]
+                ]}
                 rehypePlugins={[rehypeKatex]}
+                components={{
+                  a: MarkdownLink,
+                  p: ({ children }) => {
+                    return <p>{children}</p>
+                  }
+                }}
               >
                 {paper.summary}
               </ReactMarkdown>

@@ -106,6 +106,9 @@ body {
   }
   .message-content em {
     @apply italic;
+    white-space: normal;
+    letter-spacing: normal;
+    word-spacing: normal;
   }
 
   /* Equations / Math styling */
@@ -142,13 +145,23 @@ body {
 /* Add styles for markdown content */
 .message-content {
   @apply min-w-[60px] max-w-full;
-  word-break: break-word;
+  overflow-wrap: break-word;
   word-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+  white-space: normal;
+  letter-spacing: normal;
+  word-spacing: normal;
 }
 
 .message-content > * {
   @apply overflow-x-auto;
   padding-right: 1rem;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
 }
 
 /* Headers */
@@ -193,10 +206,16 @@ body {
 /* Code blocks */
 .message-content pre {
   @apply my-2 p-3 bg-gray-800 text-white rounded-lg;
+  max-width: 100%;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-wrap: break-word;
 }
 
 .message-content code {
   @apply font-mono text-sm;
+  max-width: 100%;
+  word-wrap: break-word;
 }
 
 /* Inline code */
