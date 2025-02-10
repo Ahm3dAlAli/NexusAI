@@ -1,3 +1,4 @@
+import asyncio
 import io
 import time
 
@@ -44,6 +45,11 @@ class PaperDownloader:
         else:
             raise ValueError(f"Unsupported LLM provider: {LLM_PROVIDER}")
 
+    def __generate_embeddings(self, pages: list[str]) -> list[str]:
+        logger.info(f"Generating embeddings for {len(pages)} pages...")
+        embeddings = asyncio.run(self.embeddings.aembed_documents(pages))
+        return embeddings
+
     def __filter_pages(self, pages: list[str]) -> list[str]:
         """Filter pages with RAG to keep only the most relevant ones."""
         logger.warning(
@@ -55,9 +61,9 @@ class PaperDownloader:
             )
             return pages[:MAX_PAGES]
 
-        logger.info(f"Generating embeddings for {len(pages)} pages...")
-        db = FAISS.from_texts(
-            pages,
+        embeddings = self.__generate_embeddings(pages)
+        db = FAISS.from_embeddings(
+            zip(pages, embeddings),
             self.embeddings,
             metadatas=[{"page_number": i} for i in range(len(pages))],
         )
