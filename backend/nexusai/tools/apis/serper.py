@@ -9,7 +9,7 @@ from nexusai.config import (
     RETRY_BASE_DELAY,
     SERPER_API_KEY,
 )
-from nexusai.models.inputs import SearchPapersInput
+from nexusai.models.inputs import SearchPapersInput, SearchType
 from nexusai.utils.logger import logger
 from nexusai.utils.strings import arxiv_abs_to_pdf_url
 
@@ -26,32 +26,34 @@ class SerperAPIWrapper:
         self.api_key = SERPER_API_KEY
         self.cache_manager = CacheManager(self.name)
         self.host = "google.serper.dev"
-        self.path = "/search"
+        self.path = "/scholar"
 
-    def __build_query(self, input: SearchPapersInput) -> str:
+    def __build_query_and_payload(self, input: SearchPapersInput) -> tuple[str, dict]:
         query = input.query
-        start_year, end_year = input.date_range[0], input.date_range[1]
-        if start_year:
-            query += f" after:{start_year}"
-        if end_year:
-            query += f" before:{end_year}"
+        if input.search_type == SearchType.title:
+            query = f'"{query}"'
 
-        query += f" filetype:pdf"
-        return query
-
-    def __get_search_results(self, input: SearchPapersInput) -> dict:
-        """Execute the Serper search call with a retry mechanism."""
-        query = self.__build_query(input)
         payload = {
             "q": query,
             "num": input.max_results,
         }
+        if input.date_range:
+            start_year, end_year = input.date_range[0], input.date_range[1]
+            if start_year:
+                payload["as_ylo"] = start_year
+            if end_year:
+                payload["as_yhi"] = end_year
+        return query, payload
+
+    def __get_search_results(self, input: SearchPapersInput) -> dict:
+        """Execute the Serper search call with a retry mechanism."""
+        query, payload = self.__build_query_and_payload(input)
         payload_str = json.dumps(payload)
         headers = {"X-API-KEY": self.api_key, "Content-Type": "application/json"}
 
         for attempt in range(MAX_RETRIES):
             logger.info(
-                f"Searching Serper for '{query}' (attempt {attempt + 1}/{MAX_RETRIES})"
+                f"[Serper API] Attempt {attempt + 1}/{MAX_RETRIES}: Searching for '{query}'"
             )
             try:
                 conn = http.client.HTTPSConnection(self.host, timeout=REQUEST_TIMEOUT)
@@ -74,7 +76,7 @@ class SerperAPIWrapper:
                 ]:
                     delay = RETRY_BASE_DELAY ** (attempt + 1)
                     logger.warning(
-                        f"Serper API call failed with status {response.status}. Retrying in {delay} seconds..."
+                        f"[Serper API] Attempt {attempt + 1}/{MAX_RETRIES}: API call failed with status {response.status}. Retrying in {delay} seconds..."
                     )
                     time.sleep(delay)
                 else:
@@ -85,7 +87,7 @@ class SerperAPIWrapper:
                 if attempt < MAX_RETRIES - 1:
                     delay = RETRY_BASE_DELAY ** (attempt + 1)
                     logger.warning(
-                        f"Error during Serper API call: {e}. Retrying in {delay} seconds..."
+                        f"[Serper API] Attempt {attempt + 1}/{MAX_RETRIES}: Error during API call: {e}. Retrying in {delay} seconds..."
                     )
                     time.sleep(delay)
                 else:
@@ -98,15 +100,20 @@ class SerperAPIWrapper:
         results = response.get("organic", [])
         docs = []
         for res in results:
-            title = res.get("title", "No Title")
-            link = arxiv_abs_to_pdf_url(res["link"]) if res.get("link") else "No URL"
-            snippet = res.get("snippet", "No Snippet")
-            date = res.get("date", "Unknown Date")
+            title = res.get("title", "No title")
+            if res.get("pdfUrl") or res.get("link"):
+                link = arxiv_abs_to_pdf_url(res.get("pdfUrl") or res["link"])
+            else:
+                link = "No URL"
+            publication_info = res.get("publicationInfo", "No publication info")
+            snippet = res.get("snippet", "No snippet")
             doc_info = [
                 f"* Title: {title}",
                 f"* Link: {link}",
+                f"* Publication Info: {publication_info}",
                 f"* Snippet: {snippet}",
-                f"* Date: {date}",
+                f"* Year: {res.get('year', 'Unknown year')}",
+                f"* Cited By: {res.get('citedBy', 'Unknown citations')}",
             ]
             docs.append("\n".join(doc_info))
         return "\n-----\n".join(docs)
@@ -115,13 +122,10 @@ class SerperAPIWrapper:
         """Search for papers using the Serper API and format results."""
         # Use cache if available
         if cached_results := self.cache_manager.get_search_results(input):
-            logger.info(
-                f"Found Serper search results for '{input.model_dump_json()}' in cache"
-            )
+            logger.info(f"[Serper API] Cached search results found for input: {input}")
             return cached_results
 
         response = self.__get_search_results(input)
         formatted_results = self.__format_results(response)
-
         self.cache_manager.store_search_results(input, formatted_results)
         return formatted_results

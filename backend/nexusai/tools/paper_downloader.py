@@ -154,7 +154,7 @@ class PaperDownloader:
 
         return self.__convert_bytes_to_text(url, response.data)
 
-    def download_url_content(self, url: str) -> str:
+    def download_url(self, url: str) -> str:
         """Download the full text of a paper from a given URL."""
         full_text = ExaAPIWrapper().download_url(url)
         return self.__filter_text(full_text)
@@ -166,20 +166,19 @@ class PaperDownloader:
             return self.download_pdf(url)
         except Exception as e:
             logger.warning(f"Error downloading PDF from {url}: {e}")
-            return self.download_url_content(url)
+            return self.download_url(url)
 
     @tool("download-paper")
     @staticmethod
     def tool_function(url: str) -> str:
-        """Download the full text of a paper from a given URL.
+        """Download a paper from a given URL.
 
-        Call this tool when you want to access the content of a paper to extract relevant insights.
-        For example, the user is asking to analyze a specific paper, or the plan you must follow includes a step where you need to download a paper.
+        Call this tool when the user is asking to analyze a specific paper or the plan you must follow tells you to download the paper.
 
-        The tool may occasionally return an error, for example if the provided URL is not available for download.
-        If you get an error, acknowledge it and move forward.
+        The tool may return an error, for example if the provided URL is not available for download.
+        In that case, acknowledge it and move forward.
 
-        Do not underestimate the importance of this tool. If the user or the plan ask you to download a paper, you must use this tool to follow the plan. Otherwise, the quality of your answer will not be enough.
+        **Important:** If the user or the plan ask you to download a paper, you must use this tool to follow the plan. Otherwise, the quality of your answer will not be enough.
 
         Example:
         {"url": "https://sample.pdf"}

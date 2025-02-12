@@ -9,23 +9,16 @@ from nexusai.utils.logger import logger
 def search_papers(**kwargs) -> str:
     """Search engine for scientific papers and articles. Use this tool to search for scientific papers and articles online.
 
-    This tool has access to most of the web, and should be able to find relevant content or include results with a link to download a specific paper.
-    However, keep in mind that this tool is not perfect, it might return irrelevant results or not work on a first try, or simply doesn't have access to the URL of a specific resource, for example if it's behind a paywall.
-    Before assuming relevant results cannot be found, try calling the tool several times with different queries or search types.
-    If you have called the tool several times, with different search approaches, and were unable to find relevant results, inform the user and move forward.
+    This tool has access to most of the web. Its results should include a link to the paper PDF or page on the publisher website.
+    However, results might not always be relevant or include a link, for example if the paper is behind a paywall.
+    If the results are not useful to answer the user query, you must try several times with different queries or search types, to make sure you're not missing any relevant results.
+    Only afterwards, you can assume there are no relevant results and inform the user.
 
-    Your query must be in English. You're only allowed to use non-English terms if you are looking for specific items, like a paper with a non-English title.
-    The coverage for non-English papers might be limited.
+    Your query must be in English unless the user is asking for specific items, like a paper with a non-English title.
     """
     try:
         input = SearchPapersInput(**kwargs)
-
-        # SerperAPI works better when searching for a specific title or a date range
-        if input.search_type == SearchType.title or any(input.date_range):
-            providers = [SerperAPIWrapper(), ExaAPIWrapper()]
-        else:
-            providers = [ExaAPIWrapper(), SerperAPIWrapper()]
-
+        providers = [SerperAPIWrapper(), ExaAPIWrapper()]
         for provider in providers:
             try:
                 return provider.search(input)

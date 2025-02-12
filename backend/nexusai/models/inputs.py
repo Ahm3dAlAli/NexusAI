@@ -14,15 +14,16 @@ class SearchPapersInput(BaseModel):
 
     query: str = Field(
         description=(
-            "A descriptive, natural language query that will be used to search for papers and articles. "
-            "It doesn't need to be keyword-optimized. Since results are ranked based on semantic similarity, it should be as semantically similar as possible to the results you are looking for. "
+            "Search query to use to find papers and articles. "
+            "When trying different search approaches, you should change the level of detail of the query as well, to make sure you're not missing any relevant results. "
+            "For example, after searching for 'the impact of AI on protein folding' without relevant results, try with both a more specific and a broader query."
         ),
     )
     search_type: SearchType = Field(
         default=SearchType.narrow,
         description=(
             "Type of scientific research to perform from the most specific to the most general:\n"
-            "* 'title': Use this option if your plan requires you to find a specific paper by its title. "
+            "* 'title': Use this option if your plan requires searching for a paper by title. "
             "* 'narrow': Use this option if your plan requires you to download and analyze the papers you find. "
             "* 'broad': Use this option when your plan does not require downloading papers or as a fallback when the 'narrow' option does not return enough results."
         ),
@@ -30,9 +31,9 @@ class SearchPapersInput(BaseModel):
     date_range: list[int | None] = Field(
         default=[None, None],
         description=(
-            "A list of two integers representing the start and end years of the date range to search for. "
+            "A list of two integers to filter the search by date. "
             "The first integer is the start year, and the second integer is the end year. "
-            "If not provided, the tool will search for papers from the last 10 years."
+            "If not provided, no date filtering will be applied."
         ),
         examples=[
             [None, None],
