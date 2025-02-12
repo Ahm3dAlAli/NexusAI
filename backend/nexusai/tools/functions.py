@@ -1,5 +1,5 @@
 from langchain_core.tools import BaseTool, tool
-from nexusai.models.inputs import SearchPapersInput, SearchType
+from nexusai.models.inputs import SearchPapersInput
 from nexusai.tools.apis import *
 from nexusai.tools.paper_downloader import PaperDownloader
 from nexusai.utils.logger import logger

@@ -14,7 +14,8 @@ class SearchPapersInput(BaseModel):
 
     query: str = Field(
         description=(
-            "Search query to use to find papers and articles. "
+            "Search query to use to find papers and articles. It should be of the same level of detail as the user query. Don't add any additional information for your first search. "
+            "For example, if the user asks for 'Deep learning', your first query should be 'Deep learning'.\n"
             "When trying different search approaches, you should change the level of detail of the query as well, to make sure you're not missing any relevant results. "
             "For example, after searching for 'the impact of AI on protein folding' without relevant results, try with both a more specific and a broader query."
         ),
