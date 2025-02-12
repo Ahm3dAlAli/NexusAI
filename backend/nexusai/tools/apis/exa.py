@@ -4,10 +4,11 @@ import time
 from exa_py import Exa
 from exa_py.api import Result, SearchResponse
 from nexusai.cache.cache_manager import CacheManager
-from nexusai.config import EXA_API_KEY, MAX_RETRIES, RETRY_BASE_DELAY
+from nexusai.config import EXA_API_KEY, MAX_RETRIES, RETRY_BASE_DELAY, MAX_PAGES
 from nexusai.models.inputs import SearchPapersInput, SearchType
 from nexusai.utils.logger import logger
 from nexusai.utils.strings import arxiv_abs_to_pdf_url
+from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 
 class ExaAPIWrapper:
@@ -17,6 +18,7 @@ class ExaAPIWrapper:
     """
 
     name = "exa"
+    chars_per_page: int = 5000  # Average page length
 
     def __init__(self):
         self.api_key = EXA_API_KEY
@@ -140,12 +142,13 @@ class ExaAPIWrapper:
         return formatted_results
 
     def download_url(self, url: str) -> str:
-        """Download content from a URL using the Exa API and return it as a string."""
+        """Download and split content from a URL using the Exa API."""
+        url = arxiv_abs_to_pdf_url(url)
         logger.info(f"[Exa API] Downloading content from URL: '{url}'")
 
-        if cached_text := self.cache_manager.get_url_content(url):
+        if cached_pages := self.cache_manager.get_content(url):
             logger.info(f"[Exa API] Cached content found for URL: '{url}'")
-            return cached_text
+            return "\n\n".join(cached_pages)
 
         for attempt in range(MAX_RETRIES):
             logger.info(
@@ -154,12 +157,19 @@ class ExaAPIWrapper:
             try:
                 response: SearchResponse = self.client.get_contents([url], text=True)
                 if response.results:
-                    downloaded_text = response.results[0].text
+                    text = response.results[0].text
                     logger.info(
                         f"[Exa API] Successfully downloaded content from URL: '{url}'"
                     )
-                    self.cache_manager.store_url_content(url, downloaded_text)
-                    return downloaded_text
+                    if len(text) > self.chars_per_page * MAX_PAGES:
+                        text_splitter = RecursiveCharacterTextSplitter(
+                            chunk_size=self.chars_per_page, chunk_overlap=0
+                        )
+                        pages = text_splitter.split_text(text)
+                    else:
+                        pages = [text]
+                    self.cache_manager.store_content(url, pages)
+                    return "\n\n".join(pages)
                 else:
                     raise Exception("No text content found in the response")
             except Exception as e:

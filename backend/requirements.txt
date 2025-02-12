@@ -1,3 +1,6 @@
+Brotli==1.1.0
+bs4==0.0.2
+cloudscraper==1.2.71
 exa-py==1.8.8
 fastapi==0.115.5
 faiss-cpu==1.9.0

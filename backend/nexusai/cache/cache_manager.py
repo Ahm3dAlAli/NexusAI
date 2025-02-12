@@ -8,10 +8,7 @@ from nexusai.utils.logger import logger
 
 
 class CacheManager:
-    """Cache manager for the agent.
-
-    It uses Redis to minimize latency and cost of the APIs.
-    """
+    """Manages caching using Redis."""
 
     def __init__(self, provider: str = ""):
         self.provider = provider
@@ -31,50 +28,36 @@ class CacheManager:
         except redis.exceptions.ConnectionError as e:
             raise Exception(f"Failed to connect to Redis. Reason: {e}")
 
-    def __generate_key(self, key_type: str, value: str) -> str:
-        """Generate a unique cache key based on type and value."""
-        return (
-            f"{key_type}:{self.provider}:{hashlib.sha256(value.encode()).hexdigest()}"
-        )
+    def __generate_key(self, url: str) -> str:
+        """Generate a unique key based on URL."""
+        return f"url:{self.provider}:{hashlib.sha256(url.encode()).hexdigest()}"
 
-    def get_pdf(self, url: str) -> list[str] | None:
-        """Get PDF from cache."""
-        key = self.__generate_key("pdf", url)
+    def get_content(self, url: str) -> list[str] | None:
+        """Retrieve cached content for a URL."""
+        key = self.__generate_key(url)
         data = self.redis.get(key)
         return json.loads(data) if data else None
 
-    def store_pdf(self, url: str, pages: list[str]) -> None:
-        """Store PDF in cache as a list of pages."""
-        logger.info(f"Storing PDF in cache for {url}")
-        key = self.__generate_key("pdf", url)
-        self.redis.set(key, json.dumps(pages))
+    def store_content(
+        self, url: str, content: list[str], expire_seconds: int = 86400 * 7
+    ) -> None:
+        """Store content in cache."""
+        logger.info(f"Storing content in cache for {url}")
+        key = self.__generate_key(url)
+        self.redis.set(key, json.dumps(content), ex=expire_seconds)
 
     def get_search_results(self, input: SearchPapersInput) -> str | None:
-        """Get search results from cache."""
-        key = self.__generate_key("search", input.model_dump_json())
+        """Retrieve cached search results."""
+        key = f"search:{self.provider}:{hashlib.sha256(input.model_dump_json().encode()).hexdigest()}"
         data = self.redis.get(key)
         return json.loads(data) if data else None
 
     def store_search_results(
         self, input: SearchPapersInput, results: str, expire_seconds: int = 86400
     ) -> None:
-        """Store search results in cache with 1-day default expiration."""
+        """Cache search results."""
         logger.info(
-            f"Storing search results in cache for provider '{self.provider}' and input '{input.model_dump_json()}'"
+            f"Storing search results for provider '{self.provider}' and input '{input.model_dump_json()}'"
         )
-        key = self.__generate_key("search", input.model_dump_json())
+        key = f"search:{self.provider}:{hashlib.sha256(input.model_dump_json().encode()).hexdigest()}"
         self.redis.set(key, json.dumps(results), ex=expire_seconds)
-
-    def get_url_content(self, url: str) -> str | None:
-        """Get URL content from cache."""
-        key = self.__generate_key("url", url)
-        data = self.redis.get(key)
-        return json.loads(data) if data else None
-
-    def store_url_content(
-        self, url: str, content: str, expire_seconds: int = 86400 * 7
-    ) -> None:
-        """Store URL content in cache with 7-day default expiration."""
-        logger.info(f"Storing URL content in cache for {url}")
-        key = self.__generate_key("url", url)
-        self.redis.set(key, json.dumps(content), ex=expire_seconds)
