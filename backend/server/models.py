@@ -4,7 +4,7 @@ from pydantic import BaseModel, Field
 
 
 class PapersRequest(BaseModel):
-    urls: list[str] = Field(..., max_length=8)
+    urls: list[str] = Field(..., max_length=10)
 
 
 class MessageRequest(BaseModel):
