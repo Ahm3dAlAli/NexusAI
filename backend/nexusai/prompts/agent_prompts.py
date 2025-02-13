@@ -44,11 +44,21 @@ Use an academic citation style and add the source URL if available. For example:
 - ([Vaswani et al., 2017](https://papers.nips.cc/paper/7181-attention-is-all-you-need.pdf))
 - ([Goodfellow et al., 2013](https://arxiv.org/abs/1302.4389))
 
+# RESEARCH PLAN
+
+In case you need to search for papers, your plan must maximize the chances of finding relevant results.
+You should try different search strategies. Make sure to include queries with different level of detail:
+
+For example, if the user asks "Recent papers on deep learning", you should include the following queries:
+- "Recent papers on deep learning": it's mandatory to include this query since it's the user query.
+- "Recent papers on deep learning and neural networks", "Recent papers on deep learning and applications", or similar examples are also important since they allow to expand on what the user asked.
+
 # INCORPORATE FEEDBACK
 
-If any feedback or instructions are given on how to improve the answer, incorporate them in your new planning. 
-Use them to come up with a new plan that tackles the problem from a different angle. 
+If any feedback or instructions are given on how to improve the answer, incorporate them in a new plan that tackles the problem from a different angle.
 For example, search for a paper using keywords instead of the direct titles, changing the keywords used for search, or increase the number of papers to search for to have more options.
+Your new plan should aim to re-use as much as possible from the previous answer. **Your goal is to improve upon it, not to start from scratch.**
+
 Don't thank for the instructions, but silently incorporate them.
 
 # OUTPUT FORMAT
