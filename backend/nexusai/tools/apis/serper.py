@@ -1,12 +1,9 @@
 import http.client
 import json
-import time
 
 from nexusai.cache.cache_manager import CacheManager
 from nexusai.config import (
-    MAX_RETRIES,
     REQUEST_TIMEOUT,
-    RETRY_BASE_DELAY,
     SERPER_API_KEY,
 )
 from nexusai.models.inputs import SearchPapersInput, SearchType
@@ -51,49 +48,21 @@ class SerperAPIWrapper:
         payload_str = json.dumps(payload)
         headers = {"X-API-KEY": self.api_key, "Content-Type": "application/json"}
 
-        for attempt in range(MAX_RETRIES):
-            logger.info(
-                f"[Serper API] Attempt {attempt + 1}/{MAX_RETRIES}: Searching for '{query}'"
-            )
-            try:
-                conn = http.client.HTTPSConnection(self.host, timeout=REQUEST_TIMEOUT)
-                conn.request("POST", self.path, payload_str, headers)
-                response = conn.getresponse()
+        logger.info(f"[Serper API] Searching for '{query}'")
+        try:
+            conn = http.client.HTTPSConnection(self.host, timeout=REQUEST_TIMEOUT)
+            conn.request("POST", self.path, payload_str, headers)
+            response = conn.getresponse()
 
-                if 200 <= response.status < 300:
-                    data = response.read()
-                    response_str = data.decode("utf-8")
-                    response_json = json.loads(response_str)
-                    if response_json.get("organic"):
-                        return response_json
-                    else:
-                        raise Exception("No results found from Serper")
-                elif attempt < MAX_RETRIES - 1 and response.status not in [
-                    400,
-                    403,
-                    404,
-                    500,
-                ]:
-                    delay = RETRY_BASE_DELAY ** (attempt + 1)
-                    logger.warning(
-                        f"[Serper API] Attempt {attempt + 1}/{MAX_RETRIES}: API call failed with status {response.status}. Retrying in {delay} seconds..."
-                    )
-                    time.sleep(delay)
-                else:
-                    raise Exception(
-                        f"Serper API call failed with status code {response.status}."
-                    )
-            except Exception as e:
-                if attempt < MAX_RETRIES - 1:
-                    delay = RETRY_BASE_DELAY ** (attempt + 1)
-                    logger.warning(
-                        f"[Serper API] Attempt {attempt + 1}/{MAX_RETRIES}: Error during API call: {e}. Retrying in {delay} seconds..."
-                    )
-                    time.sleep(delay)
-                else:
-                    raise Exception(
-                        f"Serper API call failed after {MAX_RETRIES} attempts: {e}"
-                    )
+            if 200 <= response.status < 300:
+                data = response.read()
+                response_str = data.decode("utf-8")
+                response_json = json.loads(response_str)
+                if response_json.get("organic"):
+                    return response_json
+            raise Exception("No results found from Serper")
+        except Exception as e:
+            raise Exception(f"Serper API call failed. Details: {e}")
 
     def __format_results(self, response: dict) -> str:
         """Format the Serper response into a string."""

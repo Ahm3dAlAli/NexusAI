@@ -1,10 +1,9 @@
 import json
-import time
 
 from exa_py import Exa
 from exa_py.api import Result, SearchResponse
 from nexusai.cache.cache_manager import CacheManager
-from nexusai.config import EXA_API_KEY, MAX_RETRIES, RETRY_BASE_DELAY, MAX_PAGES
+from nexusai.config import EXA_API_KEY, MAX_PAGES
 from nexusai.models.inputs import SearchPapersInput, SearchType
 from nexusai.utils.logger import logger
 from nexusai.utils.strings import arxiv_abs_to_pdf_url
@@ -67,32 +66,20 @@ class ExaAPIWrapper:
         """Execute the Exa search call with a retry mechanism."""
         query, kwargs = self.__build_query_and_kwargs(input)
 
-        for attempt in range(MAX_RETRIES):
-            logger.info(
-                f"[Exa API] Attempt {attempt + 1}/{MAX_RETRIES}: Searching for '{query}'"
+        logger.info(f"[Exa API] Searching for '{query}'")
+        try:
+            response: SearchResponse = self.client.search_and_contents(
+                query=query, num_results=input.max_results, **kwargs
             )
-            try:
-                response: SearchResponse = self.client.search_and_contents(
-                    query=query, num_results=input.max_results, **kwargs
+            if response.results:
+                logger.info(
+                    f"[Exa API] Successfully obtained search results for '{query}'"
                 )
-                if response.results:
-                    logger.info(
-                        f"[Exa API] Successfully obtained search results for '{query}'"
-                    )
-                    return response
-                else:
-                    raise Exception(f"No results found from Exa for '{query}'")
-            except Exception as e:
-                if attempt < MAX_RETRIES - 1:
-                    sleep_time = RETRY_BASE_DELAY ** (attempt + 1)
-                    logger.warning(
-                        f"[Exa API] Attempt {attempt + 1}/{MAX_RETRIES}: API call failed with error: {e}. Retrying in {sleep_time} seconds..."
-                    )
-                    time.sleep(sleep_time)
-                else:
-                    raise Exception(
-                        f"Exa API call failed after {MAX_RETRIES} attempts: {e}"
-                    )
+                return response
+            else:
+                raise Exception(f"No results found from Exa for '{query}'")
+        except Exception as e:
+            raise Exception(f"Exa API call failed. Details: {e}")
 
     def __format_results(self, response: SearchResponse) -> str:
         """Format the Exa response into a string."""
@@ -150,36 +137,24 @@ class ExaAPIWrapper:
             logger.info(f"[Exa API] Cached content found for URL: '{url}'")
             return "\n\n".join(cached_pages)
 
-        for attempt in range(MAX_RETRIES):
-            logger.info(
-                f"[Exa API] Attempt {attempt + 1}/{MAX_RETRIES}: Downloading content from URL: '{url}'"
-            )
-            try:
-                response: SearchResponse = self.client.get_contents([url], text=True)
-                if response.results:
-                    text = response.results[0].text
-                    logger.info(
-                        f"[Exa API] Successfully downloaded content from URL: '{url}'"
+        logger.info(f"[Exa API] Downloading content from URL: '{url}'")
+        try:
+            response: SearchResponse = self.client.get_contents([url], text=True)
+            if response.results:
+                text = response.results[0].text
+                logger.info(
+                    f"[Exa API] Successfully downloaded content from URL: '{url}'"
+                )
+                if len(text) > self.chars_per_page * MAX_PAGES:
+                    text_splitter = RecursiveCharacterTextSplitter(
+                        chunk_size=self.chars_per_page, chunk_overlap=0
                     )
-                    if len(text) > self.chars_per_page * MAX_PAGES:
-                        text_splitter = RecursiveCharacterTextSplitter(
-                            chunk_size=self.chars_per_page, chunk_overlap=0
-                        )
-                        pages = text_splitter.split_text(text)
-                    else:
-                        pages = [text]
-                    self.cache_manager.store_content(url, pages)
-                    return "\n\n".join(pages)
+                    pages = text_splitter.split_text(text)
                 else:
-                    raise Exception("No text content found in the response")
-            except Exception as e:
-                if attempt < MAX_RETRIES - 1:
-                    sleep_time = RETRY_BASE_DELAY ** (attempt + 1)
-                    logger.warning(
-                        f"[Exa API] Attempt {attempt + 1}/{MAX_RETRIES}: Failed to download content from URL '{url}' with error: {e}. Retrying in {sleep_time} seconds..."
-                    )
-                    time.sleep(sleep_time)
-                else:
-                    raise Exception(
-                        f"Exa API download failed for URL '{url}' after {MAX_RETRIES} attempts: {e}"
-                    )
+                    pages = [text]
+                self.cache_manager.store_content(url, pages)
+                return "\n\n".join(pages)
+            else:
+                raise Exception("No text content found in the response")
+        except Exception as e:
+            raise Exception(f"Exa API download failed for URL '{url}'. Details: {e}")

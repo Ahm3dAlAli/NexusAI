@@ -147,10 +147,10 @@ class PaperDownloader:
         """Convert response content to pages based on content type."""
         content_type = response.headers.get("Content-Type", "").lower()
         if "application/pdf" in content_type:
-            logger.info("Processing as PDF...")
+            logger.info(f"Processing PDF from {url}...")
             pages = self.__convert_bytes_to_pages(url, response.content)
         else:
-            logger.info("Processing as text...")
+            logger.info(f"Processing text from {url}...")
             soup = BeautifulSoup(response.text, "html.parser")
             text = soup.get_text(separator="\n", strip=True)
             pages = self.__convert_text_to_pages(url, text)
@@ -177,36 +177,28 @@ class PaperDownloader:
                 if 200 <= response.status_code < 300:
                     return self.__handle_response(url, response)
                 elif response.status_code == 403:
-                    logger.warning("403 Forbidden. Retrying with different headers...")
-                    time.sleep(random.uniform(1, 3))
-                elif attempt < MAX_RETRIES - 1 and response.status_code not in [
-                    400,
-                    404,
-                    500,
-                ]:
-                    delay = RETRY_BASE_DELAY ** (attempt + 1)
+                    sleep_time = RETRY_BASE_DELAY ** (attempt + 1)
                     logger.warning(
-                        f"Received {response.status_code}. Retrying in {delay} seconds..."
+                        f"Request to {url} resulted in a 403 response. Retrying in {sleep_time} seconds..."
                     )
-                    time.sleep(delay)
+                    time.sleep(sleep_time)
                 else:
-                    raise Exception(
-                        f"Error {response.status_code} downloading content from {url}."
-                    )
+                    break
             except Exception as e:
-                logger.warning(f"Error: {e}. Retrying...")
-                time.sleep(random.uniform(1, 3))
-        raise Exception(
-            f"Failed to download content from {url} after {MAX_RETRIES} attempts."
-        )
+                sleep_time = RETRY_BASE_DELAY ** (attempt + 1)
+                logger.warning(f"Error: {e}. Retrying in {sleep_time} seconds...")
+                time.sleep(sleep_time)
+        raise Exception(f"Failed to download content from {url}.")
 
     def download(self, url: str) -> str:
         """Attempt to download content, fallback to Exa API if necessary."""
         try:
             return self.download_content(url)
         except Exception as e:
-            logger.warning(f"Error downloading content from {url}: {e}")
-            logger.warning(f"Fallback to Exa API for {url}")
+            logger.warning(
+                f"Error downloading content with native downloader from {url}. Details: {e}"
+            )
+            logger.info(f"Trying with Exa API for {url}...")
             return ExaAPIWrapper().download_url(url)
 
     @tool("download-paper")
@@ -229,8 +221,3 @@ class PaperDownloader:
             return PaperDownloader(PaperDownloader.query).download(url)
         except Exception as e:
             return f"Error downloading paper: {e}"
-
-
-if __name__ == "__main__":
-    sample_url = "https://blog.samaltman.com/how-to-be-successful"
-    print(PaperDownloader(None).download_content(sample_url))
