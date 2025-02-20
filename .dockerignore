@@ -73,3 +73,43 @@ README.md
 .prettierrc
 .prettierignore
 .eslintrc
+
+# docker
+Dockerfile
+docker-compose*.yml
+*.dockerfile
+.docker/
+
+# temp files
+*.tmp
+*~
+*.bak
+
+# test files
+__tests__/
+test/
+tests/
+*.test.js
+*.spec.js
+
+# docs
+docs/
+documentation/
+
+# CI/CD
+.github/
+.gitlab/
+.circleci/
+.travis.yml
+.jenkins*
+
+# logs
+logs/
+*.log.*
+
+# build artifacts
+*.tar.gz
+*.zip
+*.rar
+dist/
+build/

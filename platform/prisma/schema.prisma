@@ -1,0 +1,84 @@
+generator client {
+  provider = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AgentMessageType {
+  system
+  human
+  agent
+  tool
+  error
+  final
+}
+
+enum ModelProviderType {
+  default
+  azureopenai
+  openai
+}
+
+model User {
+  id                String        @id @default(uuid())
+  name              String
+  email             String        @unique
+  password          String?
+  collectPapers     Boolean       @default(true)
+  customInstructions String[]      @default([])
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  researches        Research[]
+  papers            Paper[]
+  modelProviders    ModelProvider[]
+}
+
+model Research {
+  id          String    @id @default(uuid())
+  title       String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  messages    Message[]
+  user        User?     @relation(fields: [userId], references: [id])
+  userId      String?
+}
+
+model Message {
+  id             String         @id @default(uuid())
+  research       Research       @relation(fields: [researchId], references: [id])
+  researchId     String
+  order          Int
+  type           AgentMessageType
+  content        String
+  toolName       String? 
+  createdAt      DateTime        @default(now())
+}
+
+model Paper {
+  id               String           @id @default(uuid())
+  title            String
+  authors          String
+  summary          String
+  url              String
+  user             User?            @relation(fields: [userId], references: [id])
+  userId           String?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+}
+
+model ModelProvider {
+  id           String         @id @default(uuid())
+  name         ModelProviderType
+  user         User           @relation(fields: [userId], references: [id])
+  userId       String
+  secretName   String        
+  selected     Boolean        @default(false)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@unique([name, userId])
+}

@@ -1,7 +1,7 @@
 # NexusAI
 
 <div align="center">
-<img src="frontend/app/favicon.ico" alt="NexusAI Logo" width="100">
+<img src="platform/app/favicon.ico" alt="NexusAI Logo" width="100">
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -14,42 +14,56 @@
 
 Keeping up with the flood of academic papers is harder than ever for researchers. Manually reviewing this overwhelming volume of studies takes too much time, leading to missed insights or duplicated efforts. Modern research is also more complex, with key information spread across text, figures, tables, and equations, making it difficult to fully understand. Current tools for searching and analyzing papers aren’t smart enough — they struggle to understand deeper connections between studies, extract insights from complex formats, or summarize information effectively.
 
-NexusAI transforms how researchers interact with scientific literature. It streamlines research by delegating the heavy lifting to an AI agent able to plan its own execution strategy, self-assess the quality of its work, and let the user ask further questions to dive deeper into the results. All with access to the most comprehensive academic search engines (arXiv, CORE, and Google).
+NexusAI transforms how researchers interact with scientific literature. It streamlines research by delegating the heavy lifting to an AI agent able to plan its own execution strategy, self-assess the quality of its work, and let the user ask further questions to dive deeper into the results. All with access to the most comprehensive academic search engines (arXiv, Bing, CORE, and Google).
 
-## Features
+# Features
 
-- 🧠 **Intelligent Query Processing** - Automatically determines if a query needs extensive research or can be answered directly, optimizing response time and computational resources.
-- 📋 **Structured Planning** - Breaks down complex research queries into manageable subtasks with explicit tool mapping for systematic information gathering.
-- 🔄 **Multi-API Paper Search** - Comprehensive research coverage through integration with arXiv, CORE, and Google Scholar APIs, with unified search syntax for consistent results across platforms.
-- 📑 **Smart PDF Processing** - Efficient document handling with on-the-fly RAG and FAISS-powered vector search to extract only the most relevant content from papers.
-- ⚡ **Parallel Processing** - Executes multiple tool calls simultaneously to minimize latency and improve response times.
-- 🔍 **Self-Assessment & Refinement** - Implements quality control through automated self-review and iterative refinement of responses based on internal feedback.
-- 💬 **Follow-up Questions** - Maintains conversation context to allow natural follow-up questions and deeper exploration of research topics without repeating context.
-- 💾 **Redis Caching System** - Optimizes performance and reduces API costs by caching search results and tool outputs for faster subsequent queries.
+NexusAI combines advanced AI research capabilities with enterprise-ready platform features to deliver a comprehensive research automation solution. The system is built on two main pillars: a sophisticated AI agent for intelligent research automation and a robust platform infrastructure for enterprise deployment.
 
-## Architecture
+### Core Agent Capabilities
 
-NexusAI implements a modular architecture powered by a Python/LangChain backend, Next.js frontend, and Redis caching layer. The core agent workflow is orchestrated through a directed graph structure as shown below:
+The AI agent is designed to handle complex research tasks through a combination of advanced language models, specialized tools, and intelligent workflow management. These capabilities enable the agent to understand, plan, and execute research tasks with human-like comprehension while maintaining machine-like efficiency.
 
-![Agent Workflow](https://i.ibb.co/0BBzkcb/mermaid-diagram-2024-11-17-195744.png)
+- 🧠 **Dual Processing Modes** - Intelligently routes queries through either a research workflow for complex questions or direct paper processing for document analysis, optimizing response strategies.
+- 📋 **Dynamic Research Planning** - Creates adaptive research strategies using a multi-LLM approach (gpt-4o-mini for simple tasks, gpt-4o for complex ones) to optimize cost and performance.
+- 🔄 **Multi-Provider Search** - Unified search interface across arXiv, Bing, CORE, and Serp APIs with provider fallback, ensuring comprehensive coverage and resilience.
+- 📑 **Smart Document Processing** - RAG-powered content filtering with configurable dimension embeddings, automatically limiting processing to the most relevant sections of papers.
+- ⚡ **Asynchronous Tool Execution** - Parallel processing of tool calls through async/await patterns, significantly reducing latency in multi-step research tasks.
+- 🔍 **Iterative Quality Control** - Self-assessment system with configurable feedback loops (`MAX_FEEDBACK_REQUESTS`) for continuous refinement of responses.
+- 💬 **Stateful Conversations** - Maintains conversation context through `AgentState` management, enabling coherent multi-turn interactions.
 
-The system maintains state through the `AgentState` class, tracking research requirements, planning status, feedback iterations, and message history.
+### Platform Features
 
-Key components of the workflow include:
+The platform layer provides the infrastructure and interfaces necessary for deploying NexusAI in production environments. These features ensure security, scalability, and a seamless user experience while maintaining enterprise-grade standards.
 
-1. **Decision Making Node**: Determines if a query needs research or can be answered directly, producing a `DecisionMakingOutput`.
+- 🎨 **Intuitive Research Interface** - Minimalist chat-like interface with curated example research questions to help researchers quickly understand and leverage the platform's capabilities.
+- 📚 **Research Management** - PostgreSQL-powered system for storing research history and paper collections, enabling users to access and continue previous research sessions while building their knowledge base.
+- 💾 **Caching Layer** - Redis-based caching system for API responses and PDF content with provider-specific cache management, optimizing response times and reducing API costs.
+- 🌐 **Real-time Updates** - WebSocket-based streaming of intermediate results with structured message types, providing researchers with live insights into the research process.
+- ⚙️ **Customizable Experience** - System-level custom instructions feature allowing researchers to guide the agent's behavior and tailor its research approach to their specific needs.
+- 🔐 **Enterprise-grade Security** - Comprehensive authentication system through NextAuth supporting email-password and Microsoft Azure AD, with JWT-secured API endpoints and WebSocket connections.
 
-2. **Planning Node**: For research queries, breaks down complex tasks into subtasks mapped to specific tools.
+# Architecture
 
-3. **Agent Node**: Executes the research plan using a ReAct pattern, coordinating tool usage and synthesizing results.
+The backend implements two primary functionalities: Research Workflow and Paper Processing.
 
-4. **Tools Node**: Provides two main tools:
-   - **Paper Search**: Unified search across multiple APIs (ArXiv, CORE, SERP) using `SearchPapersInput` schema
-   - **PDF Processing**: Implemented in `PDFDownloader` with RAG-based content filtering
+### Research Workflow
 
-5. **Judge Node**: Quality control through `JudgeOutput`, providing feedback for iterative improvement.
+Orchestrated through a directed graph structure with the following nodes:
 
-The system employs Redis caching for API responses and parallel processing for tool execution to optimize performance. All communication between nodes uses standardized message types defined in `AgentMessageType`.
+1. **Decision Making Node** - The entry point of the workflow that evaluates query complexity using gpt-4o-mini. It analyzes the user's request and produces a `DecisionMakingOutput` to determine whether research is required or if the query can be answered directly. The node supports custom instructions through markdown-formatted directives that influence the decision-making process.
+
+2. **Planning Node** - A strategic component that creates detailed research plans based on the query complexity. It utilizes gpt-4o for complex planning tasks while falling back to gpt-4o-mini for simpler ones to optimize costs. The node creates structured research plans with explicit tool mappings and incorporates previous conversation context to avoid redundant searches.
+
+3. **Tools Node** - The execution engine that handles all external interactions through asynchronous processing. It implements retry mechanisms with exponential backoff for reliability and manages two primary tools: a unified paper search interface across multiple providers and a PDF processing system for content extraction with RAG-based filtering.
+
+4. **Agent Node** - The orchestrator that coordinates tool execution based on the planning output. It maintains the conversation state through `AgentState` and manages the streaming of intermediate results to clients through WebSocket connections, ensuring real-time visibility into the research process.
+
+5. **Judge Node** - The quality control component that evaluates response quality through structured `JudgeOutput`. It implements configurable feedback loops with a default of 2 attempts and provides specific improvement directives when refinement is needed, ensuring high-quality research outputs.
+
+### Paper Processing
+
+This workflow transforms academic papers into structured summaries by accepting a paper URL, retrieving the document with the `PDFDownloader` tool, and using RAG-based filtering with Azure/OpenAI embeddings to process only the most relevant sections, generating a concise summary.
 
 ### Project Structure
 
@@ -57,53 +71,18 @@ The system employs Redis caching for API responses and parallel processing for t
 NexusAI/
 ├── backend/                 # FastAPI backend service
 │   ├── Dockerfile
-│   └── server/
-├── frontend/               # Next.js frontend application
+│   ├── requirements.txt     # Python dependencies
+│   └── nexusai/             # Core NexusAI folder
+│   └── server/              # FastAPI server folder
+├── platform/                # Next.js application
 │   └── Dockerfile
-├── nexusai/               # Core NexusAI library
-├── docker-compose.yml     # Docker services configuration
-├── requirements.txt       # Python dependencies
-└── .env.sample           # Environment variables template
+├── docker-compose.yml       # Docker services configuration
+└── .env.sample              # Environment variables template
 ```
 
 ## ⚙️ Getting Started
 
-### Prerequisites
-
-Before you begin, make sure you have Docker installed.
-
-### Installation
-
-1. **Clone the Repository**
-   ```bash
-   git clone https://github.com/Ahm3dAlAli/NexusAI.git
-   cd NexusAI
-   ```
-
-2. **Set Up Environment Variables**
-   
-   Create a `.env` file by copying the provided template:
-   ```bash
-   cp .env.sample .env
-   ```
-
-   Configure your environment variables:
-   ```env
-   # Required
-   OPENAI_API_KEY=your_openai_api_key
-
-   # Optional - for enhanced functionality
-   CORE_API_KEY=your_core_api_key
-   SERP_API_KEY=your_serp_api_key
-   LANGCHAIN_API_KEY=your_langchain_api_key
-
-   # Redis configuration (leave as default for Docker setup)
-   REDIS_URL="redis://redis:6379"
-
-   # Deployment
-   FRONTEND_URL="http://localhost:3000"
-   NEXT_PUBLIC_API_URL="ws://localhost:8000/ws"
-   ```
+To immediately start using NexusAI, you can use our online demo [here](https://nexusai-platform.redisland-af07373c.westus2.azurecontainerapps.io). Alternatively, you can run the application locally by following the instructions below.
 
 ### Running with Docker
 
@@ -117,12 +96,11 @@ If that doesn't work, try running it without the dash:
 docker compose up --build
 ```
 
-This command starts three services:
-- Frontend (Next.js) - Port 3000
-- Backend (FastAPI) - Port 8000
+This command starts four services:
+- PostgreSQL (database) - Port 5432
 - Redis (caching) - Port 6379
-
-Navigate to the frontend interface at [http://localhost:3000](http://localhost:3000) and start automating your research!
+- Backend (FastAPI) - Port 8000
+- Platform (Next.js) - Port 3000
 
 ## License
 
@@ -130,7 +108,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Acknowledgments
 
-We would like to thank Dimant AI and Langchain for hosting the AgentCraft Hackathon. Special thanks to arXiv, CORE, and Serp for providing APIs to access academic papers.
+We would like to thank Dimant AI and Langchain for hosting the AgentCraft Hackathon. Special thanks to Microsoft Azure for providing sponsorship credits to deploy the application infrastructure, and to arXiv, Bing, CORE, and Serp for providing APIs to access academic papers.
 
 ## Contact
 
